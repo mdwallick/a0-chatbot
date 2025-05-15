@@ -1,0 +1,27 @@
+/* eslint-disable @next/next/no-html-link-for-pages */
+import { ChevronLeftIcon } from "lucide-react"
+
+import UserProfile from "../../components/auth0/user-profile"
+
+export default async function Profile() {
+  return (
+    <div
+      className="flex flex-col min-w-0 h-dvh bg-background w-full"
+      style={{ maxHeight: "calc(100vh - 56px)" }}
+    >
+      <div className="flex-col md:flex flex-1 overflow-y-scroll">
+        <div className="flex-1 space-y-4 p-5 sm:p-8 pt-6">
+          <div className="max-w-screen-lg mx-auto justify-center">
+            <div className="flex items-center space-x-1 text-sm text-black">
+              <ChevronLeftIcon className="h-4 w-4" />
+              <a href="/" className="font-light text-black">
+                Back to chat
+              </a>
+            </div>
+          </div>
+          <UserProfile />
+        </div>
+      </div>
+    </div>
+  )
+}

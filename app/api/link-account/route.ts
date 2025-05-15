@@ -1,7 +1,7 @@
-import { NextRequest } from "next/server"
+import { NextRequest } from "next/server";
 
-import { auth0 } from "@/lib/auth0"
-import { IdentityToLink, linkUser } from "@/lib/auth0-mgmt"
+import { auth0 } from "@/lib/auth0";
+import { IdentityToLink, linkUser } from "@/lib/auth0-mgmt";
 
 export async function GET(request: NextRequest) {
   const session = await auth0.getSession()
@@ -21,5 +21,8 @@ export async function GET(request: NextRequest) {
 
   request.cookies.delete("link-account")
 
-  return Response.redirect(new URL(`/auth/login?returnTo=${returnTo}`, request.nextUrl.origin))
+  const baseUrl = process.env.AUTH0_BASE_URL!
+  const redirectUrl = new URL(`/auth/login?returnTo=${returnTo}`, baseUrl)
+  return Response.redirect(redirectUrl)
+  //return Response.redirect(new URL(`/auth/login?returnTo=${returnTo}`, request.nextUrl.origin))
 }

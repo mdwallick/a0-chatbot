@@ -26,8 +26,7 @@ IMAGE="gcr.io/$PROJECT_ID/$REPO_NAME/app:$COMMIT_SHA"
 
 # 🔧 Build the image using cloudbuild.yaml
 gcloud builds submit --config=cloudbuild.yaml \
-  --substitutions=_AUTH0_DOMAIN="$AUTH0_DOMAIN",_AUTH0_CLIENT_ID="$AUTH0_CLIENT_ID",_APP_BASE_URL="$APP_BASE_URL",COMMIT_SHA="$COMMIT_SHA" \
-  .
+  --substitutions=_COMMIT_SHA="$COMMIT_SHA" .
 
 # 🚀 Deploy using the image from Cloud Build
 gcloud run deploy "$SERVICE_NAME" \

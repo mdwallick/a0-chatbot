@@ -1,6 +1,9 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server";
 
-import { auth0 } from "@/lib/auth0"
+import { auth0 } from "@/lib/auth0";
+
+// List of paths that require authentication
+const PROTECTED_PATHS = ["/profile", "/api/link-account", "/api/integrations"]
 
 export async function middleware(request: NextRequest) {
   const authRes = await auth0.middleware(request)
@@ -26,10 +29,14 @@ export async function middleware(request: NextRequest) {
     return authRes
   }
 
-  const session = await auth0.getSession(request)
+  // Check if the requested path requires authentication
+  const requiresAuth = PROTECTED_PATHS.some(path => request.nextUrl.pathname.startsWith(path))
 
-  if (!session) {
-    return NextResponse.redirect(new URL("/auth/login", request.nextUrl.origin))
+  if (requiresAuth) {
+    const session = await auth0.getSession(request)
+    if (!session) {
+      return NextResponse.redirect(new URL("/auth/login", process.env.AUTH0_BASE_URL!))
+    }
   }
 
   return authRes

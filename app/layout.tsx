@@ -1,14 +1,15 @@
 import type { Metadata, Viewport } from "next"
-import "./globals.css"
+import "./globals.css";
 
-import { Geist, Geist_Mono } from "next/font/google"
+import { Geist, Geist_Mono } from "next/font/google";
 
-import { GooglePickerLoader } from "@/components/google-picker-loader"
-import Header from "@/components/header"
-import { LinkedAccountsProvider } from "@/components/use-linked-accounts-context"
-import { auth0 } from "@/lib/auth0"
-import { getLinkedAccounts } from "@/lib/auth0-mgmt"
-import { Auth0Provider } from "@auth0/nextjs-auth0"
+import { ChatSidebar } from "@/components/chat-sidebar";
+import { GooglePickerLoader } from "@/components/google-picker-loader";
+import Header from "@/components/header";
+import { LinkedAccountsProvider } from "@/components/use-linked-accounts-context";
+import { auth0 } from "@/lib/auth0";
+import { getLinkedAccounts } from "@/lib/auth0-mgmt";
+import { Auth0Provider } from "@auth0/nextjs-auth0";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,8 +40,8 @@ export default async function RootLayout({
   const session = await auth0.getSession()
   let linkedAccounts: any[] = []
 
-  if (session) {
-    linkedAccounts = await getLinkedAccounts(session!.user!.sub!)
+  if (session?.user?.sub) {
+    linkedAccounts = await getLinkedAccounts(session.user.sub)
   }
 
   return (
@@ -54,7 +55,10 @@ export default async function RootLayout({
               className="flex flex-row flex-1 w-full mx-auto border-t border-gray-100"
               style={{ maxHeight: "calc(100vh - 56px)" }}
             >
-              <LinkedAccountsProvider value={linkedAccounts}>{children}</LinkedAccountsProvider>
+              <ChatSidebar />
+              <div className="flex-1 min-w-0">
+                <LinkedAccountsProvider value={linkedAccounts}>{children}</LinkedAccountsProvider>
+              </div>
             </main>
           </div>
         </Auth0Provider>

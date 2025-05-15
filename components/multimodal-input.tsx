@@ -1,23 +1,23 @@
 "use client"
 
 import type { UIMessage } from "ai"
-import cx from "classnames"
-import { Plus } from "lucide-react"
-import { memo, useCallback, useEffect, useRef, useState } from "react"
-import { toast } from "sonner"
-import { useLocalStorage } from "usehooks-ts"
+import cx from "classnames";
+import { Plus } from "lucide-react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import { useLocalStorage } from "usehooks-ts";
 
-import { Connections } from "@/lib/auth0-ai/connections"
-import { Attachment } from "@ai-sdk/ui-utils"
+import { Connections } from "@/lib/auth0-ai/connections";
+import { Attachment } from "@ai-sdk/ui-utils";
+import { useUser } from "@auth0/nextjs-auth0";
 
-import { AttachmentWithMeta } from "../lib/utils"
-import { AttachmentItem } from "./attachment-item"
-import { EnableIntegration } from "./enable-integration"
-import { GoogleDrivePicker, GoogleFile } from "./google-picker"
+import { AttachmentWithMeta } from "../lib/utils";
+import { AttachmentItem } from "./attachment-item";
+import { EnableIntegration } from "./enable-integration";
+import { GoogleDrivePicker, GoogleFile } from "./google-picker";
 import {
   ArrowUpIcon,
   BoxIcon,
-  BoxIconRounded,
   GoogleDriveIcon,
   GoogleDriveRoundedIcon,
   OneDriveIcon,
@@ -27,16 +27,16 @@ import {
   SlackIcon,
   SlackIconRounded,
   StopIcon,
-} from "./icons"
-import { IntegrationTools } from "./integration-tools"
-import { SuggestedActions } from "./suggested-actions"
-import { Button } from "./ui/button"
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
-import { Textarea } from "./ui/textarea"
-import { useLinkedAccounts } from "./use-linked-accounts-context"
+} from "./icons";
+import { IntegrationTools } from "./integration-tools";
+import { Button } from "./ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Textarea } from "./ui/textarea";
+import { useLinkedAccounts } from "./use-linked-accounts-context";
 
 import type React from "react"
 import type { UseChatHelpers } from "@ai-sdk/react"
+
 function PureMultimodalInput({
   chatId,
   input,
@@ -60,6 +60,7 @@ function PureMultimodalInput({
   append: UseChatHelpers["append"]
   className?: string
 }) {
+  const { user } = useUser()
   const linkedAccounts: any = useLinkedAccounts()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [files, setFiles] = useState<GoogleFile[]>([])
@@ -148,7 +149,7 @@ function PureMultimodalInput({
 
   return (
     <div className="relative w-full flex flex-col gap-4 pointer-events-auto">
-      {messages.length === 0 && <SuggestedActions append={append} chatId={chatId} />}
+      {/* {messages.length === 0 && <SuggestedActions append={append} chatId={chatId} />} */}
 
       <div className="border-input rounded-2xl border p-3 shadow-lg transition-[color,box-shadow] outline-none flex flex-col gap-3 focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]">
         {files.length > 0 && (
@@ -191,182 +192,126 @@ function PureMultimodalInput({
       </div>
 
       <div className="absolute bottom-0 p-3 w-fit flex flex-row justify-start gap-2 items-center">
-        {/* <DropdownMenu>
-          <DropdownMenuTrigger
-            asChild
-            className="rounded-full border border-gray-300 p-1 hover:border-ring hover:ring-ring/50 hover:ring-[3px] transition-all ease-in cursor-pointer"
-          >
-            <div>
-              <Plus color="#5D5D5D" />
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56">
-            <DropdownMenuGroup>
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>Connect apps</DropdownMenuSubTrigger>
-                <DropdownMenuPortal>
-                  <DropdownMenuSubContent className="w-[255px]  flex flex-col gap-0 p-0">
-                    <DropdownMenuItem className="p-0 rounded-none">
-                      <EnableIntegration
-                        title="Connect to One Drive"
-                        icon={<OneDriveIcon />}
-                        integration={Connections.windowsLive.connection}
-                      />
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="p-0 rounded-none">
-                      <EnableIntegration
-                        title="Connect to Slack"
-                        icon={<SlackIcon />}
-                        integration={Connections.slack.connection}
-                      />
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="p-0 rounded-none">
-                      <EnableIntegration
-                        title="Connect to Box"
-                        icon={<BoxIcon />}
-                        integration={Connections.box.connection}
-                      />
-                    </DropdownMenuItem>
-                  </DropdownMenuSubContent>
-                </DropdownMenuPortal>
-              </DropdownMenuSub>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>GitHub</DropdownMenuItem>
-            <DropdownMenuItem>Support</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu> */}
-
-        <Popover>
-          <PopoverTrigger className="rounded-full border border-gray-300 p-1 hover:border-ring hover:ring-ring/50 hover:ring-[3px] transition-all ease-in cursor-pointer">
-            <div>
-              <Plus color="#5D5D5D" />
-            </div>
-          </PopoverTrigger>
-          <PopoverContent className="w-[275px] flex flex-col gap-0 p-0">
-            {isConnectionEnabled(Connections.googleDrive.connection) ? (
-              <div className="flex items-center justify-between gap-2 hover:bg-gray-100 transition-all ease-in hover:cursor-pointer p-4 py-3 pt-3">
-                <div className="flex gap-2 items-center">
-                  <GoogleDriveIcon />
-                  <span className="text-sm text-gray-600">
-                    <GoogleDrivePicker onSelect={loadGoogleDocument} />
-                  </span>
+        {user && (
+          <>
+            <Popover>
+              <PopoverTrigger className="rounded-full border border-gray-300 p-1 hover:border-ring hover:ring-ring/50 hover:ring-[3px] transition-all ease-in cursor-pointer">
+                <div>
+                  <Plus color="#5D5D5D" />
                 </div>
-              </div>
-            ) : (
-              <EnableIntegration
-                title="Connect to Google Drive"
-                icon={<GoogleDriveIcon />}
-                integration={Connections.googleDrive.connection}
+              </PopoverTrigger>
+              <PopoverContent className="w-[275px] flex flex-col gap-0 p-0">
+                {isConnectionEnabled(Connections.googleDrive.connection) ? (
+                  <div className="flex items-center justify-between gap-2 hover:bg-gray-100 transition-all ease-in hover:cursor-pointer p-4 py-3 pt-3">
+                    <div className="flex gap-2 items-center">
+                      <GoogleDriveIcon />
+                      <span className="text-sm text-gray-600">
+                        <GoogleDrivePicker onSelect={loadGoogleDocument} />
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <EnableIntegration
+                    title="Connect to Google Drive"
+                    icon={<GoogleDriveIcon />}
+                    integration={Connections.googleDrive.connection}
+                  />
+                )}
+
+                <EnableIntegration
+                  title="Connect to One Drive"
+                  icon={<OneDriveIcon />}
+                  integration={Connections.windowsLive.connection}
+                />
+
+                <EnableIntegration
+                  title="Connect to Salesforce"
+                  icon={<SalesforceIcon />}
+                  integration={Connections.salesforce.connection}
+                />
+
+                <EnableIntegration
+                  title="Connect to Slack"
+                  icon={<SlackIcon />}
+                  integration={Connections.slack.connection}
+                />
+
+                <EnableIntegration
+                  title="Connect to Box"
+                  icon={<BoxIcon />}
+                  integration={Connections.box.connection}
+                />
+              </PopoverContent>
+            </Popover>
+
+            {isConnectionEnabled(Connections.googleDrive.connection) && (
+              <IntegrationTools
+                append={append}
+                title="Google Drive Tools"
+                icon={<GoogleDriveRoundedIcon />}
+                tools={[
+                  {
+                    title: "List files and folders",
+                    prompt: "List files and folders from Google Drive",
+                  },
+                  {
+                    title: "Get file metadata",
+                    prompt: "Get file metadata",
+                  },
+                  {
+                    title: "Export files",
+                    prompt: "Export files",
+                  },
+                  {
+                    title: "Create new folder",
+                    prompt: "Create new folder",
+                  },
+                ]}
               />
             )}
 
-            <EnableIntegration
-              title="Connect to One Drive"
-              icon={<OneDriveIcon />}
-              integration={Connections.windowsLive.connection}
-            />
+            {isConnectionEnabled(Connections.windowsLive.connection) && (
+              <IntegrationTools
+                append={append}
+                title="One Drive Tools"
+                icon={<OneDriveIconRounded />}
+                tools={[
+                  {
+                    title: "List files",
+                    prompt: "List files from One Drive",
+                  },
+                ]}
+              />
+            )}
 
-            <EnableIntegration
-              title="Connect to Salesforce"
-              icon={<SalesforceIcon />}
-              integration={Connections.salesforce.connection}
-            />
+            {isConnectionEnabled(Connections.salesforce.connection) && (
+              <IntegrationTools
+                append={append}
+                title="Salesforcde Tools"
+                icon={<SalesforceIconRounded />}
+                tools={[
+                  {
+                    title: "Search CRM",
+                    prompt: "Search records from Salesforce",
+                  },
+                ]}
+              />
+            )}
 
-            <EnableIntegration
-              title="Connect to Slack"
-              icon={<SlackIcon />}
-              integration={Connections.slack.connection}
-            />
-
-            <EnableIntegration
-              title="Connect to Box"
-              icon={<BoxIcon />}
-              integration={Connections.box.connection}
-            />
-          </PopoverContent>
-        </Popover>
-
-        {isConnectionEnabled(Connections.googleDrive.connection) && (
-          <IntegrationTools
-            append={append}
-            title="Google Drive Tools"
-            icon={<GoogleDriveRoundedIcon />}
-            tools={[
-              {
-                title: "List files and folders",
-                prompt: "List files and folders from Google Drive",
-              },
-              {
-                title: "Get file metadata",
-                prompt: "Get file metadata",
-              },
-              {
-                title: "Export files",
-                prompt: "Export files",
-              },
-              {
-                title: "Create new folder",
-                prompt: "Create new folder",
-              },
-            ]}
-          />
-        )}
-
-        {isConnectionEnabled(Connections.windowsLive.connection) && (
-          <IntegrationTools
-            append={append}
-            title="One Drive Tools"
-            icon={<OneDriveIconRounded />}
-            tools={[
-              {
-                title: "List files",
-                prompt: "List files from One Drive",
-              },
-            ]}
-          />
-        )}
-
-        {isConnectionEnabled(Connections.salesforce.connection) && (
-          <IntegrationTools
-            append={append}
-            title="Salesforcde Tools"
-            icon={<SalesforceIconRounded />}
-            tools={[
-              {
-                title: "Search CRM",
-                prompt: "Search records from Salesforce",
-              },
-            ]}
-          />
-        )}
-
-        {isConnectionEnabled(Connections.slack.connection) && (
-          <IntegrationTools
-            append={append}
-            title="Slack Tools"
-            icon={<SlackIconRounded />}
-            tools={[
-              {
-                title: "List channels",
-                prompt: "List channels",
-              },
-            ]}
-          />
-        )}
-
-        {isConnectionEnabled(Connections.box.connection) && (
-          <IntegrationTools
-            append={append}
-            title="Box Tools"
-            icon={<BoxIconRounded />}
-            tools={[
-              {
-                title: "List files",
-                prompt: "List Box files",
-              },
-            ]}
-          />
+            {isConnectionEnabled(Connections.slack.connection) && (
+              <IntegrationTools
+                append={append}
+                title="Slack Tools"
+                icon={<SlackIconRounded />}
+                tools={[
+                  {
+                    title: "List channels",
+                    prompt: "List channels",
+                  },
+                ]}
+              />
+            )}
+          </>
         )}
       </div>
       <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">

@@ -24,7 +24,8 @@
     "OPENAI_API_KEY": "@openai-api-key",
     "OPENAI_MODEL": "@openai-model",
     "SALESFORCE_LOGIN_URL": "@salesforce-login-url",
-    "DATABASE_URL": "@database-url",
+    "POSTGRES_PRISMA_URL": "@postgres-prisma-url",
+    "POSTGRES_URL_NON_POOLING": "@postgres-url-non-pooling",
     "ENABLED_CONNECTIONS": "@enabled-connections"
   }
 }

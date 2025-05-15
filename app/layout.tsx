@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Auth0 IA | Demo",
+  title: "Auth0 AI | Demo",
 }
 
 export const viewport: Viewport = {

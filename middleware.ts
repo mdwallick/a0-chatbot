@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server"
 
-import { auth0 } from "@/lib/auth0";
+import { auth0 } from "@/lib/auth0"
 
 // List of paths that require authentication
 const PROTECTED_PATHS = ["/profile", "/api/link-account", "/api/integrations"]

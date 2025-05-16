@@ -1,14 +1,14 @@
 "use client"
 
-import Link from "next/link";
+import Link from "next/link"
 
-import UserButton from "@/components/auth0/user-button";
-import { Auth0Icon, IconAuth0 } from "@/components/icons";
-import { DropdownMenuShortcut } from "@/components/ui/dropdown-menu";
-import { useUser } from "@auth0/nextjs-auth0";
-import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
+import UserButton from "@/components/auth0/user-button"
+import { Auth0Icon, IconAuth0 } from "@/components/icons"
+import { DropdownMenuShortcut } from "@/components/ui/dropdown-menu"
+import { useUser } from "@auth0/nextjs-auth0"
+import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu"
 
-import { Button } from "./ui/button";
+import { Button } from "./ui/button"
 
 export default function Header() {
   const { user } = useUser()

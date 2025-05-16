@@ -1,31 +1,6 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "next.config.js",
-      "use": "@vercel/next"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/"
-    }
-  ],
-  "env": {
-    "AUTH0_DOMAIN": "@auth0-domain",
-    "AUTH0_CLIENT_ID": "@auth0-client-id",
-    "AUTH0_CLIENT_SECRET": "@auth0-client-secret",
-    "AUTH0_SECRET": "@auth0-secret",
-    "APP_BASE_URL": "@app-base-url",
-    "AUTH0_CLIENT_ID_MGMT": "@auth0-client-id-mgmt",
-    "AUTH0_CLIENT_SECRET_MGMT": "@auth0-client-secret-mgmt",
-    "AUTH0_ISSUER_BASE_URL": "@auth0-issuer-base-url",
-    "OPENAI_API_KEY": "@openai-api-key",
-    "OPENAI_MODEL": "@openai-model",
-    "SALESFORCE_LOGIN_URL": "@salesforce-login-url",
-    "POSTGRES_PRISMA_URL": "@postgres-prisma-url",
-    "POSTGRES_URL_NON_POOLING": "@postgres-url-non-pooling",
-    "ENABLED_CONNECTIONS": "@enabled-connections"
-  }
+  "buildCommand": "next build",
+  "devCommand": "next dev",
+  "framework": "nextjs"
 }

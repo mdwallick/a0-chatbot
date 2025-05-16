@@ -263,3 +263,6 @@ Temporary Items
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/osx,visualstudiocode,node,nextjstypescript
+
+# Prisma
+/lib/generated/prisma

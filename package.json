@@ -7,7 +7,23 @@
     "build": "next build",
     "start": "next start",
     "format": "prettier --write .",
-    "lint": "next lint"
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "prisma:pull": "dotenv -e .env.local -- prisma db pull",
+    "prisma:push": "dotenv -e .env.local -- prisma db push",
+    "prisma:generate": "dotenv -e .env.local -- prisma generate",
+    "prisma:studio": "dotenv -e .env.local -- prisma studio",
+    "prepare": "husky install",
+    "postinstall": "npm run prisma:generate"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
   },
   "engines": {
     "node": ">=22"
@@ -44,7 +60,7 @@
     "jsforce": "^3.8.1",
     "lru-cache": "^11.1.0",
     "lucide-react": "^0.503.0",
-    "mammoth": "^1.9.0",
+    "mammoth": "^1.6.0",
     "next": "15.3.1",
     "openai": "^4.98.0",
     "pdfjs-dist": "^3.11.174",
@@ -66,10 +82,13 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv-cli": "^8.0.0",
     "eslint": "^9.26.0",
     "eslint-config-next": "^15.3.1",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.4.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.0.0",
     "prettier": "^3.5.3",
     "tailwindcss": "^4",
     "typescript": "^5"

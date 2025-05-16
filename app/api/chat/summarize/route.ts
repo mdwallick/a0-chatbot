@@ -1,6 +1,6 @@
-import { Message } from "ai";
-import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import { Message } from "ai"
+import { NextResponse } from "next/server"
+import OpenAI from "openai"
 
 const openai = new OpenAI()
 

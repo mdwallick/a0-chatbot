@@ -1,14 +1,14 @@
 "use client"
 
-import { PlusIcon, Trash2Icon } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { PlusIcon, Trash2Icon } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
-import { cn, generateUUID } from "@/lib/utils";
-import { useUser } from "@auth0/nextjs-auth0";
+import { cn, generateUUID } from "@/lib/utils"
+import { useUser } from "@auth0/nextjs-auth0"
 
-import { Button } from "./ui/button";
+import { Button } from "./ui/button"
 
 type ChatThread = {
   id: string
@@ -46,6 +46,16 @@ export function ChatSidebar() {
 
   const createNewChat = () => {
     const id = generateUUID()
+    if (user) {
+      setThreads(prevThreads => [
+        {
+          id,
+          summary: "New conversation",
+          updatedAt: new Date().toISOString(),
+        },
+        ...prevThreads,
+      ])
+    }
     router.push(`/chat/${id}`)
   }
 
@@ -114,7 +124,7 @@ export function ChatSidebar() {
                 onClick={e => deleteThread(thread.id, e)}
                 variant="ghost"
                 size="icon"
-                className="opacity-0 group-hover:opacity-100 transition-opacity mr-2"
+                className="opacity-0 group-hover:opacity-100 transition-opacity mr-2 cursor-pointer"
               >
                 <Trash2Icon size={16} className="text-gray-500 hover:text-red-500" />
               </Button>

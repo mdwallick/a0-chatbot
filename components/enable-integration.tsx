@@ -20,9 +20,13 @@ export function EnableIntegration({
 
   const getLinkAccount = useCallback(
     (connection: string) => {
-      const { strategy } = AvailableConnections.find(
-        (account: any) => account.connection === connection
-      )!
+      const match = AvailableConnections.find((account: any) => account.connection === connection)
+
+      if (!match) {
+        throw new Error(`Connection "${connection}" not found in AvailableConnections`)
+      }
+
+      const { strategy } = match
 
       if (typeof window === "undefined") {
         return

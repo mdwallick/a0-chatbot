@@ -1,23 +1,24 @@
 "use client"
 
 import type { UIMessage } from "ai"
-import cx from "classnames";
-import { Plus } from "lucide-react";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
-import { useLocalStorage } from "usehooks-ts";
+import cx from "classnames"
+import { Plus } from "lucide-react"
+import { memo, useCallback, useEffect, useRef, useState } from "react"
+import { toast } from "sonner"
+import { useLocalStorage } from "usehooks-ts"
 
-import { Connections } from "@/lib/auth0-ai/connections";
-import { Attachment } from "@ai-sdk/ui-utils";
-import { useUser } from "@auth0/nextjs-auth0";
+import { Connections } from "@/lib/auth0-ai/connections"
+import { Attachment } from "@ai-sdk/ui-utils"
+import { useUser } from "@auth0/nextjs-auth0"
 
-import { AttachmentWithMeta } from "../lib/utils";
-import { AttachmentItem } from "./attachment-item";
-import { EnableIntegration } from "./enable-integration";
-import { GoogleDrivePicker, GoogleFile } from "./google-picker";
+import { AttachmentWithMeta } from "../lib/utils"
+import { AttachmentItem } from "./attachment-item"
+import { EnableIntegration } from "./enable-integration"
+import { GoogleDrivePicker, GoogleFile } from "./google-picker"
 import {
   ArrowUpIcon,
   BoxIcon,
+  BoxIconRounded,
   GoogleDriveIcon,
   GoogleDriveRoundedIcon,
   OneDriveIcon,
@@ -27,16 +28,16 @@ import {
   SlackIcon,
   SlackIconRounded,
   StopIcon,
-} from "./icons";
-import { IntegrationTools } from "./integration-tools";
-import { Button } from "./ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { Textarea } from "./ui/textarea";
-import { useLinkedAccounts } from "./use-linked-accounts-context";
+} from "./icons"
+import { IntegrationTools } from "./integration-tools"
+import { SuggestedActions } from "./suggested-actions"
+import { Button } from "./ui/button"
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
+import { Textarea } from "./ui/textarea"
+import { useLinkedAccounts } from "./use-linked-accounts-context"
 
 import type React from "react"
 import type { UseChatHelpers } from "@ai-sdk/react"
-
 function PureMultimodalInput({
   chatId,
   input,
@@ -149,7 +150,7 @@ function PureMultimodalInput({
 
   return (
     <div className="relative w-full flex flex-col gap-4 pointer-events-auto">
-      {/* {messages.length === 0 && <SuggestedActions append={append} chatId={chatId} />} */}
+      {messages.length === 0 && <SuggestedActions append={append} chatId={chatId} />}
 
       <div className="border-input rounded-2xl border p-3 shadow-lg transition-[color,box-shadow] outline-none flex flex-col gap-3 focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]">
         {files.length > 0 && (
@@ -277,8 +278,8 @@ function PureMultimodalInput({
                 icon={<OneDriveIconRounded />}
                 tools={[
                   {
-                    title: "List files",
-                    prompt: "List files from One Drive",
+                    title: "List My Files",
+                    prompt: "List my files from One Drive",
                   },
                 ]}
               />
@@ -287,12 +288,20 @@ function PureMultimodalInput({
             {isConnectionEnabled(Connections.salesforce.connection) && (
               <IntegrationTools
                 append={append}
-                title="Salesforcde Tools"
+                title="Salesforce Tools"
                 icon={<SalesforceIconRounded />}
                 tools={[
                   {
-                    title: "Search CRM",
-                    prompt: "Search records from Salesforce",
+                    title: "List My Accounts",
+                    prompt: "List my accounts from salesforce",
+                  },
+                  {
+                    title: "List My Opportunities",
+                    prompt: "List my open opportunities",
+                  },
+                  {
+                    title: "List My Contacts",
+                    prompt: "List my contacts from salesforce",
                   },
                 ]}
               />
@@ -307,6 +316,20 @@ function PureMultimodalInput({
                   {
                     title: "List channels",
                     prompt: "List channels",
+                  },
+                ]}
+              />
+            )}
+
+            {isConnectionEnabled(Connections.box.connection) && (
+              <IntegrationTools
+                append={append}
+                title="Box Tools"
+                icon={<BoxIconRounded />}
+                tools={[
+                  {
+                    title: "List files",
+                    prompt: "List Box files",
                   },
                 ]}
               />

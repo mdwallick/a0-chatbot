@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server"
 
-import { auth0 } from "@/lib/auth0";
-import { prisma } from "@/lib/prisma";
+import { auth0 } from "@/lib/auth0"
+import { prisma } from "@/lib/prisma"
 
 export async function POST(request: Request) {
   const session = await auth0.getSession()
@@ -28,7 +28,6 @@ export async function POST(request: Request) {
         content: message.content,
         role: message.role,
         threadId: thread.id,
-        attachments: message.attachments || null,
       },
     })
 

@@ -1,16 +1,20 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server"
 
-import { auth0 } from "@/lib/auth0";
-import { prisma } from "@/lib/prisma";
+import { auth0 } from "@/lib/auth0"
+import { prisma } from "@/lib/prisma"
 
-import type { Prisma } from "@prisma/client"
-
-type Props = {
-  params: { id: string }
+interface StoredAttachment {
+  name: string
+  url: string
+  contentType?: string
+  metadata: {
+    fileId: string
+    source: "google_drive" | "onedrive"
+  }
 }
 
-export async function GET(request: NextRequest, { params }: Props) {
-  // Await the params object before using it
+export async function GET(request: NextRequest, context: any) {
+  const { params }: { params: { id: string } } = context
   const { id } = await params
   const session = await auth0.getSession()
   if (!session?.user) {
@@ -41,7 +45,14 @@ export async function GET(request: NextRequest, { params }: Props) {
       id: msg.id,
       content: msg.content,
       role: msg.role,
-      experimental_attachments: msg.attachments,
+      experimental_attachments: msg.attachments
+        ? (JSON.parse(JSON.stringify(msg.attachments)) as StoredAttachment[]).map(att => ({
+            name: att.name,
+            url: att.url,
+            contentType: att.contentType || "application/vnd.a0.file-reference",
+            metadata: att.metadata,
+          }))
+        : undefined,
     }))
 
     return NextResponse.json({ messages })
@@ -51,7 +62,8 @@ export async function GET(request: NextRequest, { params }: Props) {
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: Props) {
+export async function DELETE(request: NextRequest, context: any) {
+  const { params }: { params: { id: string } } = context
   const { id } = await params
   const session = await auth0.getSession()
   if (!session?.user) {

@@ -1,31 +1,24 @@
 import { tool } from "ai"
 import { GaxiosError } from "gaxios"
+import mammoth from "mammoth"
+import * as XLSX from "xlsx"
 import { z } from "zod"
 
 import { getAccessTokenForConnection } from "@auth0/ai-vercel"
 import { FederatedConnectionError } from "@auth0/ai/interrupts"
 import { Client, ResponseType } from "@microsoft/microsoft-graph-client"
 
-import { withOneDrive } from "../../../auth0-ai/windows-live"
-
-import mammoth from "mammoth"
-import * as XLSX from "xlsx"
-
-import { extractPdfText } from "@/lib/utils" // adjust path as needed
+import { withOneDrive } from "@/lib/auth0-ai/windows-live"
 
 const toolSchema = z.object({
-  path: z
-    .string()
-    .describe(
-      "Full path to the file in OneDrive (e.g. /example.pdf or /notes.txt or /report.docx or /data.xlsx)"
-    ),
+  fileId: z.string().describe("The OneDrive file ID to read"),
 })
 
 export const MicrosoftFilesReadTool = withOneDrive(
   tool({
     description: "Read the contents of a given file from OneDrive",
     parameters: toolSchema,
-    execute: async ({ path }) => {
+    execute: async ({ fileId }) => {
       // Get the access token from Auth0 AI
       const access_token = getAccessTokenForConnection()
 
@@ -39,14 +32,11 @@ export const MicrosoftFilesReadTool = withOneDrive(
           },
         })
 
-        // const items = await client.api("/me/drive/root/children").get()
-        // return items
-        const normalizedPath = path.startsWith("/") ? path : `/${path}`
-        const metadata = await client.api(`/me/drive/root:${normalizedPath}`).get()
+        const metadata = await client.api(`/me/drive/items/${fileId}`).get()
 
         const fileMime = metadata.file?.mimeType || ""
         const fileBuffer = await client
-          .api(`/me/drive/items/${metadata.id}/content`)
+          .api(`/me/drive/items/${fileId}/content`)
           .responseType(ResponseType.ARRAYBUFFER)
           .get()
 
@@ -54,11 +44,8 @@ export const MicrosoftFilesReadTool = withOneDrive(
 
         // PDF
         if (fileMime.includes("pdf")) {
-          const text = await extractPdfText(buffer)
           return {
-            text,
-            metadata,
-            fileMime,
+            error: "Not implemented",
           }
         }
 

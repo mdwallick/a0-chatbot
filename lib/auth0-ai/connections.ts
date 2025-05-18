@@ -12,17 +12,11 @@ export const Connections = {
     // https://developers.google.com/workspace/drive/api/guides/api-specific-auth
     friendlyScopes: ["View and manage all your Drive files."],
   },
-  googleMail: {
-    connection: "google-oauth2",
-    scopes: ["https://www.googleapis.com/auth/gmail.modify"],
-    // https://developers.google.com/workspace/mail/api/auth
-    friendlyScopes: ["View and manage your Gmail."],
-  },
   googleCalendar: {
     connection: "google-oauth2",
-    scopes: ["https://www.googleapis.com/auth/calendar.events"],
+    scopes: ["https://www.googleapis.com/auth/calendar.freebusy"],
     // https://developers.google.com/workspace/calendar/api/auth
-    friendlyScopes: ["View and manage events on your calendars."],
+    friendlyScopes: ["View your availability in your calendars."],
   },
   slack: {
     connection: "sign-in-with-slack",
@@ -35,7 +29,6 @@ export const Connections = {
   },
   windowsLive: {
     connection: "windowslive",
-    //scopes: ["https://graph.microsoft.com/Files.Read.All"],
     scopes: ["Mail.Send", "Mail.ReadWrite", "Calendars.ReadWrite", "Files.ReadWrite"],
     // https://learn.microsoft.com/en-us/graph/permissions-reference
     friendlyScopes: [
@@ -46,9 +39,9 @@ export const Connections = {
     ],
   },
   salesforce: {
-    connection: "salesforce-dev",
-    scopes: ["api", "id", "refresh_token"],
-    friendlyScopes: ["api", "id", "refresh_token"],
+    connection: "salesforce",
+    scopes: ["api"],
+    friendlyScopes: ["Read and write data to Salesforce as your user."],
   },
   box: {
     connection: "box",

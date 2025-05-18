@@ -6,7 +6,7 @@ import { z } from "zod"
 import { getAccessTokenForConnection } from "@auth0/ai-vercel"
 import { FederatedConnectionError } from "@auth0/ai/interrupts"
 
-import { withBox } from "../../auth0-ai/box"
+import { withBox } from "@/lib/auth0-ai/box"
 
 export const boxTools = withBox(
   tool({

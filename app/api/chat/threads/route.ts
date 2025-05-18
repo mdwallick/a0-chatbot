@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server"
 
-import { auth0 } from "@/lib/auth0";
-import { prisma } from "@/lib/prisma";
+import { auth0 } from "@/lib/auth0"
+import { prisma } from "@/lib/prisma"
 
 export async function GET(request: NextRequest) {
   const session = await auth0.getSession()

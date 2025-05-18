@@ -5,7 +5,7 @@ import { getAccessTokenForConnection } from "@auth0/ai-vercel"
 import { FederatedConnectionError } from "@auth0/ai/interrupts"
 import { ErrorCode, WebClient } from "@slack/web-api"
 
-import { withSlack } from "../../auth0-ai/slack"
+import { withSlack } from "@/lib/auth0-ai/slack"
 
 export const listChannels = withSlack(
   tool({

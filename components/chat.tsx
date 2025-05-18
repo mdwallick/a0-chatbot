@@ -1,15 +1,15 @@
 "use client"
 
 import type { UIMessage, ChatRequestOptions } from "ai"
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 
-import { useChat } from "@ai-sdk/react";
-import { useInterruptions } from "@auth0/ai-vercel/react";
-import { useUser } from "@auth0/nextjs-auth0";
+import { useChat } from "@ai-sdk/react"
+import { useInterruptions } from "@auth0/ai-vercel/react"
+import { useUser } from "@auth0/nextjs-auth0"
 
-import { Messages } from "./messages";
-import { MultimodalInput } from "./multimodal-input";
+import { Messages } from "./messages"
+import { MultimodalInput } from "./multimodal-input"
 
 export function Chat({
   id,
@@ -33,11 +33,17 @@ export function Chat({
     stop,
     handleSubmit,
     toolInterrupt,
-  } = useInterruptions(handler =>
+  } = useInterruptions(_handler =>
     useChat({
       id,
       body: { id },
       initialMessages,
+      onResponse: async response => {
+        if (!response.ok) {
+          console.error("[ERROR] Chat response error:", response.status, response.statusText)
+          return
+        }
+      },
       onFinish: async message => {
         // Save messages to database if user is authenticated
         if (user) {
@@ -56,12 +62,15 @@ export function Chat({
                 },
               }),
             })
-            // Refresh the router to update the sidebar
+            // Only refresh the router if the save was successful
             router.refresh()
           } catch (error) {
             console.error("Error saving message:", error)
           }
         }
+      },
+      onError: error => {
+        console.error("[ERROR] Chat error:", error)
       },
     })
   )
@@ -108,8 +117,6 @@ export function Chat({
             message: userMessage,
           }),
         })
-        // Refresh the router to update the sidebar
-        router.refresh()
       } catch (error) {
         console.error("Error saving message:", error)
       }

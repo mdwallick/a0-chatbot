@@ -9,13 +9,15 @@
     "format": "prettier --write .",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
+    "prepare": "husky install",
+    "postinstall": "npm run prisma:generate",
+    "vercel-build": "prisma migrate deploy && next build",
+    "prisma:migrate": "dotenv -e .env.local -- prisma migrate dev",
     "prisma:pull": "dotenv -e .env.local -- prisma db pull",
     "prisma:push": "dotenv -e .env.local -- prisma db push",
     "prisma:generate": "dotenv -e .env.local -- prisma generate",
     "prisma:studio": "dotenv -e .env.local -- prisma studio",
-    "prepare": "husky install",
-    "postinstall": "npm run prisma:generate",
-    "vercel-build": "prisma migrate deploy && next build"
+    "prisma:truncate": "dotenv -e .env.local -- tsx prisma/scripts/clear-db.ts"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
@@ -92,6 +94,7 @@
     "lint-staged": "^16.0.0",
     "prettier": "^3.5.3",
     "tailwindcss": "^4",
+    "tsx": "^4.19.4",
     "typescript": "^5"
   }
 }

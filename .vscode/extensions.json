@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "mikerhyssmith.ts-barrelr",
+    "editorconfig.editorconfig",
+    "esbenp.prettier-vscode",
+    "Tobermory.es6-string-html"
+  ]
+}

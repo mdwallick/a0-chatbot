@@ -244,12 +244,14 @@ Temporary Items
 .apdisk
 
 ### VisualStudioCode ###
+# ignore the base folder
 .vscode/*
+
+# but don't ignore these three files in the .vscode folder
+!.vscode/
 !.vscode/settings.json
-!.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-!.vscode/*.code-snippets
 
 # Local History for Visual Studio Code
 .history/

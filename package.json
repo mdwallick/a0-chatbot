@@ -14,7 +14,8 @@
     "prisma:generate": "dotenv -e .env.local -- prisma generate",
     "prisma:studio": "dotenv -e .env.local -- prisma studio",
     "prepare": "husky install",
-    "postinstall": "npm run prisma:generate"
+    "postinstall": "npm run prisma:generate",
+    "vercel-build": "prisma migrate deploy && next build"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

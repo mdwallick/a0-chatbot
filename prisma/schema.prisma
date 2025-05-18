@@ -11,6 +11,7 @@ datasource db {
 model ChatThread {
   id        String    @id @default(cuid())
   userId    String
+  summary   String    @default("New conversation")
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   messages  Message[]

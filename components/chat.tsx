@@ -10,6 +10,7 @@ import { useUser } from "@auth0/nextjs-auth0"
 
 import { Messages } from "./messages"
 import { MultimodalInput } from "./multimodal-input"
+import { generateUUID } from "@/lib/utils"
 
 export function Chat({
   id,
@@ -58,12 +59,14 @@ export function Chat({
                 message: {
                   content: message.content,
                   role: message.role,
-                  attachments: message.experimental_attachments,
                 },
               }),
             })
             // Only refresh the router if the save was successful
             router.refresh()
+
+            // Emit event for sidebar to refresh
+            window.dispatchEvent(new Event("threadListUpdated"))
           } catch (error) {
             console.error("Error saving message:", error)
           }
@@ -74,6 +77,13 @@ export function Chat({
       },
     })
   )
+
+  useEffect(() => {
+    if (id === "new") {
+      const newId = generateUUID()
+      router.replace(`/chat/${newId}`)
+    }
+  }, [id, router])
 
   useEffect(() => {
     // Load chat thread messages when component mounts

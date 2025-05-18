@@ -26,6 +26,14 @@ export function ChatSidebar() {
   useEffect(() => {
     if (user) {
       fetchThreads()
+
+      // Listen for thread updates
+      const handleThreadUpdate = () => fetchThreads()
+      window.addEventListener("threadListUpdated", handleThreadUpdate)
+
+      return () => {
+        window.removeEventListener("threadListUpdated", handleThreadUpdate)
+      }
     } else {
       setThreads([])
       setLoading(false)
@@ -44,20 +52,44 @@ export function ChatSidebar() {
     }
   }
 
-  const createNewChat = () => {
+  const createNewChat = async () => {
     const id = generateUUID()
-    if (user) {
-      setThreads(prevThreads => [
-        {
-          id,
-          summary: "New conversation",
-          updatedAt: new Date().toISOString(),
-        },
-        ...prevThreads,
-      ])
+    if (!user) return
+
+    try {
+      const response = await fetch("/api/chat/threads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to create thread")
+      }
+
+      const newThread = await response.json()
+
+      setThreads(prevThreads => [newThread, ...prevThreads])
+      router.push(`/chat/${id}`)
+    } catch (error) {
+      toast.error("Failed to create new chat")
+      console.error(error)
     }
-    router.push(`/chat/${id}`)
   }
+  // const createNewChat = () => {
+  //   const id = generateUUID()
+  //   if (user) {
+  //     setThreads(prevThreads => [
+  //       {
+  //         id,
+  //         summary: "New conversation",
+  //         updatedAt: new Date().toISOString(),
+  //       },
+  //       ...prevThreads,
+  //     ])
+  //   }
+  //   router.push(`/chat/${id}`)
+  // }
 
   const deleteThread = async (threadId: string, event: React.MouseEvent) => {
     event.stopPropagation() // Prevent triggering the thread click

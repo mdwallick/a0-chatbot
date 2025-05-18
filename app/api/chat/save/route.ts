@@ -31,6 +31,38 @@ export async function POST(request: Request) {
       },
     })
 
+    // Get latest messages for summary
+    const messages = await prisma.message.findMany({
+      where: { threadId },
+      orderBy: { createdAt: "asc" },
+      take: 3,
+    })
+
+    // Generate new summary if there are messages
+    if (messages.length > 0) {
+      const summaryResponse = await fetch(
+        `${request.url.split("/api/chat/save")[0]}/api/chat/summarize`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: messages.map(msg => ({
+              content: msg.content,
+              role: msg.role,
+            })),
+          }),
+        }
+      )
+
+      if (summaryResponse.ok) {
+        const { summary } = await summaryResponse.json()
+        await prisma.chatThread.update({
+          where: { id: threadId },
+          data: { summary },
+        })
+      }
+    }
+
     return NextResponse.json(savedMessage)
   } catch (error) {
     console.error("Error saving message:", error)

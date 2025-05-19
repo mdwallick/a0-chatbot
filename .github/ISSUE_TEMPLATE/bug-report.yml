@@ -1,0 +1,31 @@
+name: 🐛 Bug Report
+description: Report something that isn't working correctly
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the bug and what you expected to happen.
+      placeholder: "The app crashes when I click save..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Describe how to reproduce the issue.
+      placeholder: |
+        1. Go to Settings
+        2. Click 'Save'
+        3. See error
+      render: bash
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, browser, device, or relevant details (if applicable)
+      placeholder: "macOS Sonoma, Chrome 124"

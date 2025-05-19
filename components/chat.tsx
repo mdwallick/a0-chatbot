@@ -10,6 +10,8 @@ import { useUser } from "@auth0/nextjs-auth0"
 import { Messages } from "./messages"
 import { MultimodalInput } from "./multimodal-input"
 
+import { generateUUID } from "@/lib/utils"
+
 export function Chat({
   id,
   initialMessages,

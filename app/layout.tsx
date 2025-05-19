@@ -54,7 +54,7 @@ export default async function RootLayout({
             <div className="flex flex-col h-full w-full">
               <Header />
               <main
-                className="flex flex-row flex-1 w-full mx-auto border-t border-gray-100"
+                className="flex flex-row flex-1 w-full mx-auto"
                 style={{ maxHeight: "calc(100vh - 56px)" }}
               >
                 <ChatSidebar />

@@ -11,7 +11,7 @@ Thank you for considering contributing! Whether you're fixing a bug, suggesting 
 2. **Create a new branch** from `main`:
 
 ```bash
-git checkout -b feat(scope)-concise-description
+git checkout -b feat/scope/concise-description
 ```
 
 3. **Install dependencies:**

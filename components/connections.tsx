@@ -1,11 +1,5 @@
 import { Connections } from "../lib/auth0-ai/connections"
-import {
-  BoxIconSquared,
-  GoogleIconSquared,
-  OneDriveIconSquared,
-  SalesforceIconSquared,
-  SlackIconSquared,
-} from "./icons"
+import { GoogleIconSquared, OneDriveIconSquared, SalesforceIconSquared } from "./icons"
 
 export const AvailableConnections = [
   {

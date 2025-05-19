@@ -1,8 +1,8 @@
 import { tool } from "ai"
 import { GaxiosError } from "gaxios"
+import { z } from "zod"
 import mammoth from "mammoth"
 import * as XLSX from "xlsx"
-import { z } from "zod"
 
 import { getAccessTokenForConnection } from "@auth0/ai-vercel"
 import { FederatedConnectionError } from "@auth0/ai/interrupts"
@@ -44,9 +44,7 @@ export const MicrosoftFilesReadTool = withOneDrive(
 
         // PDF
         if (fileMime.includes("pdf")) {
-          return {
-            error: "Not implemented",
-          }
+          throw new Error("PDF parsing not yet implemented")
         }
 
         // Plain text
@@ -88,6 +86,7 @@ export const MicrosoftFilesReadTool = withOneDrive(
 )
 
 // Helper functions
+
 function success(content: string, metadata: any, type: string) {
   return {
     content,

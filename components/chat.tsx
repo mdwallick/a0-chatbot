@@ -44,9 +44,9 @@ export function Chat({
           console.error("[ERROR] Chat response error:", response.status, response.statusText)
           return
         }
-        
+
         // Create thread if it doesn't exist
-        if (id === 'new') {
+        if (id === "new") {
           const newId = generateUUID()
           try {
             await fetch("/api/chat/threads", {

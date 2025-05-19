@@ -1,7 +1,15 @@
 import { createDataStreamResponse, Message, streamText } from "ai"
 
 import { boxTools, checkUsersCalendar, googleDriveTools, listChannels } from "@/lib/ai/tools"
-import { listOneDriveFiles } from "@/lib/ai/tools/microsoft"
+import {
+  MicrosoftCalendarReadTool,
+  MicrosoftCalendarWriteTool,
+  MicrosoftFilesListTool,
+  MicrosoftFilesReadTool,
+  MicrosoftFilesWriteTool,
+  MicrosoftMailReadTool,
+  MicrosoftMailWriteTool,
+} from "@/lib/ai/tools/microsoft"
 import { SalesforceQueryTool, SalesforceSearchTool } from "@/lib/ai/tools/salesforce"
 import { auth0 } from "@/lib/auth0"
 import { openai } from "@ai-sdk/openai"
@@ -19,7 +27,13 @@ export async function POST(request: Request) {
 
   const tools = {
     boxTools,
-    listOneDriveFiles,
+    MicrosoftCalendarReadTool,
+    MicrosoftCalendarWriteTool,
+    MicrosoftFilesListTool,
+    MicrosoftFilesReadTool,
+    MicrosoftFilesWriteTool,
+    MicrosoftMailReadTool,
+    MicrosoftMailWriteTool,
     checkUsersCalendar,
     listChannels,
     ...googleDriveTools,

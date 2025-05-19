@@ -68,9 +68,7 @@ export const MicrosoftFilesWriteTool = withOneDrive(
 
           return newFile
         } else if (type === "xlsx") {
-          //const XLSX = require("xlsx")
-
-          const rows = content.split("\n").map(row => row.split(";"))
+          const rows = content.split("\n").map(row => row.split(","))
 
           const wb = XLSX.utils.book_new()
           const ws = XLSX.utils.aoa_to_sheet(rows)

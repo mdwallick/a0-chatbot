@@ -19,15 +19,6 @@ export const AvailableConnections = [
     ...Connections.googleDrive,
   },
   {
-    icon: <SlackIconSquared />,
-    strategy: "oauth2",
-    displayName: "Slack",
-    description: "Search your public and private channels",
-    title: "Slack Tools",
-    shortDescription: "Requires access to view channels and conversations.",
-    ...Connections.slack,
-  },
-  {
     icon: <OneDriveIconSquared />,
     strategy: "windowslive",
     displayName: "One Drive",
@@ -44,14 +35,5 @@ export const AvailableConnections = [
     title: "Salesforce Tools",
     shortDescription: "Requires access to your CRM data.",
     ...Connections.salesforce,
-  },
-  {
-    icon: <BoxIconSquared />,
-    strategy: "box",
-    displayName: "Box",
-    description: "Search your public and private files",
-    title: "Box Tools",
-    shortDescription: "Requires access to your files.",
-    ...Connections.box,
   },
 ]

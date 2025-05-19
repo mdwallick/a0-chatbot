@@ -63,8 +63,16 @@ export const MicrosoftMailReadTool = withOneDrive(
     description: "Read Microsoft Outlook emails",
     parameters: toolSchema,
     execute: async ({ query, top: rawTop = 5, folder = "inbox" }) => {
+      const logs = []
       const top = typeof rawTop === "number" ? rawTop : 5
+
       const access_token = getAccessTokenForConnection()
+      logs.push("got access token from token vault")
+
+      if (!access_token) {
+        logs.push("access token missing or expired")
+        throw new FederatedConnectionError("Authorization required to access OneDrive")
+      }
 
       try {
         const client = Client.initWithMiddleware({
@@ -84,6 +92,7 @@ export const MicrosoftMailReadTool = withOneDrive(
 
         if (query) {
           req.query({ $search: `"${query}"` })
+          logs.push(`Searching ${folder} for ${query}`)
         }
 
         const res = await req.get()
@@ -111,6 +120,7 @@ export const MicrosoftMailReadTool = withOneDrive(
             }
           }
         })
+        logs.push(`Got ${emails.length} emails from the ${folder} folder.`)
         return emails
       } catch (error) {
         if (error instanceof GaxiosError) {

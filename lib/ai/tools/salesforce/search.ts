@@ -22,15 +22,24 @@ export const SalesforceSearchTool = withSalesforce(
     description: "Query Salesforce records using SOQL",
     parameters: toolSchema,
     execute: async ({ searchTerm, scope }) => {
+      const logs = []
+
       // Get the access token from Auth0 AI
       const access_token = getAccessTokenForConnection()
+      logs.push("got access token from token vault")
+
+      if (!access_token) {
+        logs.push("access token missing or expired")
+        throw new FederatedConnectionError("Authorization required to access Salesforce")
+      }
 
       try {
         const client = new Connection({
-          instanceUrl: process.env.SALESFORCE_LOGIN_URL || "https://login.salesforce.com",
+          instanceUrl: process.env.SALESFORCE_LOGIN_URL,
           accessToken: access_token,
         })
 
+        logs.push(`Searching ${scope} for ${searchTerm}`)
         const result = await client.search(
           `FIND {${searchTerm}}${scope ? ` IN ALL FIELDS RETURNING ${scope.join(",")}` : ""}`
         )

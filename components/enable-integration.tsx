@@ -50,11 +50,11 @@ export function EnableIntegration({
   return (
     <a
       href={getLinkAccount(integration)}
-      className="flex items-center justify-between gap-2 hover:bg-gray-100 transition-all ease-in hover:cursor-pointer p-4 py-3 pt-3 w-full"
+      className="flex items-center justify-between gap-2 hover:bg-gray-100 transition-all ease-in hover:cursor-pointer p-4 py-3 pt-3"
     >
       <div className="flex gap-2 items-center">
         {icon}
-        <span className="text-sm text-gray-600">{title}</span>
+        <span className="text-sm text-gray-600 dark:text-gray-300">{title}</span>
       </div>
       <ChevronRight color="#5D5D5D" size={19} />
     </a>

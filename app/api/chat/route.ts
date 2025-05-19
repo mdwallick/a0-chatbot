@@ -16,6 +16,8 @@ import { openai } from "@ai-sdk/openai"
 import { setAIContext } from "@auth0/ai-vercel"
 import { errorSerializer, withInterruptions } from "@auth0/ai-vercel/interrupts"
 
+import { trimMessages } from "@/lib/utils"
+
 export async function POST(request: Request) {
   const { id, messages }: { id: string; messages: Array<Message>; selectedChatModel: string } =
     await request.json()
@@ -41,15 +43,20 @@ export async function POST(request: Request) {
     SalesforceSearchTool,
   }
 
+  const trimmedMessages = trimMessages(messages, {
+    keepSystem: true,
+    maxMessages: 12,
+  })
   const systemTemplate = await getSystemTemplate(isAuthenticated)
+  const now = new Date().toLocaleString("en-US", { timeZone: "US/Central" })
 
   return createDataStreamResponse({
     execute: withInterruptions(
       async dataStream => {
         const result = streamText({
-          model: openai(process.env.OPENAI_MODEL || "gpt-4o-mini"),
-          system: systemTemplate,
-          messages,
+          model: openai(process.env.OPENAI_MODEL || "gpt-4o"),
+          system: `The current date and time is ${now}. ${systemTemplate}`,
+          messages: trimmedMessages,
           maxSteps: 5,
           tools: isAuthenticated ? tools : {}, // Only provide tools if user is authenticated
         })
@@ -105,11 +112,20 @@ ${
     : "4. DO NOT offer or suggest using any integration tools since the user is not authenticated - instead, inform them they need to log in first"
 }
 
-Current time information:
-- Current date and time: ${new Date().toLocaleString("en-US", {
-    timeZone: "US/Central",
-  })} US/Central
-- Current ISO timestamp: ${new Date().toISOString()}
+REASONING AND NARRATION INSTRUCTIONS:
+Always narrate your reasoning when deciding what to do.
+
+If using a tool:
+- Explain briefly why you chose that tool
+- Mention any key steps taken (e.g. checking auth, refreshing tokens, handling errors)
+- Show your thought process in a helpful and friendly way
+
+If a tool returns logs, summarize any important details for the user.
+
+Examples:
+- “You're logged into Google — I'll query your calendar using the Google Calendar tool.”
+- “Your token expired, so I'm refreshing it now... all set.”
+- “Now searching your Drive for files containing 'Q2 report' in the name.”
 `
 
   return baseTemplate

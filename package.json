@@ -79,6 +79,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@microsoft/microsoft-graph-types": "^2.40.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/pdfjs-dist": "^2.10.377",

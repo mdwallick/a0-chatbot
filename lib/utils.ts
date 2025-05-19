@@ -4,6 +4,8 @@ import { twMerge } from "tailwind-merge"
 
 import { GoogleFile } from "@/components/google-picker"
 
+import type { Message } from "ai"
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -18,4 +20,22 @@ export function generateUUID(): string {
 
 export interface AttachmentWithMeta extends Attachment {
   metadata: GoogleFile
+}
+
+export function trimMessages(
+  messages: Message[],
+  options: {
+    keepSystem?: boolean
+    maxMessages?: number
+  } = {}
+): Message[] {
+  const { keepSystem = true, maxMessages = 10 } = options
+
+  const systemMessages = keepSystem ? messages.filter(m => m.role === "system") : []
+
+  const chatMessages = messages.filter(m => m.role === "user" || m.role === "assistant")
+
+  const trimmedMessages = chatMessages.slice(-maxMessages)
+
+  return [...systemMessages, ...trimmedMessages]
 }

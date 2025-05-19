@@ -17,16 +17,12 @@ import { EnableIntegration } from "./enable-integration"
 import { GoogleDrivePicker, GoogleFile } from "./google-picker"
 import {
   ArrowUpIcon,
-  BoxIcon,
-  BoxIconRounded,
   GoogleDriveIcon,
   GoogleDriveRoundedIcon,
   OneDriveIcon,
   OneDriveIconRounded,
   SalesforceIcon,
   SalesforceIconRounded,
-  SlackIcon,
-  SlackIconRounded,
   StopIcon,
 } from "./icons"
 import { IntegrationTools } from "./integration-tools"
@@ -152,7 +148,7 @@ function PureMultimodalInput({
     <div className="relative w-full flex flex-col gap-4 pointer-events-auto">
       {messages.length === 0 && <SuggestedActions append={append} chatId={chatId} />}
 
-      <div className="border-input rounded-2xl border p-3 shadow-lg transition-[color,box-shadow] outline-none flex flex-col gap-3 focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]">
+      <div className="rounded-2xl border border-input dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3 shadow-lg transition-[color,box-shadow] outline-none flex flex-col gap-3 focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]">
         {files.length > 0 && (
           <div className="flex flex-row gap-2">
             {files.map((attachment: GoogleFile) => (
@@ -196,7 +192,7 @@ function PureMultimodalInput({
         {user && (
           <>
             <Popover>
-              <PopoverTrigger className="rounded-full border border-gray-300 p-1 hover:border-ring hover:ring-ring/50 hover:ring-[3px] transition-all ease-in cursor-pointer">
+              <PopoverTrigger className="rounded-full border border-gray-300 dark:border-zinc-700 p-1 hover:border-ring hover:ring-ring/50 hover:ring-[3px] transition-all ease-in cursor-pointer bg-white dark:bg-zinc-900">
                 <div>
                   <Plus color="#5D5D5D" />
                 </div>
@@ -229,18 +225,6 @@ function PureMultimodalInput({
                   title="Connect to Salesforce"
                   icon={<SalesforceIcon />}
                   integration={Connections.salesforce.connection}
-                />
-
-                <EnableIntegration
-                  title="Connect to Slack"
-                  icon={<SlackIcon />}
-                  integration={Connections.slack.connection}
-                />
-
-                <EnableIntegration
-                  title="Connect to Box"
-                  icon={<BoxIcon />}
-                  integration={Connections.box.connection}
                 />
               </PopoverContent>
             </Popover>
@@ -278,7 +262,15 @@ function PureMultimodalInput({
                 icon={<OneDriveIconRounded />}
                 tools={[
                   {
-                    title: "List My Files",
+                    title: "What's on my calendar?",
+                    prompt: "What's on my calendar this week?",
+                  },
+                  {
+                    title: "Summarize my recent emails",
+                    prompt: "Summarize my inbox",
+                  },
+                  {
+                    title: "List my files",
                     prompt: "List my files from One Drive",
                   },
                 ]}
@@ -297,39 +289,12 @@ function PureMultimodalInput({
                   },
                   {
                     title: "List My Opportunities",
-                    prompt: "List my open opportunities",
+                    prompt:
+                      "List my open opportunities from salesforce and include the total dollar amount at the end",
                   },
                   {
                     title: "List My Contacts",
                     prompt: "List my contacts from salesforce",
-                  },
-                ]}
-              />
-            )}
-
-            {isConnectionEnabled(Connections.slack.connection) && (
-              <IntegrationTools
-                append={append}
-                title="Slack Tools"
-                icon={<SlackIconRounded />}
-                tools={[
-                  {
-                    title: "List channels",
-                    prompt: "List channels",
-                  },
-                ]}
-              />
-            )}
-
-            {isConnectionEnabled(Connections.box.connection) && (
-              <IntegrationTools
-                append={append}
-                title="Box Tools"
-                icon={<BoxIconRounded />}
-                tools={[
-                  {
-                    title: "List files",
-                    prompt: "List Box files",
                   },
                 ]}
               />
@@ -365,7 +330,7 @@ function PureStopButton({
   return (
     <Button
       data-testid="stop-button"
-      className="rounded-full border border-gray-300 p-1 h-8 w-8"
+      className="rounded-full border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-black dark:text-white p-1 h-8 w-8"
       onClick={event => {
         event.preventDefault()
         stop()
@@ -383,7 +348,7 @@ function PureSendButton({ submitForm, input }: { submitForm: () => void; input: 
   return (
     <Button
       data-testid="send-button"
-      className="rounded-full border border-gray-300 p-1 h-8 w-8"
+      className="rounded-full border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-black dark:text-white p-1 h-8 w-8"
       onClick={event => {
         event.preventDefault()
         submitForm()

@@ -7,14 +7,19 @@ import { FederatedConnectionError } from "@auth0/ai/interrupts"
 import { Client } from "@microsoft/microsoft-graph-client"
 
 import { withOneDrive } from "../../../auth0-ai/windows-live"
+import { Event } from "@microsoft/microsoft-graph-types"
+
+// Your calendar query will return this type
+interface CalendarResponse {
+  value: Event[]
+  "@odata.nextLink"?: string
+}
 
 const flexibleDateTime = z.string().refine(val => !isNaN(Date.parse(val)), {
   message: "Invalid datetime format",
 })
 
 const toolSchema = z.object({
-  //timeMin: z.string().datetime().describe("Start time in ISO 8601 format"),
-  //timeMax: z.string().datetime().describe("End time in ISO 8601 format"),
   timeMin: flexibleDateTime,
   timeMax: flexibleDateTime,
   timeZone: z
@@ -30,8 +35,11 @@ export const MicrosoftCalendarReadTool = withOneDrive(
     description: "Check a user's schedule between the given date times on their Microsoft calendar",
     parameters: toolSchema,
     execute: async ({ timeMin, timeMax, timeZone = "US/Central" }) => {
+      const logs = []
+
       // Get the access token from Auth0 AI
       const access_token = getAccessTokenForConnection()
+      logs.push("got access token from token vault")
 
       try {
         const client = Client.initWithMiddleware({
@@ -42,7 +50,8 @@ export const MicrosoftCalendarReadTool = withOneDrive(
           },
         })
 
-        const items = await client
+        logs.push(`searching calendar from ${timeMin} to ${timeMax}`)
+        const items: CalendarResponse = await client
           .api("/me/calendarview")
           .header("Prefer", `outlook.timezone="${timeZone || "UTC"}"`)
           .query({
@@ -51,8 +60,11 @@ export const MicrosoftCalendarReadTool = withOneDrive(
             orderby: "start/dateTime",
           })
           .get()
-
-        return items
+        logs.push(`Found ${items?.value?.length || 0} events`)
+        return {
+          logs,
+          items,
+        }
       } catch (error) {
         if (error instanceof GaxiosError) {
           if (error.status === 401) {

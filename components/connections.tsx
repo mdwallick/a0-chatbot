@@ -1,11 +1,5 @@
 import { Connections } from "../lib/auth0-ai/connections"
-import {
-  BoxIconSquared,
-  GoogleIconSquared,
-  OneDriveIconSquared,
-  SalesforceIconSquared,
-  SlackIconSquared,
-} from "./icons"
+import { GoogleIconSquared, OneDriveIconSquared, SalesforceIconSquared } from "./icons"
 
 export const AvailableConnections = [
   {
@@ -17,15 +11,6 @@ export const AvailableConnections = [
     title: "Google Drive Tools",
     shortDescription: "Requires access to your files and folders.",
     ...Connections.googleDrive,
-  },
-  {
-    icon: <SlackIconSquared />,
-    strategy: "oauth2",
-    displayName: "Slack",
-    description: "Search your public and private channels",
-    title: "Slack Tools",
-    shortDescription: "Requires access to view channels and conversations.",
-    ...Connections.slack,
   },
   {
     icon: <OneDriveIconSquared />,
@@ -44,14 +29,5 @@ export const AvailableConnections = [
     title: "Salesforce Tools",
     shortDescription: "Requires access to your CRM data.",
     ...Connections.salesforce,
-  },
-  {
-    icon: <BoxIconSquared />,
-    strategy: "box",
-    displayName: "Box",
-    description: "Search your public and private files",
-    title: "Box Tools",
-    shortDescription: "Requires access to your files.",
-    ...Connections.box,
   },
 ]

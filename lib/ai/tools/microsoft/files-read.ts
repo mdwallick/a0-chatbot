@@ -19,8 +19,16 @@ export const MicrosoftFilesReadTool = withOneDrive(
     description: "Read the contents of a given file from OneDrive",
     parameters: toolSchema,
     execute: async ({ fileId }) => {
+      const logs = []
+
       // Get the access token from Auth0 AI
       const access_token = getAccessTokenForConnection()
+      logs.push("got access token from token vault")
+
+      if (!access_token) {
+        logs.push("access token missing or expired")
+        throw new FederatedConnectionError("Authorization required to access OneDrive")
+      }
 
       // One Drive SDK
       try {
@@ -32,44 +40,54 @@ export const MicrosoftFilesReadTool = withOneDrive(
           },
         })
 
+        logs.push("getting file metadata")
         const metadata = await client.api(`/me/drive/items/${fileId}`).get()
-
         const fileMime = metadata.file?.mimeType || ""
+        logs.push(`file type is ${fileMime}`)
+
         const fileBuffer = await client
           .api(`/me/drive/items/${fileId}/content`)
           .responseType(ResponseType.ARRAYBUFFER)
           .get()
 
         const buffer = Buffer.from(fileBuffer)
+        let content = ""
 
         // PDF
         if (fileMime.includes("pdf")) {
+          logs.push("PDF parsing is not implemented yet")
           throw new Error("PDF parsing not yet implemented")
-        }
-
-        // Plain text
-        if (fileMime.startsWith("text/")) {
-          const text = buffer.toString("utf-8")
-          return success(text, metadata, fileMime)
-        }
-
-        // Word document (.docx)
-        if (fileMime.includes("wordprocessingml.document")) {
+        } else if (fileMime.startsWith("text/")) {
+          // Plain text
+          content = buffer.toString("utf-8")
+        } else if (fileMime.includes("wordprocessingml.document")) {
+          // Word document (.docx)
           const result = await mammoth.extractRawText({ buffer })
-          return success(result.value, metadata, fileMime)
-        }
-
-        // Excel spreadsheet (.xlsx)
-        if (fileMime.includes("spreadsheetml.sheet")) {
+          content = result.value
+        } else if (fileMime.includes("spreadsheetml.sheet")) {
+          // Excel spreadsheet (.xlsx)
           const workbook = XLSX.read(buffer, { type: "buffer" })
           const allText = workbook.SheetNames.map(sheetName => {
             const sheet = workbook.Sheets[sheetName]
             return XLSX.utils.sheet_to_csv(sheet)
           }).join("\n\n")
-          return success(allText, metadata, fileMime)
+          content = allText
+        } else {
+          return {
+            status: "error",
+            message: `Unsupported file type: ${fileMime}`,
+          }
         }
 
-        return error(`Unsupported file type: ${fileMime}`)
+        return {
+          content,
+          logs,
+          metadata: {
+            name: metadata.name,
+            type: fileMime,
+            size: metadata.size,
+          },
+        }
       } catch (error) {
         if (error instanceof GaxiosError) {
           if (error.status === 401) {
@@ -84,23 +102,3 @@ export const MicrosoftFilesReadTool = withOneDrive(
     },
   })
 )
-
-// Helper functions
-
-function success(content: string, metadata: any, type: string) {
-  return {
-    content,
-    metadata: {
-      name: metadata.name,
-      type,
-      size: metadata.size,
-    },
-  }
-}
-
-function error(message: string) {
-  return {
-    status: "error",
-    message,
-  }
-}

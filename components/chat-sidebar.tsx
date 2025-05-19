@@ -1,6 +1,6 @@
 "use client"
 
-import { PlusIcon, Trash2Icon } from "lucide-react"
+import { PanelLeftDashed, MessageSquareIcon, PencilIcon, Trash2Icon } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
@@ -22,6 +22,7 @@ export function ChatSidebar() {
   const { user } = useUser()
   const [threads, setThreads] = useState<ChatThread[]>([])
   const [loading, setLoading] = useState(true)
+  const [isCollapsed, setIsCollapsed] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -76,21 +77,6 @@ export function ChatSidebar() {
       console.error(error)
     }
   }
-  // const createNewChat = () => {
-  //   const id = generateUUID()
-  //   if (user) {
-  //     setThreads(prevThreads => [
-  //       {
-  //         id,
-  //         summary: "New conversation",
-  //         updatedAt: new Date().toISOString(),
-  //       },
-  //       ...prevThreads,
-  //     ])
-  //   }
-  //   router.push(`/chat/${id}`)
-  // }
-
   const deleteThread = async (threadId: string, event: React.MouseEvent) => {
     event.stopPropagation() // Prevent triggering the thread click
     try {
@@ -123,11 +109,30 @@ export function ChatSidebar() {
   const currentChatId = pathname?.split("/").pop()
 
   return (
-    <div className="w-64 border-r border-gray-200 h-full flex flex-col">
+    <div
+      className={cn(
+        "h-screen flex flex-col transition-width duration-300 bg-[var(--sidebar)] text-[var(--sidebar-foreground)]",
+        isCollapsed ? "w-16" : "w-64"
+      )}
+    >
       <div className="p-4">
-        <Button onClick={createNewChat} className="w-full justify-start gap-2" variant="outline">
-          <PlusIcon size={16} />
-          New Chat
+        <Button
+          onClick={() => setIsCollapsed(prev => !prev)}
+          className="p-2 rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors cursor-pointer"
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          <PanelLeftDashed size={20} />
+        </Button>
+
+        <Button
+          onClick={createNewChat}
+          className="justify-start gap-2 cursor-pointer"
+          variant="outline"
+        >
+          <PencilIcon
+            size={16}
+            className="text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
+          />
         </Button>
       </div>
 
@@ -141,25 +146,32 @@ export function ChatSidebar() {
             <div
               key={thread.id}
               className={cn(
-                "group flex items-center gap-2 mb-1",
-                "rounded-lg transition-colors",
-                currentChatId === thread.id ? "bg-gray-100 hover:bg-gray-200" : "hover:bg-gray-100"
+                "group flex items-center gap-2 mb-1 rounded-lg transition-colors cursor-pointer",
+                currentChatId === thread.id
+                  ? "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+                  : "hover:bg-gray-100 dark:hover:bg-gray-700"
               )}
             >
               <button
                 onClick={() => router.push(`/chat/${thread.id}`)}
-                className="flex-1 text-left p-3 text-sm break-words"
+                className="flex items-center gap-2 flex-1 p-3 text-sm break-words cursor-pointer"
               >
-                {thread.summary}
+                <MessageSquareIcon size={18} className="text-gray-500 dark:text-gray-400" />
+                {!isCollapsed && thread.summary}
               </button>
-              <Button
-                onClick={e => deleteThread(thread.id, e)}
-                variant="ghost"
-                size="icon"
-                className="opacity-0 group-hover:opacity-100 transition-opacity mr-2 cursor-pointer"
-              >
-                <Trash2Icon size={16} className="text-gray-500 hover:text-red-500" />
-              </Button>
+              {!isCollapsed && (
+                <Button
+                  onClick={e => deleteThread(thread.id, e)}
+                  variant="ghost"
+                  size="icon"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity mr-2 cursor-pointer"
+                >
+                  <Trash2Icon
+                    size={16}
+                    className="text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
+                  />
+                </Button>
+              )}
             </div>
           ))
         )}

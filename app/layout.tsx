@@ -10,6 +10,7 @@ import { LinkedAccountsProvider } from "@/components/use-linked-accounts-context
 import { auth0 } from "@/lib/auth0"
 import { getLinkedAccounts } from "@/lib/auth0-mgmt"
 import { Auth0Provider } from "@auth0/nextjs-auth0"
+import { ThemeProvider } from "@/components/theme-provider"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,21 +48,23 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <GooglePickerLoader />
-        <Auth0Provider user={session?.user}>
-          <div className="flex flex-col h-full w-full">
-            <Header />
-            <main
-              className="flex flex-row flex-1 w-full mx-auto border-t border-gray-100"
-              style={{ maxHeight: "calc(100vh - 56px)" }}
-            >
-              <ChatSidebar />
-              <div className="flex-1 min-w-0">
-                <LinkedAccountsProvider value={linkedAccounts}>{children}</LinkedAccountsProvider>
-              </div>
-            </main>
-          </div>
-        </Auth0Provider>
+        <ThemeProvider>
+          <GooglePickerLoader />
+          <Auth0Provider user={session?.user}>
+            <div className="flex flex-col h-full w-full">
+              <Header />
+              <main
+                className="flex flex-row flex-1 w-full mx-auto border-t border-gray-100"
+                style={{ maxHeight: "calc(100vh - 56px)" }}
+              >
+                <ChatSidebar />
+                <div className="flex-1 min-w-0">
+                  <LinkedAccountsProvider value={linkedAccounts}>{children}</LinkedAccountsProvider>
+                </div>
+              </main>
+            </div>
+          </Auth0Provider>
+        </ThemeProvider>
       </body>
     </html>
   )

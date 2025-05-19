@@ -42,6 +42,21 @@ export function Chat({
           console.error("[ERROR] Chat response error:", response.status, response.statusText)
           return
         }
+        
+        // Create thread if it doesn't exist
+        if (id === 'new') {
+          const newId = generateUUID()
+          try {
+            await fetch("/api/chat/threads", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: newId }),
+            })
+            router.replace(`/chat/${newId}`, { scroll: false })
+          } catch (error) {
+            console.error("Error creating thread:", error)
+          }
+        }
       },
       onFinish: async message => {
         // Save messages to database if user is authenticated

@@ -11,6 +11,8 @@ import { Separator } from "@/components/ui/separator"
 import { AvailableConnections } from "../connections"
 import BasicInfoForm from "./basic-info-form"
 import ConnectedAccounts from "./connected-accounts"
+import AppearanceSettings from "./appearance-settings"
+import AccountSettings from "./account-settings"
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -36,9 +38,11 @@ export default function UserProfile() {
         <div className="flex flex-col space-y-2 sm:space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0 mt-4 sm:mt-0">
           <aside className="lg:w-1/5">
             <nav
-              className={
-                "flex space-x-1 lg:flex-col lg:space-x-0 lg:space-y-1 justify-start w-full bg-[#F1F5F9] sm:bg-transparent rounded-lg sm:rounded-none p-1.5 sm:p-0"
-              }
+              className={cn(
+                "flex space-x-1 lg:flex-col lg:space-x-0 lg:space-y-1 justify-start w-full",
+                "bg-muted sm:bg-transparent dark:bg-zinc-900 sm:dark:bg-transparent",
+                "rounded-lg sm:rounded-none p-1.5 sm:p-0"
+              )}
             >
               {[
                 { title: "Profile", id: "basic-info" },
@@ -52,8 +56,8 @@ export default function UserProfile() {
                   className={cn(
                     buttonVariants({ variant: "ghost" }),
                     currentItem === item.id
-                      ? "bg-white hover:bg-white sm:bg-gray-100 sm:hover:bg-muted font-medium"
-                      : "sm:hover:bg-gray-50 sm:cursor-pointer text-[#64748B] sm:text-black font-light transition-all",
+                      ? "bg-white dark:bg-zinc-800 hover:bg-white dark:hover:bg-zinc-800 sm:bg-muted sm:hover:bg-muted font-medium"
+                      : "sm:hover:bg-gray-50 dark:sm:hover:bg-zinc-800 sm:cursor-pointer text-muted-foreground font-light transition-all",
                     "justify-start",
                     "px-3 py-3",
                     "flex-1 justify-center sm:justify-start"
@@ -74,6 +78,16 @@ export default function UserProfile() {
                   onFetch={fetchUserIdentities}
                   onUnlink={deleteUserAccount}
                 />
+              </div>
+            )}
+            {currentItem === "appearance" && (
+              <div className="flex flex-col space-y-6">
+                <AppearanceSettings />
+              </div>
+            )}
+            {currentItem === "account" && (
+              <div className="flex flex-col space-y-6">
+                <AccountSettings />
               </div>
             )}
           </div>

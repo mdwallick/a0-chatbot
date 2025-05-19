@@ -123,7 +123,7 @@ export function ChatSidebar() {
   const currentChatId = pathname?.split("/").pop()
 
   return (
-    <div className="w-64 border-r border-gray-200 h-full flex flex-col">
+    <div className="w-64 border-r border-gray-200 h-screen flex flex-col">
       <div className="p-4">
         <Button onClick={createNewChat} className="w-full justify-start gap-2" variant="outline">
           <PlusIcon size={16} />
@@ -143,7 +143,9 @@ export function ChatSidebar() {
               className={cn(
                 "group flex items-center gap-2 mb-1",
                 "rounded-lg transition-colors",
-                currentChatId === thread.id ? "bg-gray-100 hover:bg-gray-200" : "hover:bg-gray-100"
+                currentChatId === thread.id
+                  ? "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+                  : "hover:bg-gray-100 dark:hover:bg-gray-800"
               )}
             >
               <button

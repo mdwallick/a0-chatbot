@@ -3,16 +3,6 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth0 } from "@/lib/auth0"
 import { prisma } from "@/lib/prisma"
 
-interface StoredAttachment {
-  name: string
-  url: string
-  contentType?: string
-  metadata: {
-    fileId: string
-    source: "google_drive" | "onedrive"
-  }
-}
-
 export async function GET(request: NextRequest, context: any) {
   const { params }: { params: { id: string } } = context
   const { id } = await params
@@ -45,14 +35,6 @@ export async function GET(request: NextRequest, context: any) {
       id: msg.id,
       content: msg.content,
       role: msg.role,
-      experimental_attachments: msg.attachments
-        ? (JSON.parse(JSON.stringify(msg.attachments)) as StoredAttachment[]).map(att => ({
-            name: att.name,
-            url: att.url,
-            contentType: att.contentType || "application/vnd.a0.file-reference",
-            metadata: att.metadata,
-          }))
-        : undefined,
     }))
 
     return NextResponse.json({ messages })

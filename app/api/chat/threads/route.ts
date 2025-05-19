@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth0 } from "@/lib/auth0"
 import { prisma } from "@/lib/prisma"
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   const session = await auth0.getSession()
   if (!session?.user) {
     return new NextResponse("Unauthorized", { status: 401 })
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const session = await auth0.getSession()
   if (!session?.user) {
     return new NextResponse("Unauthorized", { status: 401 })

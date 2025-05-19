@@ -2,7 +2,6 @@
 
 import type { UIMessage, ChatRequestOptions } from "ai"
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
 
 import { useChat } from "@ai-sdk/react"
 import { useInterruptions } from "@auth0/ai-vercel/react"
@@ -10,7 +9,6 @@ import { useUser } from "@auth0/nextjs-auth0"
 
 import { Messages } from "./messages"
 import { MultimodalInput } from "./multimodal-input"
-import { generateUUID } from "@/lib/utils"
 
 export function Chat({
   id,
@@ -77,29 +75,6 @@ export function Chat({
       },
     })
   )
-
-  useEffect(() => {
-    if (id === "new") {
-      const newId = generateUUID()
-      router.replace(`/chat/${newId}`)
-    }
-  }, [id, router])
-
-  useEffect(() => {
-    // Load chat thread messages when component mounts
-    if (user && id) {
-      fetch(`/api/chat/${id}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.messages && data.messages.length > 0) {
-            setMessages(data.messages)
-          }
-        })
-        .catch(error => {
-          console.error("Error loading chat thread:", error)
-        })
-    }
-  }, [id, user, setMessages])
 
   const handleSubmitWithSave = async (
     event?: { preventDefault?: () => void },

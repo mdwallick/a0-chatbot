@@ -7,12 +7,11 @@ import { AnimatePresence, motion } from "framer-motion"
 import { memo, useState } from "react"
 
 import { EnsureAPIAccessPopup } from "@/components/auth0-ai/FederatedConnections/popup"
-import { AttachmentWithMeta, cn } from "@/lib/utils"
+import { cn } from "@/lib/utils"
 import { UseChatHelpers } from "@ai-sdk/react"
 import { Auth0InterruptionUI } from "@auth0/ai-vercel/react"
 import { FederatedConnectionInterrupt } from "@auth0/ai/interrupts"
 
-import { AttachmentItem } from "./attachment-item"
 import { AvailableConnections } from "./connections"
 import { PencilEditIcon, SparklesIcon } from "./icons"
 import { Markdown } from "./markdown"
@@ -57,18 +56,6 @@ const PurePreviewMessage = ({
         animate={{ y: 0, opacity: 1 }}
         data-role={message.role}
       >
-        {message.experimental_attachments && message.experimental_attachments.length > 0 && (
-          <div className="flex gap-2 flex-row-reverse mb-3">
-            {message.experimental_attachments
-              ?.filter(attachment => attachment.contentType!.startsWith("text/"))
-              .map(attachment => {
-                const metadata = (attachment as AttachmentWithMeta).metadata
-
-                return <AttachmentItem key={metadata.id} file={metadata} readOnly={true} />
-              })}
-          </div>
-        )}
-
         <div
           className={cn(
             "flex gap-4 w-full group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl",

@@ -10,13 +10,10 @@ This readme will be updated once the first version is deployed.
 Clone the repository and navigate to the project directory:
 
 ```bash
-git clone https://github.com/mdwallick/TODO
-cd lambda-jwk-manager
+git clone https://github.com/mdwallick/a0-chatbot && cd a0-chatbot
 ```
 
 Install Dependencies
-
-Install the required npm dependencies:
 
 ```bash
 npm install
@@ -33,6 +30,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 ## Contributing
 
 Feel free to open issues and pull requests if you have suggestions for improvements or fixes.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
 ## License
 

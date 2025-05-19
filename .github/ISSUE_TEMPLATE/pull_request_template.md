@@ -5,6 +5,7 @@
 ## ✅ Related Issue(s)
 
 <!-- Link to the relevant issue(s) -->
+
 Closes #123 <!-- auto-closes the issue when merged -->
 
 ## 🧪 Changes

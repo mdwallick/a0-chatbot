@@ -77,31 +77,31 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) with required s
 
 Types:
 
-* `feat`: New feature
-* `fix`: Bug fix
-* `chore`: Minor maintenance
-* `docs`: Documentation changes
-* `refactor`: Code change that doesn’t fix a bug or add a feature
-* `style`: Formatting only
-* `test`: Adding or updating tests
+- `feat`: New feature
+- `fix`: Bug fix
+- `chore`: Minor maintenance
+- `docs`: Documentation changes
+- `refactor`: Code change that doesn’t fix a bug or add a feature
+- `style`: Formatting only
+- `test`: Adding or updating tests
 
 Accepted Scopes:
 
-* `auth`
-* `calendar`
-* `files`
-* `mail`
-* `ui`
-* `ci`
-* `deps`
-* `ai`
-* `infra`
+- `auth`
+- `calendar`
+- `files`
+- `mail`
+- `ui`
+- `ci`
+- `deps`
+- `ai`
+- `infra`
 
 Examples:
 
-* `feat(ai): enable summarization tool`
-* `fix(auth): handle token expiry edge case`
-* `chore(ci): update Vercel deploy hook`
+- `feat(ai): enable summarization tool`
+- `fix(auth): handle token expiry edge case`
+- `chore(ci): update Vercel deploy hook`
 
 ⚠️ PRs that do not follow this format may be rejected or require title changes.
 

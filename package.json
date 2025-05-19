@@ -9,7 +9,6 @@
     "format": "prettier --write .",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "prepare": "husky install",
     "postinstall": "npm run prisma:generate",
     "vercel-build": "prisma migrate deploy && next build",
     "prisma:migrate": "dotenv -e .env.local -- prisma migrate dev",

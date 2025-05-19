@@ -3,7 +3,15 @@
 ## Introduction
 
 This is a demo chatbot using Auth0's [Auth for GenAI](https://auth0.com/ai).
-This readme will be updated once the first version is deployed.
+This readme will be updated with all the relevant details once the first version is deployed.
+
+## ⚠️ Disclaimer
+
+This project is **not production-ready** and is provided for **demonstration, educational and experimental purposes only**.  
+It comes with **no warranty of any kind**, either express or implied. Use it **at your own risk**.
+
+The authors and contributors are **not liable for any damages or losses** arising from the use of this code.  
+You are solely responsible for evaluating its fitness for your intended use, and for ensuring it meets all relevant legal, security, and quality standards before deploying it in any production environment.
 
 ## Getting Started
 

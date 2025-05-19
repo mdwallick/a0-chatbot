@@ -1,0 +1,18 @@
+name: 🧹 Chore
+description: Maintenance, cleanup, or developer tooling task
+title: "[Chore] "
+labels: [chore]
+body:
+  - type: textarea
+    id: chore
+    attributes:
+      label: What needs to be done?
+      description: Describe the technical task or refactor you'd like to track.
+      placeholder: "Update dependencies, refactor folder structure..."
+
+  - type: input
+    id: context
+    attributes:
+      label: Related area or component
+      description: What part of the codebase is affected?
+      placeholder: "ci.yml, Vercel config, etc."

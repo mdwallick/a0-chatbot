@@ -25,3 +25,12 @@ model Message {
   createdAt   DateTime   @default(now())
   thread      ChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
 }
+
+model XboxCredential {
+  userId      String      @id
+  userHash    String
+  xuid        String
+  xstsToken   String
+  issuedAt    DateTime
+  expiresOn   DateTime
+}

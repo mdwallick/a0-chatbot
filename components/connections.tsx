@@ -1,5 +1,10 @@
-import { Connections } from "../lib/auth0-ai/connections"
-import { GoogleIconSquared, OneDriveIconSquared, SalesforceIconSquared } from "./icons"
+import { Connections } from "@/lib/auth0-ai/connections"
+import {
+  GoogleIconSquared,
+  OneDriveIconSquared,
+  SalesforceIconSquared,
+  XboxIconSquared,
+} from "./icons"
 
 export const AvailableConnections = [
   {
@@ -20,6 +25,15 @@ export const AvailableConnections = [
     title: "One Drive Tools",
     shortDescription: "Requires access to your files.",
     ...Connections.windowsLive,
+  },
+  {
+    icon: <XboxIconSquared />,
+    strategy: "oidc",
+    displayName: "Xbox",
+    description: "Read your Xbox profile information",
+    title: "Xbox Tools",
+    shortDescription: "Requires read access to your Xbox profile.",
+    ...Connections.xbox,
   },
   {
     icon: <SalesforceIconSquared />,

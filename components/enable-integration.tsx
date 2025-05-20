@@ -50,7 +50,7 @@ export function EnableIntegration({
   return (
     <a
       href={getLinkAccount(integration)}
-      className="flex items-center justify-between gap-2 hover:bg-gray-100 transition-all ease-in hover:cursor-pointer p-4 py-3 pt-3"
+      className="flex items-center justify-between gap-2 transition-all ease-in hover:cursor-pointer p-4 py-3 pt-3 hover:bg-muted/60 dark:hover:bg-muted/40"
     >
       <div className="flex gap-2 items-center">
         {icon}

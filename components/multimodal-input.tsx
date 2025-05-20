@@ -21,6 +21,8 @@ import {
   GoogleDriveRoundedIcon,
   OneDriveIcon,
   OneDriveIconRounded,
+  XboxIcon,
+  XboxIconRounded,
   SalesforceIcon,
   SalesforceIconRounded,
   StopIcon,
@@ -198,6 +200,12 @@ function PureMultimodalInput({
                 </div>
               </PopoverTrigger>
               <PopoverContent className="w-[275px] flex flex-col gap-0 p-0">
+                <EnableIntegration
+                  title="Connect to Xbox"
+                  icon={<XboxIcon />}
+                  integration={Connections.xbox.connection}
+                />
+
                 {isConnectionEnabled(Connections.googleDrive.connection) ? (
                   <div className="flex items-center justify-between gap-2 hover:bg-gray-100 transition-all ease-in hover:cursor-pointer p-4 py-3 pt-3">
                     <div className="flex gap-2 items-center">
@@ -228,6 +236,28 @@ function PureMultimodalInput({
                 />
               </PopoverContent>
             </Popover>
+
+            {isConnectionEnabled(Connections.xbox.connection) && (
+              <IntegrationTools
+                append={append}
+                title="Xbox Tools"
+                icon={<XboxIconRounded />}
+                tools={[
+                  {
+                    title: "Show my Xbox profile",
+                    prompt: "Show me my Xbox profile",
+                  },
+                  {
+                    title: "Show Achivements",
+                    prompt: "Show my achhievement progress for my Xbox games",
+                  },
+                  {
+                    title: "Show Stats",
+                    prompt: "Show my gameplay stats for my Xbox games",
+                  },
+                ]}
+              />
+            )}
 
             {isConnectionEnabled(Connections.googleDrive.connection) && (
               <IntegrationTools

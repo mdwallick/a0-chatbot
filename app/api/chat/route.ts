@@ -1,6 +1,6 @@
 import { createDataStreamResponse, Message, streamText } from "ai"
 
-import { boxTools, checkUsersCalendar, googleDriveTools, listChannels } from "@/lib/ai/tools"
+import { checkUsersCalendar, googleDriveTools } from "@/lib/ai/tools"
 import {
   MicrosoftCalendarReadTool,
   MicrosoftCalendarWriteTool,
@@ -10,6 +10,7 @@ import {
   MicrosoftMailReadTool,
   MicrosoftMailWriteTool,
 } from "@/lib/ai/tools/microsoft"
+import { XboxUserProfileTool, XboxAchievementTool } from "@/lib/ai/tools/xbox"
 import { SalesforceQueryTool, SalesforceSearchTool } from "@/lib/ai/tools/salesforce"
 import { auth0 } from "@/lib/auth0"
 import { openai } from "@ai-sdk/openai"
@@ -28,7 +29,6 @@ export async function POST(request: Request) {
   const isAuthenticated = !!session?.user
 
   const tools = {
-    boxTools,
     MicrosoftCalendarReadTool,
     MicrosoftCalendarWriteTool,
     MicrosoftFilesListTool,
@@ -37,10 +37,11 @@ export async function POST(request: Request) {
     MicrosoftMailReadTool,
     MicrosoftMailWriteTool,
     checkUsersCalendar,
-    listChannels,
     ...googleDriveTools,
     SalesforceQueryTool,
     SalesforceSearchTool,
+    XboxUserProfileTool,
+    XboxAchievementTool,
   }
 
   const trimmedMessages = trimMessages(messages, {

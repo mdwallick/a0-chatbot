@@ -8,19 +8,17 @@ import { FederatedConnectionError } from "@auth0/ai/interrupts"
 import { Endpoints, callXboxApi, withXbox } from "@/lib/auth0-ai/xbox"
 
 const toolSchema = z.object({
-  userId: z
-    .string()
-    .optional()
-    .nullable()
-    .default("me")
-    .describe("Gamertag, xuid, or me. Defaults to me."),
+  gameTitle: z.string().describe("The title or name of the game in question."),
+  serviceConfigId: z.string().describe("The serviceConfigId value. This is from chat context."),
 })
 
-export const XboxAchievementTool = withXbox(
+export const XboxUserStatsTool = withXbox(
   tool({
-    description: "Get user's achievement progress",
+    description:
+      "Get user's game statistics for a given game title/name and serviceConfigId aka SCID",
     parameters: toolSchema,
-    execute: async () => {
+    execute: async ({ gameTitle, serviceConfigId }) => {
+      console.log("XboxUserStatsTool with args", gameTitle, serviceConfigId)
       const logs = []
 
       try {
@@ -37,8 +35,9 @@ export const XboxAchievementTool = withXbox(
           userData: "no response from server",
         }
 
-        logs.push("Getting Xbox achievement information")
-        const url = `https://${Endpoints.achievements.baseUri}/users/me/history/titles`
+        console.log(`Getting Xbox user stats for ${gameTitle}`)
+        logs.push(`Getting Xbox user stats for ${gameTitle}`)
+        const url = `https://${Endpoints.userstats.baseUri}/users/me/scids/${serviceConfigId}/stats/wins,kills,kdratio,headshots`
         const response = await callXboxApi(url, accessToken)
 
         if (response.status === 200) {

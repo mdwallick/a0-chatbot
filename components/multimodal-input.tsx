@@ -251,10 +251,6 @@ function PureMultimodalInput({
                     title: "Show Achivements",
                     prompt: "Show my achhievement progress for my Xbox games",
                   },
-                  {
-                    title: "Show Stats",
-                    prompt: "Show my gameplay stats for my Xbox games",
-                  },
                 ]}
               />
             )}

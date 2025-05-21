@@ -20,14 +20,14 @@ export const XboxUserProfileTool = withXbox(
   tool({
     description: "Get user's profile from Xbox Live",
     parameters: toolSchema,
-    execute: async ({ userId }) => {
+    execute: async () => {
       const logs = []
 
       try {
         // Get the access token from Auth0 AI
         const accessToken = getAccessTokenForConnection()
         logs.push("got access token from token vault")
-        //console.log("msft access token", accessToken)
+        console.log("msft access token", accessToken)
 
         if (!accessToken) {
           logs.push("access token missing or expired")
@@ -40,7 +40,7 @@ export const XboxUserProfileTool = withXbox(
 
         logs.push("Getting Xbox user profile information")
         const settings = "GameDisplayName,GameDisplayPicRaw,Gamerscore,Gamertag,TenureLevel"
-        const url = `https://${Endpoints.profile.baseUri}/users/${userId}/profile/settings?settings=${settings}`
+        const url = `https://${Endpoints.profile.baseUri}/users/me/profile/settings?settings=${settings}`
         const response = await callXboxApi(url, accessToken)
 
         if (response.status === 200) {

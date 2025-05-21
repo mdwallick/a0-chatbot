@@ -5,7 +5,6 @@
 
 import { auth0 } from "@/lib/auth0"
 import { Auth0AI } from "@auth0/ai-vercel"
-//import { getAccessTokenForConnection } from "@auth0/nextjs-auth0/server"
 import { prisma } from "@/lib/prisma"
 import axios from "axios"
 
@@ -24,9 +23,20 @@ export const withXbox = auth0AI.withTokenForConnection({
 
 export const callXboxApi = async (url: string, accessToken: string) => {
   try {
-    const { userHash, xstsToken } = await getXstsToken(accessToken)
-    console.log(`Authorization: XBL3.0 x=${userHash};${xstsToken}`)
-    const response = await axios.get(url, {
+    const { userHash, xstsToken, xuid } = await getXstsToken(accessToken)
+    console.debug(`Authorization: XBL3.0 x=${userHash};${xstsToken}`)
+
+    /*
+      //// HACK ////
+      some URIs accept "me" as the user ID meaning the xuid from
+      the XSTS token. Some only accept xuid(ID), so every URL will have
+      /me/ coming and and we replace it with xuid(${xuid})
+    */
+    console.debug("original URL", url)
+    const newUrl = url.replace("/users/me/", `/users/xuid(${xuid})/`)
+    console.debug("new URL", newUrl)
+
+    const response = await axios.get(newUrl, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -34,6 +44,7 @@ export const callXboxApi = async (url: string, accessToken: string) => {
         "x-xbl-contract-version": "2",
       },
     })
+
     return response
   } catch (error) {
     console.error("Axios error:", error)
@@ -101,9 +112,9 @@ const exchangeMsftTokenForXboxUserToken = async (accessToken: string) => {
     }
   )
 
-  //console.log("userTokenResponse", userTokenResponse)
   const userToken = userTokenResponse.data.Token
   const userHash = userTokenResponse.data.DisplayClaims.xui[0].uhs
+
   return {
     userToken,
     userHash,
@@ -111,7 +122,7 @@ const exchangeMsftTokenForXboxUserToken = async (accessToken: string) => {
 }
 
 const exchangeUserTokenForXstsToken = async (userToken: string) => {
-  const xstsTokenResponse = await axios.post(
+  const response = await axios.post(
     "https://xsts.auth.xboxlive.com/xsts/authorize",
     {
       Properties: {
@@ -130,10 +141,10 @@ const exchangeUserTokenForXstsToken = async (userToken: string) => {
     }
   )
 
-  const xstsToken = xstsTokenResponse.data.Token
-  const issuedAt = new Date(xstsTokenResponse.data.IssueInstant)
-  const expiresOn = new Date(xstsTokenResponse.data.NotAfter)
-  const xuid = xstsTokenResponse.data.DisplayClaims.xui[0].xid
+  const xstsToken = response.data.Token
+  const issuedAt = new Date(response.data.IssueInstant)
+  const expiresOn = new Date(response.data.NotAfter)
+  const xuid = response.data.DisplayClaims.xui[0].xid
 
   return {
     xstsToken,

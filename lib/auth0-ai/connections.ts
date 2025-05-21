@@ -38,6 +38,12 @@ export const Connections = {
       "Read and write files in your OneDrive",
     ],
   },
+  xbox: {
+    connection: "xbox",
+    scopes: ["XboxLive.signin", "XboxLive.offline_access"],
+    // https://learn.microsoft.com/en-us/graph/permissions-reference
+    friendlyScopes: ["Sign in to your Xbox Account", "Access Xbox data you have authorized"],
+  },
   salesforce: {
     connection: "salesforce",
     scopes: ["api"],

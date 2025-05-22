@@ -1,7 +1,6 @@
 "use client"
 
 import type { UIMessage, ChatRequestOptions } from "ai"
-import { useRouter } from "next/navigation"
 
 import { useChat } from "@ai-sdk/react"
 import { useInterruptions } from "@auth0/ai-vercel/react"
@@ -21,7 +20,6 @@ export function Chat({
   initialMessages: Array<UIMessage>
   isReadonly: boolean
 }) {
-  const router = useRouter()
   const { user } = useUser()
   const {
     messages,
@@ -34,62 +32,15 @@ export function Chat({
     stop,
     handleSubmit,
     toolInterrupt,
-  } = useInterruptions(_handler =>
+  } = useInterruptions(handler =>
     useChat({
       id,
       body: { id },
       initialMessages,
-      onResponse: async response => {
-        if (!response.ok) {
-          console.error("[ERROR] Chat response error:", response.status, response.statusText)
-          return
-        }
-
-        // Create thread if it doesn't exist
-        if (id === "new") {
-          const newId = generateUUID()
-          try {
-            await fetch("/api/chat/threads", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ id: newId }),
-            })
-            router.replace(`/chat/${newId}`, { scroll: false })
-          } catch (error) {
-            console.error("Error creating thread:", error)
-          }
-        }
-      },
-      onFinish: async message => {
-        // Save messages to database if user is authenticated
-        if (user) {
-          try {
-            await fetch("/api/chat/save", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                threadId: id,
-                message: {
-                  content: message.content,
-                  role: message.role,
-                },
-              }),
-            })
-            // Only refresh the router if the save was successful
-            router.refresh()
-
-            // Emit event for sidebar to refresh
-            window.dispatchEvent(new Event("threadListUpdated"))
-          } catch (error) {
-            console.error("Error saving message:", error)
-          }
-        }
-      },
-      onError: error => {
-        console.error("[ERROR] Chat error:", error)
-      },
+      experimental_throttle: 100,
+      sendExtraMessageFields: true,
+      generateId: generateUUID,
+      onError: handler(error => console.error("Chat error:", error)),
     })
   )
 

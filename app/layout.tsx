@@ -1,16 +1,19 @@
 import type { Metadata, Viewport } from "next"
+import { ThemeProvider } from "next-themes"
 import "./globals.css"
 
 import { Geist, Geist_Mono } from "next/font/google"
 
+import { Auth0Provider } from "@auth0/nextjs-auth0"
+
 import { ChatSidebar } from "@/components/chat-sidebar"
+import { MobileChatSidebarDrawer } from "@/components/mobile-sidebar-drawer"
+import { SidebarProvider } from "@/components/sidebar-context"
 import { GooglePickerLoader } from "@/components/google-picker-loader"
 import Header from "@/components/header"
 import { LinkedAccountsProvider } from "@/components/use-linked-accounts-context"
 import { auth0 } from "@/lib/auth0"
 import { getLinkedAccounts } from "@/lib/auth0-mgmt"
-import { Auth0Provider } from "@auth0/nextjs-auth0"
-import { ThemeProvider } from "@/components/theme-provider"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,9 +31,6 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   width: "device-width",
-  initialScale: 1.0,
-  maximumScale: 1.0,
-  userScalable: false,
 }
 
 export default async function RootLayout({
@@ -46,23 +46,31 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ThemeProvider>
+        <ThemeProvider attribute="class" enableSystem={true} defaultTheme="system">
           <GooglePickerLoader />
           <Auth0Provider user={session?.user}>
-            <div className="flex flex-col h-full w-full">
-              <Header />
-              <main
-                className="flex flex-row flex-1 w-full mx-auto"
-                style={{ maxHeight: "calc(100vh - 56px)" }}
-              >
-                <ChatSidebar />
-                <div className="flex-1 min-w-0">
-                  <LinkedAccountsProvider value={linkedAccounts}>{children}</LinkedAccountsProvider>
-                </div>
-              </main>
-            </div>
+            <SidebarProvider>
+              <div className="flex flex-col min-h-screen w-full">
+                {" "}
+                <Header />
+                <main className="flex flex-col md:flex-row flex-1 w-full mx-auto">
+                  <div className="hidden md:flex flex-shrink-0">
+                    {" "}
+                    <ChatSidebar />
+                  </div>
+                  <MobileChatSidebarDrawer />
+
+                  <div className="flex-1 min-w-0 overflow-y-auto">
+                    {" "}
+                    <LinkedAccountsProvider value={linkedAccounts}>
+                      {children}
+                    </LinkedAccountsProvider>
+                  </div>
+                </main>
+              </div>
+            </SidebarProvider>
           </Auth0Provider>
         </ThemeProvider>
       </body>

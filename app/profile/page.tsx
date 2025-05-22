@@ -1,7 +1,7 @@
-/* eslint-disable @next/next/no-html-link-for-pages */
 import { ChevronLeftIcon } from "lucide-react"
+import Link from "next/link"
 
-import UserProfile from "../../components/auth0/user-profile"
+import UserProfile from "@/components/auth0/user-profile"
 
 export default async function Profile() {
   return (
@@ -12,11 +12,11 @@ export default async function Profile() {
       <div className="flex-col md:flex flex-1 overflow-y-scroll">
         <div className="flex-1 space-y-4 p-5 sm:p-8 pt-6">
           <div className="max-w-screen-lg mx-auto justify-center">
-            <div className="flex items-center space-x-1 text-sm text-black">
+            <div className="flex items-center space-x-1 text-sm">
               <ChevronLeftIcon className="h-4 w-4" />
-              <a href="/" className="font-light text-black">
+              <Link href="/" className="font-light">
                 Back to chat
-              </a>
+              </Link>
             </div>
           </div>
           <UserProfile />

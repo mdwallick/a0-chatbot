@@ -1,2 +1,2 @@
 export { MicrosoftMailReadTool } from "./mail-read"
-export { MicrosoftMailWriteTool } from "./mail-write"
+export { MicrosoftMailSendTool } from "./mail-send"

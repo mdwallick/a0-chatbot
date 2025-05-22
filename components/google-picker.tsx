@@ -1,6 +1,6 @@
 "use client"
 
-import { Connections } from "../lib/auth0-ai/connections"
+import { Connections } from "@/lib/auth0-ai/connections"
 
 export type GoogleFile = {
   id: string
@@ -47,7 +47,7 @@ export function GoogleDrivePicker({ onSelect }: { onSelect: (file: GoogleFile) =
 
     try {
       const { access_token }: any = await (
-        await fetch(`/api/integrations?connection=${Connections.googleDrive.connection}`)
+        await fetch(`/api/integrations?connection=${Connections.google.connection}`)
       ).json()
 
       const picker = new window.google.picker.PickerBuilder()

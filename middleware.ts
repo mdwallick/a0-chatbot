@@ -35,7 +35,7 @@ export async function middleware(request: NextRequest) {
   if (requiresAuth) {
     const session = await auth0.getSession(request)
     if (!session) {
-      return NextResponse.redirect(new URL("/auth/login", process.env.AUTH0_BASE_URL!))
+      return NextResponse.redirect(new URL("/auth/login", process.env.APP_BASE_URL!))
     }
   }
 

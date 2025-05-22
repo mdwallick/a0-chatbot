@@ -17,15 +17,15 @@ import { EnableIntegration } from "./enable-integration"
 import { GoogleDrivePicker, GoogleFile } from "./google-picker"
 import {
   ArrowUpIcon,
-  GoogleDriveIcon,
-  GoogleDriveRoundedIcon,
-  OneDriveIcon,
-  OneDriveIconRounded,
-  XboxIcon,
-  XboxIconRounded,
+  GoogleIcon,
+  GoogleIconRounded,
+  MicrosoftIcon,
+  MicrosoftIconRounded,
   SalesforceIcon,
   SalesforceIconRounded,
   StopIcon,
+  XboxIcon,
+  XboxIconRounded,
 } from "./icons"
 import { IntegrationTools } from "./integration-tools"
 import { SuggestedActions } from "./suggested-actions"
@@ -206,10 +206,10 @@ function PureMultimodalInput({
                   integration={Connections.xbox.connection}
                 />
 
-                {isConnectionEnabled(Connections.googleDrive.connection) ? (
+                {isConnectionEnabled(Connections.google.connection) ? (
                   <div className="flex items-center justify-between gap-2 hover:bg-gray-100 transition-all ease-in hover:cursor-pointer p-4 py-3 pt-3">
                     <div className="flex gap-2 items-center">
-                      <GoogleDriveIcon />
+                      <GoogleIcon />
                       <span className="text-sm text-gray-600">
                         <GoogleDrivePicker onSelect={loadGoogleDocument} />
                       </span>
@@ -217,16 +217,16 @@ function PureMultimodalInput({
                   </div>
                 ) : (
                   <EnableIntegration
-                    title="Connect to Google Drive"
-                    icon={<GoogleDriveIcon />}
-                    integration={Connections.googleDrive.connection}
+                    title="Connect to Google"
+                    icon={<GoogleIcon />}
+                    integration={Connections.google.connection}
                   />
                 )}
 
                 <EnableIntegration
-                  title="Connect to One Drive"
-                  icon={<OneDriveIcon />}
-                  integration={Connections.windowsLive.connection}
+                  title="Connect to Microsoft"
+                  icon={<MicrosoftIcon />}
+                  integration={Connections.microsoft.connection}
                 />
 
                 <EnableIntegration
@@ -255,11 +255,11 @@ function PureMultimodalInput({
               />
             )}
 
-            {isConnectionEnabled(Connections.googleDrive.connection) && (
+            {isConnectionEnabled(Connections.google.connection) && (
               <IntegrationTools
                 append={append}
-                title="Google Drive Tools"
-                icon={<GoogleDriveRoundedIcon />}
+                title="Google Tools"
+                icon={<GoogleIconRounded />}
                 tools={[
                   {
                     title: "List files and folders",
@@ -281,11 +281,11 @@ function PureMultimodalInput({
               />
             )}
 
-            {isConnectionEnabled(Connections.windowsLive.connection) && (
+            {isConnectionEnabled(Connections.microsoft.connection) && (
               <IntegrationTools
                 append={append}
-                title="One Drive Tools"
-                icon={<OneDriveIconRounded />}
+                title="Microsoft Tools"
+                icon={<MicrosoftIconRounded />}
                 tools={[
                   {
                     title: "What's on my calendar?",

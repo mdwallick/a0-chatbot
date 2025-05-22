@@ -1,6 +1,13 @@
 import { createDataStreamResponse, Message, streamText } from "ai"
 
-import { checkUsersCalendar, googleDriveTools } from "@/lib/ai/tools"
+import { googleDriveTools } from "@/lib/ai/tools"
+import {
+  GmailReadTool,
+  GmailSendTool,
+  GoogleCalendarReadTool,
+  GoogleCalendarWriteTool,
+} from "@/lib/ai/tools/google"
+
 import {
   MicrosoftCalendarReadTool,
   MicrosoftCalendarWriteTool,
@@ -8,7 +15,7 @@ import {
   MicrosoftFilesReadTool,
   MicrosoftFilesWriteTool,
   MicrosoftMailReadTool,
-  MicrosoftMailWriteTool,
+  MicrosoftMailSendTool,
 } from "@/lib/ai/tools/microsoft"
 import { XboxUserProfileTool, XboxAchievementTool } from "@/lib/ai/tools/xbox"
 import { SalesforceQueryTool, SalesforceSearchTool } from "@/lib/ai/tools/salesforce"
@@ -29,15 +36,18 @@ export async function POST(request: Request) {
   const isAuthenticated = !!session?.user
 
   const tools = {
+    GmailReadTool,
+    GmailSendTool,
+    GoogleCalendarReadTool,
+    GoogleCalendarWriteTool,
+    ...googleDriveTools,
     MicrosoftCalendarReadTool,
     MicrosoftCalendarWriteTool,
     MicrosoftFilesListTool,
     MicrosoftFilesReadTool,
     MicrosoftFilesWriteTool,
     MicrosoftMailReadTool,
-    MicrosoftMailWriteTool,
-    checkUsersCalendar,
-    ...googleDriveTools,
+    MicrosoftMailSendTool,
     SalesforceQueryTool,
     SalesforceSearchTool,
     XboxUserProfileTool,
@@ -90,12 +100,15 @@ Available integrations for authenticated users:
 You can offer these integration features only when the user is authenticated.
 
 IMPORTANT - WHICH TOOLS TO USE:
-Take into account the services the user has linked to their account. 
-For example, if the user has only linked their Google account, then only use the Google Drive tools if they ask about their files or documents.
+Take into account the services the user has linked to their account. For example, if the user has only linked their Google account, then only use the Google Drive tools if they ask about their files or documents.
 `
 
   const baseTemplate = `
 You are a friendly assistant! Keep your responses concise and helpful.
+
+When providing a date or time, always output the value in full ISO 8601 format using UTC (e.g. "2025-05-24T19:00:00Z"). Use 24-hour time and include seconds.
+Only return properly formatted ISO 8601 strings for all datetime fields like startDateTime or endDateTime.
+
 
 ${
   isAuthenticated

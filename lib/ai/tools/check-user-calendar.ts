@@ -7,9 +7,9 @@ import { z } from "zod"
 import { getAccessTokenForConnection } from "@auth0/ai-vercel"
 import { FederatedConnectionError } from "@auth0/ai/interrupts"
 
-import { withGoogleCalendar } from "@/lib/auth0-ai/google"
+import { withGoogleCalendarRead } from "@/lib/auth0-ai/google"
 
-export const checkUsersCalendar = withGoogleCalendar(
+export const checkUsersCalendar = withGoogleCalendarRead(
   tool({
     description: "Check user availability on a given date time on their calendar",
     parameters: z.object({

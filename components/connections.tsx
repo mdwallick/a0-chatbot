@@ -1,7 +1,7 @@
 import { Connections } from "@/lib/auth0-ai/connections"
 import {
   GoogleIconSquared,
-  OneDriveIconSquared,
+  MicrosoftIconSquared,
   SalesforceIconSquared,
   XboxIconSquared,
 } from "./icons"
@@ -10,30 +10,20 @@ export const AvailableConnections = [
   {
     icon: <GoogleIconSquared />,
     strategy: "google-oauth2",
-
-    displayName: "Google Drive",
-    description: "Search your personal and shared drives",
-    title: "Google Drive Tools",
-    shortDescription: "Requires access to your files and folders.",
-    ...Connections.googleDrive,
+    displayName: "Google",
+    description: "Access your Google services like Gmail or Drive.",
+    title: "Google Tools",
+    shortDescription: "Requires access to your Google account.",
+    ...Connections.google,
   },
   {
-    icon: <OneDriveIconSquared />,
+    icon: <MicrosoftIconSquared />,
     strategy: "windowslive",
-    displayName: "One Drive",
-    description: "Search your public and private files",
-    title: "One Drive Tools",
-    shortDescription: "Requires access to your files.",
-    ...Connections.windowsLive,
-  },
-  {
-    icon: <XboxIconSquared />,
-    strategy: "oidc",
-    displayName: "Xbox",
-    description: "Read your Xbox profile information",
-    title: "Xbox Tools",
-    shortDescription: "Requires read access to your Xbox profile.",
-    ...Connections.xbox,
+    displayName: "Microsoft",
+    description: "Access your personal Microsoft services like Outlook or OneDrive",
+    title: "Microsoft Tools",
+    shortDescription: "Requires access to your Microsoft account.",
+    ...Connections.microsoft,
   },
   {
     icon: <SalesforceIconSquared />,
@@ -43,5 +33,14 @@ export const AvailableConnections = [
     title: "Salesforce Tools",
     shortDescription: "Requires access to your CRM data.",
     ...Connections.salesforce,
+  },
+  {
+    icon: <XboxIconSquared />,
+    strategy: "oidc",
+    displayName: "Xbox",
+    description: "Access your Xbox account.",
+    title: "Xbox Tools",
+    shortDescription: "Requires access to your Xbox account.",
+    ...Connections.xbox,
   },
 ]

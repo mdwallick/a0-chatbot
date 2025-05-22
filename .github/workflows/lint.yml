@@ -33,7 +33,6 @@ jobs:
           AUTH0_ISSUER_BASE_URL: https://notreal.auth0.com
           AUTH0_SECRET: dummy
           APP_BASE_URL: http://localhost:3000
-          AUTH0_BASE_URL: http://localhost:3000
           OPENAI_API_KEY: dummy
           OPENAI_MODEL: dummy
           ENABLED_CONNECTIONS: dummy

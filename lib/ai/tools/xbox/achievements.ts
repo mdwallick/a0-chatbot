@@ -5,7 +5,7 @@ import { z } from "zod"
 import { getAccessTokenForConnection } from "@auth0/ai-vercel"
 import { FederatedConnectionError } from "@auth0/ai/interrupts"
 
-import { Endpoints, callXboxApi, withXbox } from "@/lib/auth0-ai/xbox"
+import { Endpoints, callXboxApi, withXboxRead } from "@/lib/auth0-ai/xbox"
 
 const toolSchema = z.object({
   userId: z
@@ -16,7 +16,7 @@ const toolSchema = z.object({
     .describe("Gamertag, xuid, or me. Defaults to me."),
 })
 
-export const XboxAchievementTool = withXbox(
+export const XboxAchievementTool = withXboxRead(
   tool({
     description: "Get user's achievement progress",
     parameters: toolSchema,

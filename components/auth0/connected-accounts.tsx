@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 import { useUser } from "@auth0/nextjs-auth0"
 
-import { ConnectionsMetadata } from "../../lib/auth0-ai/connections"
+import { ConnectionsMetadata } from "@/lib/auth0-ai/connections"
 
 function Spinner() {
   return (
@@ -234,7 +234,8 @@ export default function ConnectedAccounts({
                   </div>
                   <div className="relative w-full border-t-gray-200 border-t pt-4 text-sm grid grid-cols-[0_1fr] gap-y-2 items-start bg-card text-card-foreground">
                     <div className="col-start-2 line-clamp-1 min-h-4 font-medium tracking-tight text-muted-foreground ">
-                      The app will be allowed to:
+                      Based on the consent you&apos;ve granted, the app <strong>MAY</strong> be
+                      allowed to:
                     </div>
                     <ul className="text-muted-foreground col-start-2 grid justify-items-start gap-1 text-sm [&_p]:leading-relaxed">
                       {ConnectionsMetadata.find(
@@ -245,6 +246,10 @@ export default function ConnectedAccounts({
                         </li>
                       )) || <li>No scopes available</li>}
                     </ul>
+                    {/* <div className="col-start-2 line-clamp-1 min-h-4 font-medium tracking-tight text-muted-foreground ">
+                      To see what exact permissions you've consented to, see your{" "}
+                      <a href="#">account page</a> for this provider.
+                    </div> */}
                   </div>
                 </div>
               )

@@ -6,7 +6,7 @@ import { getAccessTokenForConnection } from "@auth0/ai-vercel"
 import { FederatedConnectionError } from "@auth0/ai/interrupts"
 import { Client } from "@microsoft/microsoft-graph-client"
 
-import { withOneDrive } from "../../../auth0-ai/windows-live"
+import { withMSMailSend } from "@/lib/auth0-ai/microsoft"
 
 const toolSchema = z.object({
   subject: z.string().describe("Subject of the email"),
@@ -21,7 +21,7 @@ const toolSchema = z.object({
     .describe("Importance of the email"),
 })
 
-export const MicrosoftMailWriteTool = withOneDrive(
+export const MicrosoftMailSendTool = withMSMailSend(
   tool({
     description: "Write/Send Microsoft Outlook emails",
     parameters: toolSchema,

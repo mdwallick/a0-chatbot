@@ -6,7 +6,7 @@ import { getAccessTokenForConnection } from "@auth0/ai-vercel"
 import { FederatedConnectionError } from "@auth0/ai/interrupts"
 import { Client } from "@microsoft/microsoft-graph-client"
 
-import { withOneDrive } from "../../../auth0-ai/windows-live"
+import { withMSCalendarRead } from "@/lib/auth0-ai/microsoft"
 import { Event } from "@microsoft/microsoft-graph-types"
 
 // Your calendar query will return this type
@@ -30,13 +30,14 @@ const toolSchema = z.object({
     .describe("Time zone to use for the calendar"),
 })
 
-export const MicrosoftCalendarReadTool = withOneDrive(
+export const MicrosoftCalendarReadTool = withMSCalendarRead(
   tool({
     description: "Check a user's schedule between the given date times on their Microsoft calendar",
     parameters: toolSchema,
     execute: async ({ timeMin, timeMax, timeZone = "US/Central" }) => {
       const logs = []
 
+      console.log(timeMin, timeMax, timeZone)
       // Get the access token from Auth0 AI
       const access_token = getAccessTokenForConnection()
       logs.push("got access token from token vault")

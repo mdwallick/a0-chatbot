@@ -5,14 +5,14 @@ import { z } from "zod"
 import { getAccessTokenForConnection } from "@auth0/ai-vercel"
 import { FederatedConnectionError } from "@auth0/ai/interrupts"
 
-import { Endpoints, callXboxApi, withXbox } from "@/lib/auth0-ai/xbox"
+import { Endpoints, callXboxApi, withXboxRead } from "@/lib/auth0-ai/xbox"
 
 const toolSchema = z.object({
   gameTitle: z.string().describe("The title or name of the game in question."),
   serviceConfigId: z.string().describe("The serviceConfigId value. This is from chat context."),
 })
 
-export const XboxUserStatsTool = withXbox(
+export const XboxUserStatsTool = withXboxRead(
   tool({
     description:
       "Get user's game statistics for a given game title/name and serviceConfigId aka SCID",

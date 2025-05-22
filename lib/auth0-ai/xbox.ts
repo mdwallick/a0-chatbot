@@ -12,13 +12,9 @@ import { Connections } from "./connections"
 
 const auth0AI = new Auth0AI()
 
-export const withXbox = auth0AI.withTokenForConnection({
+export const withXboxRead = auth0AI.withTokenForConnection({
   ...Connections.xbox,
-  refreshToken: async () => {
-    const session = await auth0.getSession()
-    const refreshToken = session?.tokenSet.refreshToken as string
-    return refreshToken
-  },
+  scopes: ["XboxLive.signin", "XboxLive.offline_access"],
 })
 
 export const callXboxApi = async (url: string, accessToken: string) => {

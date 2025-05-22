@@ -6,7 +6,7 @@ import { getAccessTokenForConnection } from "@auth0/ai-vercel"
 import { FederatedConnectionError } from "@auth0/ai/interrupts"
 import { Client } from "@microsoft/microsoft-graph-client"
 
-import { withOneDrive } from "../../../auth0-ai/windows-live"
+import { withMSCalendarWrite } from "@/lib/auth0-ai/microsoft"
 
 const flexibleDateTime = z.string().refine(val => !isNaN(Date.parse(val)), {
   message: "Invalid datetime format",
@@ -27,7 +27,7 @@ const toolSchema = z.object({
   eventId: z.string().optional().nullable().describe("Event ID for updating existing events"),
 })
 
-export const MicrosoftCalendarWriteTool = withOneDrive(
+export const MicrosoftCalendarWriteTool = withMSCalendarWrite(
   tool({
     description:
       "Create or update an event in the user's Microsoft calendar. Provide eventId to update an existing event.",

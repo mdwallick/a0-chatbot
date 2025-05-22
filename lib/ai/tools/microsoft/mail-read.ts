@@ -6,7 +6,7 @@ import { getAccessTokenForConnection } from "@auth0/ai-vercel"
 import { FederatedConnectionError } from "@auth0/ai/interrupts"
 import { Client } from "@microsoft/microsoft-graph-client"
 
-import { withOneDrive } from "../../../auth0-ai/windows-live"
+import { withMSMailRead } from "@/lib/auth0-ai/microsoft"
 
 const toolSchema = z.object({
   query: z.string().optional().nullable().describe("Search query for the email subject or body"),
@@ -58,7 +58,7 @@ type Email = {
   }>
 }
 
-export const MicrosoftMailReadTool = withOneDrive(
+export const MicrosoftMailReadTool = withMSMailRead(
   tool({
     description: "Read Microsoft Outlook emails",
     parameters: toolSchema,
@@ -68,11 +68,6 @@ export const MicrosoftMailReadTool = withOneDrive(
 
       const access_token = getAccessTokenForConnection()
       logs.push("got access token from token vault")
-
-      if (!access_token) {
-        logs.push("access token missing or expired")
-        throw new FederatedConnectionError("Authorization required to access OneDrive")
-      }
 
       try {
         const client = Client.initWithMiddleware({

@@ -1,24 +1,21 @@
 import { tool } from "ai"
 import { z } from "zod"
 
-import { withMSOneDriveRead } from "@/lib/auth0-ai/microsoft"
 import { getAccessTokenForConnection } from "@auth0/ai-vercel"
 import { FederatedConnectionError } from "@auth0/ai/interrupts"
-import { Client } from "@microsoft/microsoft-graph-client"
+import { google } from "googleapis"
+
+import { getGoogleAuth, withGoogleDriveRead } from "@/lib/auth0-ai/google"
 
 const toolSchema = z.object({
-  path: z
-    .string()
-    .optional()
-    .nullable()
-    .describe("Path to the folder (e.g. /Documents). Leave blank for root."),
+  query: z.string().optional().nullable().describe("What to search the Google Drive for."),
 })
 
-export const MicrosoftFilesListTool = withMSOneDriveRead(
+export const GoogleFilesListTool = withGoogleDriveRead(
   tool({
-    description: "list files from One Drive",
+    description: "list files from Google Drive",
     parameters: toolSchema,
-    execute: async ({ path = "" }) => {
+    execute: async ({ query }) => {
       const logs = []
 
       try {
@@ -26,34 +23,19 @@ export const MicrosoftFilesListTool = withMSOneDriveRead(
         const access_token = getAccessTokenForConnection()
         logs.push("got access token from token vault")
 
-        if (!access_token) {
-          logs.push("access token missing or expired")
-          throw new FederatedConnectionError("Authorization required to access OneDrive")
-        }
-
-        // Initialize OneDrive client
-        const client = Client.initWithMiddleware({
-          authProvider: {
-            getAccessToken: async () => {
-              return access_token
-            },
-          },
+        // Create Google OAuth client.
+        const auth = getGoogleAuth(access_token)
+        const drive = google.drive({ version: "v3", auth })
+        const res = await drive.files.list({
+          q: query || undefined,
+          fields: "files(id, name)",
         })
-
-        // Construct path and fetch items
-        const drivePath = path ? `/me/drive/root:/${path}:/children` : `/me/drive/root/children`
-        logs.push(`Fetching items from path: ${drivePath}`)
-
-        const items = await client.api(drivePath).get()
-
-        if (!items) {
-          logs.push("No items returned from OneDrive")
-          throw new Error("No items returned from OneDrive")
-        }
+        //res.data.files?.forEach(f => console.log(f.name, f.id))
+        const items = res.data
 
         logs.push("Successfully retrieved items:", {
-          itemCount: items.value?.length || 0,
-          hasItems: !!items.value,
+          itemCount: items.files?.length || 0,
+          hasItems: !!items,
         })
 
         return {

@@ -23,7 +23,6 @@ const toolSchema = z.object({
     .string()
     .datetime()
     .describe("End time in ISO 8601 format using UTC, e.g. 2025-05-24T19:00:00Z"),
-  timeZone: z.string().optional().nullable().default("UTC").describe("Time zone for the event"),
   location: z.string().optional().nullable().describe("Location of the event"),
   attendees: z.array(z.string()).optional().nullable().describe("Email addresses of attendees"),
   eventId: z.string().optional().nullable().describe("Event ID for updating existing events"),
@@ -39,7 +38,6 @@ export const GoogleCalendarWriteTool = withGoogleCalendarWrite(
       description,
       startDateTime,
       endDateTime,
-      timeZone,
       location,
       attendees = [],
       eventId,
@@ -57,11 +55,9 @@ export const GoogleCalendarWriteTool = withGoogleCalendarWrite(
           description,
           start: {
             dateTime: startDateTime,
-            timeZone,
           },
           end: {
             dateTime: endDateTime,
-            timeZone,
           },
           attendees: attendees?.map(email => ({ email })) || [],
           reminders: {

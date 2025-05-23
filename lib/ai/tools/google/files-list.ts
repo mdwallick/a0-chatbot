@@ -1,4 +1,5 @@
 import { tool } from "ai"
+import { GaxiosError } from "gaxios"
 import { z } from "zod"
 
 import { getAccessTokenForConnection } from "@auth0/ai-vercel"
@@ -30,7 +31,7 @@ export const GoogleFilesListTool = withGoogleDriveRead(
           q: query || undefined,
           fields: "files(id, name)",
         })
-        //res.data.files?.forEach(f => console.log(f.name, f.id))
+        res.data.files?.forEach(f => console.log(f.name, f.id))
         const items = res.data
 
         logs.push("Successfully retrieved items:", {
@@ -42,28 +43,16 @@ export const GoogleFilesListTool = withGoogleDriveRead(
           logs,
           items,
         }
-      } catch (error: any) {
-        console.error("[ERROR] OneDrive list files failed:", {
-          error,
-          errorType: error?.constructor?.name,
-          errorMessage: error?.message,
-          errorResponse: error?.response?.data,
-          errorStatus: error?.response?.status,
-        })
-
-        if (error instanceof FederatedConnectionError) {
-          console.error("[ERROR] Federation connection error:", error.message)
-          throw error
+      } catch (error) {
+        if (error instanceof GaxiosError) {
+          if (error.status === 401) {
+            throw new FederatedConnectionError(
+              `Authorization required to access the Federated Connection`
+            )
+          }
         }
 
-        if (error?.response?.status === 401 || error?.response?.status === 403) {
-          console.error("[ERROR] Authentication error:", error.response.status)
-          throw new FederatedConnectionError("Authorization required to access OneDrive")
-        }
-
-        throw new Error(
-          `OneDrive operation failed: ${error instanceof Error ? error.message : String(error)}`
-        )
+        throw error
       }
     },
   })

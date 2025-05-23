@@ -1,10 +1,13 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
+import { useUser } from "@auth0/nextjs-auth0"
 
 import { WaitingMessage } from "../util/loader"
 import { PromptUserContainer } from "../util/prompt-user-container"
 import { FederatedConnectionAuthProps } from "./FederatedConnectionAuthProps"
+
+import { AvailableConnections } from "../../connections"
 
 export function EnsureAPIAccessPopup({
   interrupt: { connection, requiredScopes, resume },
@@ -13,8 +16,9 @@ export function EnsureAPIAccessPopup({
 }: FederatedConnectionAuthProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [loginPopup, setLoginPopup] = useState<Window | null>(null)
+  const { user } = useUser()
 
-  //Poll for the login process until the popup is closed
+  // Poll for the login process until the popup is closed
   // or the user is authorized
   useEffect(() => {
     if (!loginPopup) {
@@ -39,18 +43,35 @@ export function EnsureAPIAccessPopup({
     }
   }, [loginPopup, onFinish, resume])
 
-  //Open the login popup
+  // Open the login popup
   const startLoginPopup = useCallback(async () => {
+    const match = AvailableConnections.find((account: any) => account.connection === connection)
+
+    if (!match) {
+      throw new Error(`Connection "${connection}" not found in AvailableConnections`)
+    }
+
+    const { strategy } = match
+
+    const returnTo = new URL("/api/link-account", window.location.origin)
+    returnTo.searchParams.set("returnTo", "/close")
+    returnTo.searchParams.set("tx", "link-account")
+    returnTo.searchParams.set("tx_strategy", strategy)
+    returnTo.searchParams.set("tx_sub", user!.sub)
+    returnTo.searchParams.set("connection", connection)
+
     const params = new URLSearchParams({
       connection,
       access_type: "offline",
       prompt: "consent",
       connection_scope: requiredScopes.join(),
-      returnTo: "/close",
     })
-    const url = `/auth/login?${params.toString()}`
+
+    const url = `/auth/login?${params.toString()}&returnTo=${returnTo}`
+    console.log("popping url", url)
     const windowFeatures = "width=800,height=650,status=no,toolbar=no,menubar=no"
     const popup = window.open(url, "_blank", windowFeatures)
+
     if (!popup) {
       console.error("Popup blocked by the browser")
       return
@@ -58,7 +79,7 @@ export function EnsureAPIAccessPopup({
       setLoginPopup(popup)
       setIsLoading(true)
     }
-  }, [connection, requiredScopes])
+  }, [connection, user, requiredScopes])
 
   if (isLoading) {
     return <WaitingMessage />

@@ -17,9 +17,11 @@ export async function GET(request: NextRequest) {
     user_id: session!.user.sub,
   }
 
-  await linkUser(subject, identity)
-
-  request.cookies.delete("link-account")
+  if (subject !== identity.user_id) {
+    // only try to link if it's a different identity
+    await linkUser(subject, identity)
+    request.cookies.delete("link-account")
+  }
 
   return Response.redirect(new URL(`/auth/login?returnTo=${returnTo}`, request.nextUrl.origin))
 }

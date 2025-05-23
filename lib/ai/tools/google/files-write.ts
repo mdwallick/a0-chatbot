@@ -4,91 +4,38 @@ import { z } from "zod"
 
 import { getAccessTokenForConnection } from "@auth0/ai-vercel"
 import { FederatedConnectionError } from "@auth0/ai/interrupts"
-import { Client } from "@microsoft/microsoft-graph-client"
+import { google } from "googleapis"
+import stream from "stream" // Needed for creating a stream from a string/buffer
 
-import { withMSOneDriveWrite } from "@/lib/auth0-ai/microsoft"
-
-import { Document, Packer, Paragraph, TextRun } from "docx"
-import * as XLSX from "xlsx"
+import { getGoogleAuth, withGoogleDriveWrite } from "@/lib/auth0-ai/google"
+import { OAuth2Client } from "google-auth-library"
 
 const writeSchema = z.object({
-  path: z.string().describe("Full path to the file in OneDrive (e.g. /Documents/example.docx)"),
+  path: z.string().describe("Full path to the file in Google Drive (e.g. /Documents/example.docx)"),
   content: z.string().describe("Content to write to the file"),
-  type: z.enum(["text", "docx", "xlsx"]).describe("Type of file to create"),
+  type: z.enum(["text", "doc", "sheet"]).describe("Type of file to create"),
 })
 
-export const MicrosoftFilesWriteTool = withMSOneDriveWrite(
+export const GoogleFilesWriteTool = withGoogleDriveWrite(
   tool({
-    description: "Create and edit files in OneDrive",
+    description: "Create and edit files in Google Drive",
     parameters: writeSchema,
     execute: async ({ path, content, type }) => {
       try {
         const access_token = getAccessTokenForConnection()
 
-        const client = Client.initWithMiddleware({
-          authProvider: {
-            getAccessToken: async () => {
-              return access_token
-            },
-          },
-        })
+        // Create Google OAuth client.
+        const auth = getGoogleAuth(access_token)
 
+        console.log("Creating", path)
+        console.log("Content", content)
         if (type === "text") {
-          await client.api(`/me/drive/root:${path}:/content`).put(content)
-          return JSON.stringify({
-            status: "success",
-            message: `Text file at ${path} was successfully created/updated`,
-          })
-        }
-
-        let templateType = ""
-        if (type === "docx") {
-          templateType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        } else if (type === "xlsx") {
-          templateType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        }
-
-        if (type === "docx") {
-          const doc = new Document({
-            sections: [
-              {
-                children: content
-                  .split("\n")
-                  .map(line => new Paragraph({ children: [new TextRun(line)] })),
-              },
-            ],
-          })
-
-          const buffer = await Packer.toBuffer(doc)
-
-          const newFile = await client
-            .api(`/me/drive/root:${path}:/content`)
-            .header("Content-Type", templateType)
-            .put(buffer)
-
+          const newFile = createTextFile(auth, path, content)
           return newFile
-        } else if (type === "xlsx") {
-          const rows = content.split("\n").map(row => row.split(","))
-
-          const wb = XLSX.utils.book_new()
-          const ws = XLSX.utils.aoa_to_sheet(rows)
-          XLSX.utils.book_append_sheet(wb, ws, "Sheet1")
-
-          const excelBuffer = XLSX.write(wb, {
-            type: "buffer",
-            bookType: "xlsx",
-          })
-
-          const newFile = await client
-            .api(`/me/drive/root:${path}:/content`)
-            .header("Content-Type", templateType)
-            .put(excelBuffer)
-
-          return JSON.stringify({
-            status: "success",
-            message: `Excel document at ${path} was successfully created/updated`,
-            fileId: newFile.id,
-          })
+        } else {
+          return {
+            message: "Only text messages are supported for now.",
+          }
         }
       } catch (error) {
         if (error instanceof GaxiosError) {
@@ -104,3 +51,40 @@ export const MicrosoftFilesWriteTool = withMSOneDriveWrite(
     },
   })
 )
+
+async function createTextFile(auth: OAuth2Client, fileName: string, fileContent: string) {
+  const drive = google.drive({ version: "v3", auth })
+
+  const fileMetadata = {
+    name: fileName, // The name of the file
+    mimeType: "text/plain",
+    // To place it in a specific folder, add:
+    // parents: ['YOUR_FOLDER_ID_HERE']
+  }
+
+  // Create a readable stream from the content
+  const buffer = Buffer.from(fileContent, "utf-8")
+  const bufferStream = new stream.PassThrough()
+  bufferStream.end(buffer)
+
+  const media = {
+    mimeType: "text/plain",
+    body: bufferStream, // Use the stream here
+  }
+
+  try {
+    const file = await drive.files.create({
+      requestBody: fileMetadata,
+      media: media,
+      fields: "id, name", // Specify which fields to return
+    })
+
+    console.log(`File created successfully!`)
+    console.log("File ID:", file.data.id)
+    console.log("File Name:", file.data.name)
+    return file.data
+  } catch (err) {
+    console.error("Error creating file:", err)
+    throw err
+  }
+}

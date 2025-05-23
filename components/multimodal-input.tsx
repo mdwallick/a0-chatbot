@@ -200,13 +200,7 @@ function PureMultimodalInput({
                 </div>
               </PopoverTrigger>
               <PopoverContent className="w-[275px] flex flex-col gap-0 p-0">
-                <EnableIntegration
-                  title="Connect to Xbox"
-                  icon={<XboxIcon />}
-                  integration={Connections.xbox.connection}
-                />
-
-                {isConnectionEnabled(Connections.google.connection) ? (
+                {isConnectionEnabled(Connections.google.connection) && (
                   <div className="flex items-center justify-between gap-2 hover:bg-gray-100 transition-all ease-in hover:cursor-pointer p-4 py-3 pt-3">
                     <div className="flex gap-2 items-center">
                       <GoogleIcon />
@@ -215,7 +209,9 @@ function PureMultimodalInput({
                       </span>
                     </div>
                   </div>
-                ) : (
+                )}
+
+                {!isConnectionEnabled(Connections.google.connection) && (
                   <EnableIntegration
                     title="Connect to Google"
                     icon={<GoogleIcon />}
@@ -223,17 +219,29 @@ function PureMultimodalInput({
                   />
                 )}
 
-                <EnableIntegration
-                  title="Connect to Microsoft"
-                  icon={<MicrosoftIcon />}
-                  integration={Connections.microsoft.connection}
-                />
+                {!isConnectionEnabled(Connections.microsoft.connection) && (
+                  <EnableIntegration
+                    title="Connect to Microsoft"
+                    icon={<MicrosoftIcon />}
+                    integration={Connections.microsoft.connection}
+                  />
+                )}
 
-                <EnableIntegration
-                  title="Connect to Salesforce"
-                  icon={<SalesforceIcon />}
-                  integration={Connections.salesforce.connection}
-                />
+                {!isConnectionEnabled(Connections.salesforce.connection) && (
+                  <EnableIntegration
+                    title="Connect to Salesforce"
+                    icon={<SalesforceIcon />}
+                    integration={Connections.salesforce.connection}
+                  />
+                )}
+
+                {!isConnectionEnabled(Connections.xbox.connection) && (
+                  <EnableIntegration
+                    title="Connect to Xbox"
+                    icon={<XboxIcon />}
+                    integration={Connections.xbox.connection}
+                  />
+                )}
               </PopoverContent>
             </Popover>
 
@@ -262,20 +270,20 @@ function PureMultimodalInput({
                 icon={<GoogleIconRounded />}
                 tools={[
                   {
+                    title: "What's on my calendar?",
+                    prompt: "What's on my Google calendar this week?",
+                  },
+                  {
+                    title: "Summarize my recent emails",
+                    prompt: "Summarize my Gmail inbox.",
+                  },
+                  {
                     title: "List files and folders",
                     prompt: "List files and folders from Google Drive",
                   },
                   {
-                    title: "Get file metadata",
-                    prompt: "Get file metadata",
-                  },
-                  {
-                    title: "Export files",
-                    prompt: "Export files",
-                  },
-                  {
                     title: "Create new folder",
-                    prompt: "Create new folder",
+                    prompt: "Create a new folder in Google Drive",
                   },
                 ]}
               />
@@ -289,15 +297,15 @@ function PureMultimodalInput({
                 tools={[
                   {
                     title: "What's on my calendar?",
-                    prompt: "What's on my calendar this week?",
+                    prompt: "What's on my Microsoft calendar this week?",
                   },
                   {
                     title: "Summarize my recent emails",
-                    prompt: "Summarize my inbox",
+                    prompt: "Summarize my Microsoft inbox.",
                   },
                   {
-                    title: "List my files",
-                    prompt: "List my files from One Drive",
+                    title: "List files and folders",
+                    prompt: "List my files and folders from Microsoft OneDrive.",
                   },
                 ]}
               />
@@ -311,16 +319,16 @@ function PureMultimodalInput({
                 tools={[
                   {
                     title: "List My Accounts",
-                    prompt: "List my accounts from salesforce",
+                    prompt: "List my accounts from Salesforce.",
                   },
                   {
                     title: "List My Opportunities",
                     prompt:
-                      "List my open opportunities from salesforce and include the total dollar amount at the end",
+                      "List my open opportunities from Salesforce and include the total dollar amount at the end.",
                   },
                   {
                     title: "List My Contacts",
-                    prompt: "List my contacts from salesforce",
+                    prompt: "List my contacts from Salesforce. Make any email addresses clickable.",
                   },
                 ]}
               />

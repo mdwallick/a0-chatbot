@@ -1,6 +1,6 @@
 "use client"
 
-import { Trash2Icon, PencilIcon, XIcon } from "lucide-react"
+import { LogIn, Trash2Icon, PencilIcon, XIcon } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 
 import { cn } from "@/lib/utils"
@@ -10,7 +10,6 @@ import { useSidebar } from "@/components/sidebar-context"
 import { Button } from "./ui/button"
 import Link from "next/link"
 import UserButton from "@/components/auth0/user-button"
-import ThemeToggle from "./theme-toggle"
 
 export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boolean }) {
   const router = useRouter()
@@ -49,31 +48,34 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
             <Button onClick={toggleSidebar} variant="ghost" size="icon" aria-label="Close sidebar">
               <XIcon size={20} />
             </Button>
-            <Button
-              onClick={async () => {
-                await createNewChat()
-                toggleSidebar() // Close after creating
-              }}
-              variant="outline"
-              className="gap-2" // No w-full, let it size itself
-              aria-label="New chat"
-            >
-              <PencilIcon size={16} /> New Chat
-            </Button>
+            {user && (
+              <Button
+                onClick={async () => {
+                  await createNewChat()
+                  toggleSidebar() // Close after creating
+                }}
+                variant="outline"
+                className="gap-2" // No w-full, let it size itself
+                aria-label="New chat"
+              >
+                <PencilIcon size={16} />
+              </Button>
+            )}
           </div>
         ) : (
           // --- Desktop Header (Just New Chat) ---
           <div className={cn("flex h-full items-center", !isSidebarExpanded && "justify-center")}>
-            <Button
-              onClick={createNewChat} // No toggle needed for desktop
-              variant="outline"
-              size={isSidebarExpanded ? "default" : "icon"}
-              className={cn("gap-2", isSidebarExpanded && "justify-start")}
-              aria-label="New chat"
-            >
-              <PencilIcon size={16} />
-              {isSidebarExpanded && <span className="ml-2">New Chat</span>}
-            </Button>
+            {user && (
+              <Button
+                onClick={createNewChat} // No toggle needed for desktop
+                variant="outline"
+                size={isSidebarExpanded ? "default" : "icon"}
+                className={cn("gap-2", isSidebarExpanded && "justify-start")}
+                aria-label="New chat"
+              >
+                <PencilIcon size={16} />
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -147,10 +149,11 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
             </UserButton>
           ) : (
             <Button asChild variant="outline">
-              <Link href="/auth/login">Sign In</Link>
+              <Link href="/auth/login">
+                <LogIn size={16} className="mr-2" />
+              </Link>
             </Button>
           )}
-          <ThemeToggle />
         </div>
       </div>
     </div>

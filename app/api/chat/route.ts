@@ -1,11 +1,13 @@
 import { createDataStreamResponse, Message, streamText } from "ai"
 
-import { googleDriveTools } from "@/lib/ai/tools"
 import {
   GmailReadTool,
   GmailSendTool,
+  GoogleFilesListTool,
   GoogleCalendarReadTool,
   GoogleCalendarWriteTool,
+  GoogleFilesReadTool,
+  GoogleFilesWriteTool,
 } from "@/lib/ai/tools/google"
 
 import {
@@ -40,9 +42,11 @@ export async function POST(request: Request) {
   const tools = {
     GmailReadTool,
     GmailSendTool,
+    GoogleFilesListTool,
     GoogleCalendarReadTool,
     GoogleCalendarWriteTool,
-    ...googleDriveTools,
+    GoogleFilesReadTool,
+    GoogleFilesWriteTool,
     MicrosoftCalendarReadTool,
     MicrosoftCalendarWriteTool,
     MicrosoftFilesListTool,

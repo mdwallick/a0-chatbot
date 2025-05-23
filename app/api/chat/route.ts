@@ -25,6 +25,8 @@ import { setAIContext } from "@auth0/ai-vercel"
 import { errorSerializer, withInterruptions } from "@auth0/ai-vercel/interrupts"
 
 import { trimMessages } from "@/lib/utils"
+import { prisma } from "@/lib/prisma"
+import { summarizeThread } from "@/lib/summarize-thread"
 
 export async function POST(request: Request) {
   const { id, messages }: { id: string; messages: Array<Message>; selectedChatModel: string } =
@@ -61,6 +63,45 @@ export async function POST(request: Request) {
   const systemTemplate = await getSystemTemplate(isAuthenticated)
   const now = new Date().toLocaleString("en-US", { timeZone: "US/Central" })
 
+  if (isAuthenticated) {
+    // only save the message if the user is authenticated
+    const thread = await prisma.chatThread.upsert({
+      where: { id },
+      update: {}, // no update needed
+      create: {
+        id,
+        userId: session!.user.sub,
+      },
+    })
+
+    await prisma.message.create({
+      data: {
+        role: "user",
+        content: messages[messages.length - 1].content,
+        threadId: id,
+      },
+    })
+
+    console.log("# of messages", messages.length)
+    if (thread.summary === "New conversation" && messages.length >= 3) {
+      console.log("we have 3 messages, create a thread title (summary)")
+      const recentMessages = messages.slice(-3)
+
+      const summary = await summarizeThread(
+        recentMessages.reverse().map(m => ({
+          role: m.role, // e.g. "user" or "assistant"
+          content: m.content,
+        }))
+      )
+      console.log("summary", summary)
+
+      await prisma.chatThread.update({
+        where: { id },
+        data: { summary },
+      })
+    }
+  }
+
   return createDataStreamResponse({
     execute: withInterruptions(
       async dataStream => {
@@ -70,6 +111,18 @@ export async function POST(request: Request) {
           messages: trimmedMessages,
           maxSteps: 5,
           tools: isAuthenticated ? tools : {}, // Only provide tools if user is authenticated
+          async onFinish(finalResult) {
+            if (isAuthenticated) {
+              // only save the message if the user is authenticated
+              await prisma.message.create({
+                data: {
+                  role: "assistant",
+                  content: finalResult.text,
+                  threadId: id,
+                },
+              })
+            }
+          },
         })
 
         result.mergeIntoDataStream(dataStream, {
@@ -100,7 +153,8 @@ Available integrations for authenticated users:
 You can offer these integration features only when the user is authenticated.
 
 IMPORTANT - WHICH TOOLS TO USE:
-Take into account the services the user has linked to their account. For example, if the user has only linked their Google account, then only use the Google Drive tools if they ask about their files or documents.
+Take into account the services the user has linked to their account.
+For example, if the user has only authenticated their Google account, only use Google tools. Don't suggest Microsoft tools and vice versa.
 `
 
   const baseTemplate = `

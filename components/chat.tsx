@@ -1,10 +1,9 @@
 "use client"
 
-import type { UIMessage, ChatRequestOptions } from "ai"
+import type { UIMessage } from "ai"
 
 import { useChat } from "@ai-sdk/react"
 import { useInterruptions } from "@auth0/ai-vercel/react"
-import { useUser } from "@auth0/nextjs-auth0"
 
 import { Messages } from "./messages"
 import { MultimodalInput } from "./multimodal-input"
@@ -20,7 +19,6 @@ export function Chat({
   initialMessages: Array<UIMessage>
   isReadonly: boolean
 }) {
-  const { user } = useUser()
   const {
     messages,
     setMessages,
@@ -44,41 +42,6 @@ export function Chat({
     })
   )
 
-  const handleSubmitWithSave = async (
-    event?: { preventDefault?: () => void },
-    chatRequestOptions?: ChatRequestOptions
-  ) => {
-    if (event?.preventDefault) {
-      event.preventDefault()
-    }
-
-    const userMessage = {
-      content: input,
-      role: "user" as const,
-    }
-
-    // Save user message to database if authenticated
-    if (user) {
-      try {
-        await fetch("/api/chat/save", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            threadId: id,
-            message: userMessage,
-          }),
-        })
-      } catch (error) {
-        console.error("Error saving message:", error)
-      }
-    }
-
-    // Continue with normal chat submission
-    handleSubmit(event, chatRequestOptions)
-  }
-
   return (
     <>
       <div
@@ -96,7 +59,7 @@ export function Chat({
         />
 
         <form
-          onSubmit={handleSubmitWithSave}
+          onSubmit={handleSubmit}
           className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl"
         >
           {!isReadonly && (
@@ -109,7 +72,7 @@ export function Chat({
               append={append}
               messages={messages}
               setMessages={setMessages}
-              handleSubmit={handleSubmitWithSave}
+              handleSubmit={handleSubmit}
             />
           )}
         </form>

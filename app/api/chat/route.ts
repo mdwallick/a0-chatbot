@@ -1,5 +1,6 @@
 import { createDataStreamResponse, Message, streamText } from "ai"
 
+import { WebSearchTool } from "@/lib/ai/tools"
 import {
   GmailReadTool,
   GmailSendTool,
@@ -56,6 +57,7 @@ export async function POST(request: Request) {
     MicrosoftMailSendTool,
     SalesforceQueryTool,
     SalesforceSearchTool,
+    WebSearchTool,
     XboxUserProfileTool,
     XboxAchievementTool,
   }
@@ -151,14 +153,8 @@ Available integrations for authenticated users:
 - Google Drive: Search, list, read, and manage files and folders (Use google_drive_list_files to list files, google_drive_get_file to read file content)
 - OneDrive: Access and manage files
 - Salesforce: Search and manage CRM records
-- Slack: List and search channels
-- Box: Access and manage files
 
 You can offer these integration features only when the user is authenticated.
-
-IMPORTANT - WHICH TOOLS TO USE:
-Take into account the services the user has linked to their account.
-For example, if the user has only authenticated their Google account, only use Google tools. Don't suggest Microsoft tools and vice versa.
 `
 
   const baseTemplate = `
@@ -175,9 +171,10 @@ ${
 }
 
 TOOL SELECTION RULES:
-1. Only use tools that are directly relevant to the user's request
-2. Do not use calendar tools unless explicitly asked about calendar/schedule/meetings
-3. Do not mix tools from different services unless specifically requested
+1. You can use the 'WebSearchTool' tool to get up-to-date web information. When presenting results to the user, format them in numbered Markdown list with clickable links and brief summaries.
+2. Only use tools that are directly relevant to the user's request
+3. Do not use calendar tools unless explicitly asked about calendar/schedule/meetings
+4. Do not mix tools from different services unless specifically requested
 ${
   isAuthenticated
     ? "4. You have access to all integration tools since the user is authenticated"

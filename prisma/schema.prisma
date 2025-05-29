@@ -18,19 +18,29 @@ model ChatThread {
 }
 
 model Message {
-  id          String     @id @default(cuid())
-  content     String
-  role        String
-  threadId    String
-  createdAt   DateTime   @default(now())
-  thread      ChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  id        String     @id @default(cuid())
+  content   String
+  role      String
+  threadId  String
+  createdAt DateTime   @default(now())
+  thread    ChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
 }
 
 model XboxCredential {
-  userId      String      @id
-  userHash    String
-  xuid        String
-  xstsToken   String
-  issuedAt    DateTime
-  expiresOn   DateTime
+  userId    String      @id
+  userHash  String
+  xuid      String
+  xstsToken String
+  issuedAt  DateTime
+  expiresOn DateTime
+}
+
+model GrantedScope {
+  id            String    @id @default(cuid())
+  userId        String
+  connectionId  String
+  scope         String
+  grantedAt     DateTime  @default(now())
+
+  @@unique([userId, connectionId, scope], name: "UserConnectionScopeUnique")
 }

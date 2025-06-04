@@ -52,6 +52,7 @@ export function EnsureAPIAccessPopup({
     }
 
     const { strategy } = match
+    const requested_scopes = requiredScopes.join(",")
 
     const returnTo = new URL("/api/link-account", window.location.origin)
     returnTo.searchParams.set("returnTo", "/close")
@@ -59,17 +60,16 @@ export function EnsureAPIAccessPopup({
     returnTo.searchParams.set("tx_strategy", strategy)
     returnTo.searchParams.set("tx_sub", user!.sub)
     returnTo.searchParams.set("connection", connection)
+    returnTo.searchParams.set("scopes", requested_scopes)
 
     const params = new URLSearchParams({
       connection,
       access_type: "offline",
-      prompt: "consent",
-      connection_scope: requiredScopes.join(),
+      connection_scope: requested_scopes,
     })
 
     const url = `/auth/login?${params.toString()}&returnTo=${returnTo}`
-    console.log("popping url", url)
-    const windowFeatures = "width=800,height=650,status=no,toolbar=no,menubar=no"
+    const windowFeatures = "width=800,height=800,status=no,toolbar=no,menubar=no"
     const popup = window.open(url, "_blank", windowFeatures)
 
     if (!popup) {

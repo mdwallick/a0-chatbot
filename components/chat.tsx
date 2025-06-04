@@ -5,6 +5,7 @@ import type { UIMessage } from "ai"
 import { useChat } from "@ai-sdk/react"
 import { useInterruptions } from "@auth0/ai-vercel/react"
 
+import Footer from "./footer"
 import { Messages } from "./messages"
 import { MultimodalInput } from "./multimodal-input"
 
@@ -76,6 +77,7 @@ export function Chat({
             />
           )}
         </form>
+        <Footer />
       </div>
     </>
   )

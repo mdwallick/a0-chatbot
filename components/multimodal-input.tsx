@@ -243,6 +243,21 @@ function PureMultimodalInput({
                   />
                 )}
               </PopoverContent>
+
+              {/*
+            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                <AttachmentButton onFileUpload={handleFileUpload} />
+                <Button
+                  className="size-8"
+                  onClick={submitForm}
+                  disabled={input.length === 0 || isLoading}
+                  variant="ghost"
+                  aria-label="Send message"
+                >
+                  <ArrowUpIcon size={16} />
+                </Button>
+              </div>
+            */}
             </Popover>
 
             {isConnectionEnabled(Connections.xbox.connection) && (

@@ -1,6 +1,7 @@
+
 "use client"
 
-import { MenuIcon } from "lucide-react"
+import { MenuIcon, Sparkles } from "lucide-react"
 import { useSidebar } from "@/components/sidebar-context"
 import { Button } from "@/components/ui/button"
 import ThemeToggle from "./theme-toggle"
@@ -9,21 +10,26 @@ export default function Header() {
   const { isSidebarExpanded, toggleSidebar } = useSidebar()
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4">
+    <header className="sticky top-0 z-30 flex h-12 items-center gap-3 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
       <Button
-        size="icon"
-        variant="outline"
+        size="sm"
+        variant="ghost"
         onClick={toggleSidebar}
         aria-label={isSidebarExpanded ? "Close sidebar" : "Open sidebar"}
-        className="flex-shrink-0"
+        className="flex-shrink-0 h-8 w-8 p-0 hover:bg-accent"
       >
-        <MenuIcon size={20} />
+        <MenuIcon size={16} />
       </Button>
 
-      {/* Optional: App Title / Breadcrumbs / Other Header Content */}
-      <div className="flex-1 text-center font-semibold">Auth0 AI Demo</div>
+      {/* Copilot branding */}
+      <div className="flex items-center gap-2 flex-1">
+        <div className="flex items-center gap-2 text-primary">
+          <Sparkles size={20} className="text-primary" />
+          <span className="font-semibold text-lg">Copilot</span>
+        </div>
+      </div>
 
-      {/* Right-aligned items (e.g., User Avatar/Menu if you move it here) */}
+      {/* Right-aligned items */}
       <div className="ml-auto flex items-center gap-2">
         <ThemeToggle />
       </div>

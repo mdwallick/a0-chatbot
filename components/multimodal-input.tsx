@@ -300,12 +300,22 @@ function PureMultimodalInput({
                     prompt: "What's on my Microsoft calendar this week?",
                   },
                   {
+                    title: "Create a new appointment",
+                    prompt:
+                      "Create a new appointment on my Microsoft calendar for next Monday from 12-1pm.",
+                  },
+                  {
                     title: "Summarize my recent emails",
                     prompt: "Summarize my Microsoft inbox.",
                   },
                   {
                     title: "List files and folders",
                     prompt: "List my files and folders from Microsoft OneDrive.",
+                  },
+                  {
+                    title: "Create a new file",
+                    prompt:
+                      'Create a new text file in my OneDrive and summarize the movie "2001: A Space Odyssey"',
                   },
                 ]}
               />

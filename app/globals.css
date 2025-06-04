@@ -1,11 +1,8 @@
-
 @import "tailwindcss";
 @import "tw-animate-css";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @custom-variant dark (&:is(.dark *));
-
-/* Import Segoe UI font family (Microsoft's standard) */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @theme inline {
   --color-background: var(--background);
@@ -122,11 +119,18 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground font-sans;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-semibold;
   }
 }
@@ -184,7 +188,8 @@ body {
 }
 
 /* Copilot-style input focus */
-input:focus, textarea:focus {
+input:focus,
+textarea:focus {
   outline: 2px solid var(--primary);
   outline-offset: -2px;
 }

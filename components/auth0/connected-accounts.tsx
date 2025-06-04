@@ -8,8 +8,6 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 import { useUser } from "@auth0/nextjs-auth0"
 
-import { ConnectionsMetadata } from "@/lib/auth0-ai/connections"
-
 function Spinner() {
   return (
     <svg
@@ -41,6 +39,7 @@ type ConnectedAccount = {
   provider: string
   connection: string
   isPrimary: boolean
+  grantedScopes?: string[]
 }
 
 type UserConnectedAccountsProps = {
@@ -181,6 +180,16 @@ export default function ConnectedAccounts({
 
               const isMainConnection = connection === currentConnectedAccounts[0]?.connection
 
+              const detailedConnectedAccount = currentConnectedAccounts?.find(
+                cca => cca.connection === connection
+              )
+              const scopesToDisplay = detailedConnectedAccount?.grantedScopes || []
+              console.log("connection", connection)
+              console.log("scopes", scopesToDisplay)
+              const providerKeyForLookup = connection.toLowerCase() as ProviderKey
+              const providerInfo = UserScopeMetadata[providerKeyForLookup]
+              const accountManagementUrl = providerInfo?.userAccountUrl
+
               return (
                 <div
                   key={`connection-${idx}-${connection}`}
@@ -232,25 +241,38 @@ export default function ConnectedAccounts({
                       )}
                     </div>
                   </div>
-                  <div className="relative w-full border-t-gray-200 border-t pt-4 text-sm grid grid-cols-[0_1fr] gap-y-2 items-start bg-card text-card-foreground">
-                    <div className="col-start-2 line-clamp-1 min-h-4 font-medium tracking-tight text-muted-foreground ">
-                      Based on the consent you&apos;ve granted, the app <strong>MAY</strong> be
-                      allowed to:
+                  {isConnected && (
+                    <div className="relative w-full border-t-gray-200 border-t pt-4 text-sm grid grid-cols-[0_1fr] gap-y-2 items-start bg-card text-card-foreground">
+                      <div className="col-start-2 line-clamp-1 min-h-4 font-medium tracking-tight text-muted-foreground ">
+                        You have granted permission to this app to:
+                      </div>
+                      <ul className="text-muted-foreground col-start-2 grid justify-items-start gap-1 text-sm [&_p]:leading-relaxed">
+                        {isConnected && scopesToDisplay.length > 0 ? (
+                          scopesToDisplay.map(scope => (
+                            <li key={scope} className="list-disc ml-5">
+                              {getFriendlyScopeName(connection, scope)}
+                            </li>
+                          ))
+                        ) : isConnected ? (
+                          <li className="list-disc ml-5">No specific permissions found.</li>
+                        ) : (
+                          <li className="list-disc ml-5">Connect to see permissions.</li>
+                        )}{" "}
+                      </ul>
+                      <div className="col-start-2 line-clamp-1 min-h-4 font-medium tracking-tight text-muted-foreground ">
+                        To manage or revoke this consent, see your{" "}
+                        <a
+                          href={accountManagementUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline hover:text-primary font-medium"
+                        >
+                          account page
+                        </a>{" "}
+                        for this provider.
+                      </div>
                     </div>
-                    <ul className="text-muted-foreground col-start-2 grid justify-items-start gap-1 text-sm [&_p]:leading-relaxed">
-                      {ConnectionsMetadata.find(
-                        conn => conn.connection === connection
-                      )?.friendlyScopes?.map(scope => (
-                        <li key={scope} className="list-disc ml-5">
-                          {scope}
-                        </li>
-                      )) || <li>No scopes available</li>}
-                    </ul>
-                    {/* <div className="col-start-2 line-clamp-1 min-h-4 font-medium tracking-tight text-muted-foreground ">
-                      To see what exact permissions you've consented to, see your{" "}
-                      <a href="#">account page</a> for this provider.
-                    </div> */}
-                  </div>
+                  )}
                 </div>
               )
             }
@@ -258,4 +280,27 @@ export default function ConnectedAccounts({
       </CardContent>
     </Card>
   )
+}
+
+import type { ProviderKey } from "@/lib/auth0-ai/connections"
+import { UserScopeMetadata } from "@/lib/auth0-ai/connections"
+
+/**
+ * Finds the friendly name for a technical scope given a provider.
+ * @param {string} providerName - The name of the connection/provider (e.g., "google").
+ * @param {string} technicalScope - The technical scope string.
+ * @returns {string} The friendly scope string, or the technical scope if not found.
+ */
+function getFriendlyScopeName(providerName: string, technicalScope: string) {
+  const normalizedProviderName = providerName.toLowerCase() as ProviderKey
+  const providerData = UserScopeMetadata[normalizedProviderName]
+
+  if (providerData && providerData.scopes && providerData.friendlyScopes) {
+    const scopeIndex = providerData.scopes.indexOf(technicalScope)
+    if (scopeIndex !== -1 && scopeIndex < providerData.friendlyScopes.length) {
+      return providerData.friendlyScopes[scopeIndex]
+    }
+  }
+  // Fallback to the technical scope if no friendly name is found
+  return technicalScope
 }

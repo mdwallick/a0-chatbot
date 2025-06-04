@@ -33,9 +33,9 @@ export function EnableIntegration({
       }
 
       const returnToUrl = new URL("/api/link-account", window.location.origin)
-      const loginUrl = new URL("/auth/login", window.location.origin)
-
       returnToUrl.searchParams.set("returnTo", window.location.href)
+
+      const loginUrl = new URL("/auth/login", window.location.origin)
       loginUrl.searchParams.set("tx", "link-account")
       loginUrl.searchParams.set("tx_strategy", strategy)
       loginUrl.searchParams.set("tx_sub", user!.sub)

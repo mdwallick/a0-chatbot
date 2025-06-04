@@ -2,5 +2,11 @@
   "version": 2,
   "buildCommand": "npm run vercel-build",
   "devCommand": "next dev",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/cleanup",
+      "schedule": "0 5 * * *"
+    }
+  ]
 }

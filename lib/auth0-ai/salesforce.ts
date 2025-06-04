@@ -5,5 +5,5 @@ const auth0AI = new Auth0AI()
 
 export const withSalesforce = auth0AI.withTokenForConnection({
   ...Connections.salesforce,
-  scopes: ["id", "api", "refresh_token"],
+  //scopes: ["id", "api", "refresh_token"],
 })

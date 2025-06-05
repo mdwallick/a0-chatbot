@@ -53,7 +53,7 @@
   --card-foreground: #323130;
   --popover: #ffffff;
   --popover-foreground: #323130;
-  --primary: #0078d4;
+  --primary: #000000;
   --primary-foreground: #ffffff;
   --secondary: #f3f2f1;
   --secondary-foreground: #323130;
@@ -82,13 +82,13 @@
 
 .dark {
   /* Copilot Dark Theme Colors */
-  --background: #1e1e1e;
+  --background: #101524;
   --foreground: #ffffff;
   --card: #2d2d30;
   --card-foreground: #ffffff;
   --popover: #2d2d30;
   --popover-foreground: #ffffff;
-  --primary: #0078d4;
+  --primary: #ffffff;
   --primary-foreground: #ffffff;
   --secondary: #3e3e42;
   --secondary-foreground: #ffffff;
@@ -105,7 +105,7 @@
   --chart-3: #40e0d0;
   --chart-4: #9bb934;
   --chart-5: #ffb900;
-  --sidebar: #252526;
+  --sidebar: #0c101c;
   --sidebar-foreground: #ffffff;
   --sidebar-primary: #0078d4;
   --sidebar-primary-foreground: #ffffff;

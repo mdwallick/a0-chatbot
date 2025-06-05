@@ -11,6 +11,7 @@ import { Button } from "./ui/button"
 import Link from "next/link"
 import UserButton from "@/components/auth0/user-button"
 import ThemeToggle from "./theme-toggle"
+import { MicrosoftCopilotIcon } from "./icons"
 
 export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boolean }) {
   const router = useRouter()
@@ -49,7 +50,6 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
               <PanelLeftDashed size={20} />
             </Button>
             <div className="flex items-center gap-2">
-              <ThemeToggle />
               {user && (
                 <Button
                   onClick={async () => {
@@ -72,7 +72,7 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
             <div className="flex items-center gap-2 min-w-0">
               {showExpandedContent && (
                 <div className="flex items-center gap-2 text-primary">
-                  <Sparkles size={20} className="text-primary flex-shrink-0" />
+                  <MicrosoftCopilotIcon />
                   <span className="font-semibold text-lg">Copilot</span>
                 </div>
               )}

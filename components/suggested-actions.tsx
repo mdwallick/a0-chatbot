@@ -25,7 +25,7 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
       title: "Eat healthier",
       label: "meal planning tips",
       action: "Give me tips for eating healthier and meal planning",
-      picture: "cartoon-cat.png", // You can replace with appropriate images
+      picture: "healthy-food.png",
     },
     {
       title: "Prep for an interview",

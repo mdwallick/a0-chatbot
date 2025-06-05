@@ -54,37 +54,58 @@ export function Chat({
 
   return (
     <>
-      
       <div className="flex flex-col min-w-0 h-dvh bg-background w-full">
-        <Messages
-          chatId={id}
-          messages={messages}
-          setMessages={setMessages}
-          status={status}
-          reload={reload}
-          isReadonly={isReadonly}
-          toolInterrupt={toolInterrupt}
-        />
+        {/* Fixed Header */}
+        <div className="flex-shrink-0 border-b border-border bg-background">
+          <div className="flex items-center justify-between h-14 px-4">
+            <div className="flex items-center gap-2">
+              {/* Left side content can go here */}
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Right side content goes here */}
+              {user && (
+                <UserButton user={user}>
+                  <a href="/profile" className="flex gap-2 items-center text-sm w-full">
+                    Profile
+                  </a>
+                </UserButton>
+              )}
+            </div>
+          </div>
+        </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl"
-        >
-          {!isReadonly && (
-            <MultimodalInput
-              chatId={id}
-              input={input}
-              setInput={setInput}
-              status={status}
-              stop={stop}
-              append={append}
-              messages={messages}
-              setMessages={setMessages}
-              handleSubmit={handleSubmit}
-            />
-          )}
-        </form>
-        <Footer />
+        {/* Scrollable Content Area */}
+        <div className="flex flex-col flex-1 min-h-0">
+          <Messages
+            chatId={id}
+            messages={messages}
+            setMessages={setMessages}
+            status={status}
+            reload={reload}
+            isReadonly={isReadonly}
+            toolInterrupt={toolInterrupt}
+          />
+
+          <form
+            onSubmit={handleSubmit}
+            className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl"
+          >
+            {!isReadonly && (
+              <MultimodalInput
+                chatId={id}
+                input={input}
+                setInput={setInput}
+                status={status}
+                stop={stop}
+                append={append}
+                messages={messages}
+                setMessages={setMessages}
+                handleSubmit={handleSubmit}
+              />
+            )}
+          </form>
+          <Footer />
+        </div>
       </div>
     </>
   )

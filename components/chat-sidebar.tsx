@@ -35,7 +35,7 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
 
   const sidebarFrameClasses = cn(
     "h-full flex flex-col bg-[var(--sidebar)] text-[var(--sidebar-foreground)] border-r border-[var(--border)] transition-all duration-300",
-    isMobileDrawer ? "w-full" : isSidebarExpanded ? "w-64" : "w-16"
+    isMobileDrawer ? "w-full" : isSidebarExpanded ? "w-64" : "w-20"
   )
 
   return (

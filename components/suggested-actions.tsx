@@ -65,7 +65,7 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
             }}
             className="text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start"
           >
-            <span><img src={suggestedAction.picture} /></span>
+            <span><img src={`/${suggestedAction.picture}`} alt={suggestedAction.title} className="w-6 h-6" /></span>
             <span className="font-medium">{suggestedAction.title}</span>
             <span className="text-muted-foreground">{suggestedAction.label}</span>
           </Button>

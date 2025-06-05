@@ -15,25 +15,31 @@ interface SuggestedActionsProps {
 function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
   const suggestedActions = [
     {
-      title: "What are the advantages",
-      label: "of using Auth0?",
-      action: "What are the advantages of using Auth0?",
+      title: "Create an image",
+      label: "using DALL-E",
+      action: "Create an image of a cat using DALL-E",
+      picture: "cartoon-cat.png",
     },
-    {
-      title: "Write code to",
-      label: `demonstrate djikstra's algorithm`,
-      action: `Write code to demonstrate djikstra's algorithm`,
-    },
-    {
-      title: "Help me write an essay",
-      label: `about silicon valley`,
-      action: `Help me write an essay about silicon valley`,
-    },
-    {
-      title: "What is the weather",
-      label: "in San Francisco?",
-      action: "What is the weather in San Francisco?",
-    },
+    // {
+    //   title: "What are the advantages",
+    //   label: "of using Auth0?",
+    //   action: "What are the advantages of using Auth0?",
+    // },
+    // {
+    //   title: "Write code to",
+    //   label: `demonstrate djikstra's algorithm`,
+    //   action: `Write code to demonstrate djikstra's algorithm`,
+    // },
+    // {
+    //   title: "Help me write an essay",
+    //   label: `about silicon valley`,
+    //   action: `Help me write an essay about silicon valley`,
+    // },
+    // {
+    //   title: "What is the weather",
+    //   label: "in San Francisco?",
+    //   action: "What is the weather in San Francisco?",
+    // },
   ]
 
   return (
@@ -59,6 +65,7 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
             }}
             className="text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start"
           >
+            <span><img src={suggestedAction.picture} /></span>
             <span className="font-medium">{suggestedAction.title}</span>
             <span className="text-muted-foreground">{suggestedAction.label}</span>
           </Button>

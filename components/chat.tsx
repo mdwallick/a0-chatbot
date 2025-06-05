@@ -15,6 +15,7 @@ import Footer from "./footer"
 import { Messages } from "./messages"
 import { MultimodalInput } from "./multimodal-input"
 import { Button } from "./ui/button"
+import ThemeToggle from "./theme-toggle"
 
 import { generateUUID } from "@/lib/utils"
 
@@ -56,20 +57,27 @@ export function Chat({
     <>
       <div className="flex flex-col min-w-0 h-dvh bg-background w-full">
         {/* Fixed Header */}
-        <div className="flex-shrink-0 border-b border-border bg-background">
+        <div className="flex-shrink-0 bg-background">
           <div className="flex items-center justify-between h-14 px-4">
             <div className="flex items-center gap-2">
               {/* Left side content can go here */}
             </div>
             <div className="flex items-center gap-2">
               {/* Right side content goes here */}
-              {user && (
+              {user ? (
                 <UserButton user={user}>
                   <a href="/profile" className="flex gap-2 items-center text-sm w-full">
                     Profile
                   </a>
+                  <ThemeToggle />
                 </UserButton>
-              )}
+              ) : (
+                  <Button asChild variant="outline">
+                    <Link href="/auth/login">
+                      <LogIn size={16} className="mr-2" />
+                    </Link>
+                  </Button>
+                )}
             </div>
           </div>
         </div>

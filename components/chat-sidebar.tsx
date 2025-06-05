@@ -35,14 +35,14 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
   const currentChatId = pathname?.split("/").pop()
 
   const sidebarFrameClasses = cn(
-    "h-full flex flex-col bg-[var(--sidebar)] text-[var(--sidebar-foreground)] border-r border-[var(--border)] transition-all duration-300",
+    "h-full flex flex-col bg-[var(--sidebar)] text-[var(--sidebar-foreground)] transition-all duration-300",
     isMobileDrawer ? "w-full" : isSidebarExpanded ? "w-64" : "w-24"
   )
 
   return (
     <div className={sidebarFrameClasses}>
       {/* --- SIDEBAR HEADER SECTION --- */}
-      <div className="p-2 border-b border-[var(--border)] h-14">
+      <div className="p-2 h-14">
         {isMobileDrawer ? (
           // --- Mobile Header ---
           <div className="flex items-center justify-between h-full">
@@ -72,8 +72,12 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
             <div className="flex items-center gap-2 min-w-0">
               {showExpandedContent && (
                 <div className="flex items-center gap-2 text-primary">
-                  <MicrosoftCopilotIcon />
-                  <span className="font-semibold text-lg">Copilot</span>
+                  <Link href="/">
+                    <MicrosoftCopilotIcon />
+                  </Link>
+                  <Link href="/">
+                    <span className="font-semibold text-lg text-theme">Copilot</span>
+                  </Link>
                 </div>
               )}
             </div>

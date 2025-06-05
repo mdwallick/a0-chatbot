@@ -256,6 +256,28 @@ export const MicrosoftIcon = () => (
   </svg>
 )
 
+export const MicrosoftIconRounded = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="25"
+    height="25"
+    viewBox="0 0 21 21"
+    preserveAspectRatio="xMidYMid meet"
+  >
+    <defs>
+      <clipPath id="circleClip">
+        <circle cx="10.5" cy="10.5" r="10.5" />
+      </clipPath>
+    </defs>
+    <g clipPath="url(#circleClip)">
+      <path fill="#f35325" d="M0 0h10v10H0z" />
+      <path fill="#81bc06" d="M11 0h10v10H11z" />
+      <path fill="#05a6f0" d="M0 11h10v10H0z" />
+      <path fill="#ffba08" d="M11 11h10v10H11z" />
+    </g>
+  </svg>
+)
+
 export const MicrosoftIconSquared = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"

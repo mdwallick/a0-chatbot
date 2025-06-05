@@ -57,14 +57,14 @@
   :root {
     --radius: 8px;
     /* Copilot Light Theme Colors */
-    --background: #fafafa;
+    --background: #f9f4f2;
     --foreground: #323130;
     --card: #ffffff;
     --card-foreground: #323130;
     --popover: #ffffff;
     --popover-foreground: #323130;
-    --primary: #000000;
-    --primary-foreground: #ffffff;
+    --primary: #fce3cd;
+    --primary-foreground: #000000;
     --secondary: #f3f2f1;
     --secondary-foreground: #323130;
     --muted: #f3f2f1;
@@ -80,7 +80,7 @@
     --chart-3: #40e0d0;
     --chart-4: #9bb934;
     --chart-5: #ffb900;
-    --sidebar: #ffffff;
+    --sidebar: #edeae7;
     --sidebar-foreground: #323130;
     --sidebar-primary: #0078d4;
     --sidebar-primary-foreground: #ffffff;

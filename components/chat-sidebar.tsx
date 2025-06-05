@@ -84,7 +84,7 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
             
             {/* Right side - Theme Toggle and New Chat */}
             <div className="flex items-center gap-1">
-              {!showExpandedContent && <ThemeToggle />}
+              {/* {!showExpandedContent && <ThemeToggle />} */}
               {user && (
                 <Button
                   onClick={createNewChat}
@@ -95,7 +95,7 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
                   <PencilIcon size={16} />
                 </Button>
               )}
-              {showExpandedContent && <ThemeToggle />}
+              {/* {showExpandedContent && <ThemeToggle />} */}
             </div>
           </div>
         )}

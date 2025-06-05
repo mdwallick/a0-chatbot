@@ -15,18 +15,7 @@ import { AttachmentWithMeta } from "../lib/utils"
 import { AttachmentItem } from "./attachment-item"
 import { EnableIntegration } from "./enable-integration"
 import { GoogleDrivePicker, GoogleFile } from "./google-picker"
-import {
-  ArrowUpIcon,
-  GoogleIcon,
-  GoogleIconRounded,
-  MicrosoftIcon,
-  MicrosoftIconRounded,
-  SalesforceIcon,
-  SalesforceIconRounded,
-  StopIcon,
-  XboxIcon,
-  XboxIconRounded,
-} from "./icons"
+import { ArrowUpIcon, GoogleIcon, MicrosoftIcon, SalesforceIcon, StopIcon, XboxIcon } from "./icons"
 import { IntegrationTools } from "./integration-tools"
 import { SuggestedActions } from "./suggested-actions"
 import { Button } from "./ui/button"
@@ -264,7 +253,7 @@ function PureMultimodalInput({
               <IntegrationTools
                 append={append}
                 title="Xbox Tools"
-                icon={<XboxIconRounded />}
+                icon={<XboxIcon />}
                 tools={[
                   {
                     title: "Show my Xbox profile",
@@ -282,7 +271,7 @@ function PureMultimodalInput({
               <IntegrationTools
                 append={append}
                 title="Google Tools"
-                icon={<GoogleIconRounded />}
+                icon={<GoogleIcon />}
                 tools={[
                   {
                     title: "What's on my calendar?",
@@ -308,7 +297,7 @@ function PureMultimodalInput({
               <IntegrationTools
                 append={append}
                 title="Microsoft Tools"
-                icon={<MicrosoftIconRounded />}
+                icon={<MicrosoftIcon />}
                 tools={[
                   {
                     title: "What's on my calendar?",
@@ -340,7 +329,7 @@ function PureMultimodalInput({
               <IntegrationTools
                 append={append}
                 title="Salesforce Tools"
-                icon={<SalesforceIconRounded />}
+                icon={<SalesforceIcon />}
                 tools={[
                   {
                     title: "List My Accounts",

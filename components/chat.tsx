@@ -59,9 +59,7 @@ export function Chat({
         {/* Fixed Header */}
         <div className="flex-shrink-0 bg-background">
           <div className="flex items-center justify-between h-14 px-4">
-            <div className="flex items-center gap-2">
-              {/* Left side content can go here */}
-            </div>
+            <div className="flex items-center gap-2">{/* Left side content can go here */}</div>
             <div className="flex items-center gap-2">
               {/* Right side content goes here */}
               {user ? (
@@ -72,12 +70,12 @@ export function Chat({
                   <ThemeToggle />
                 </UserButton>
               ) : (
-                  <Button asChild variant="outline">
-                    <Link href="/auth/login">
-                      <LogIn size={16} className="mr-2" />
-                    </Link>
-                  </Button>
-                )}
+                <Button asChild variant="outline">
+                  <Link href="/auth/login">
+                    <LogIn size={16} className="mr-2" />
+                  </Link>
+                </Button>
+              )}
             </div>
           </div>
         </div>

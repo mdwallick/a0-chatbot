@@ -1,6 +1,6 @@
 "use client"
 
-import { LogIn, Trash2Icon, PencilIcon, PanelLeftDashed, Sparkles } from "lucide-react"
+import { Trash2Icon, PencilIcon, PanelLeftDashed } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 
 import { cn } from "@/lib/utils"
@@ -9,8 +9,6 @@ import { useSidebar } from "@/components/sidebar-context"
 
 import { Button } from "./ui/button"
 import Link from "next/link"
-import UserButton from "@/components/auth0/user-button"
-import ThemeToggle from "./theme-toggle"
 import { MicrosoftCopilotIcon } from "./icons"
 
 export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boolean }) {
@@ -154,30 +152,6 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
           ))
         )}
       </div>
-
-      {/* 3. BOTTOM STUCK CONTENT SECTION */}
-      {/* <div
-        className={cn(
-          "p-2 border-t border-[var(--border)]",
-          showExpandedContent ? "space-y-1" : ""
-        )}
-      >
-        <div className="flex items-center justify-between h-full">
-          {user ? (
-            <UserButton user={user}>
-              <a href="/profile" className="flex gap-2 items-center text-sm w-full">
-                Profile
-              </a>
-            </UserButton>
-          ) : (
-            <Button asChild variant="outline">
-              <Link href="/auth/login">
-                <LogIn size={16} className="mr-2" />
-              </Link>
-            </Button>
-          )}
-        </div>
-      </div> */}
     </div>
   )
 }

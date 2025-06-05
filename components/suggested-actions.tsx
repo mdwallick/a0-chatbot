@@ -1,4 +1,3 @@
-
 "use client"
 
 import { motion } from "framer-motion"
@@ -42,7 +41,10 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
   ]
 
   return (
-    <div data-testid="suggested-actions" className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full mb-4">
+    <div
+      data-testid="suggested-actions"
+      className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full mb-4"
+    >
       {suggestedActions.map((suggestedAction, index) => (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -67,8 +69,8 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
             className="relative h-32 w-full rounded-2xl p-4 text-left overflow-hidden border-none hover:scale-105 hover:rotate-0 transition-all duration-200"
             style={{
               backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(/${suggestedAction.picture})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
+              backgroundSize: "cover",
+              backgroundPosition: "center",
             }}
           >
             <div className="relative z-10 flex flex-col justify-end h-full text-white">

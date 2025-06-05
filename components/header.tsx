@@ -1,4 +1,3 @@
-
 "use client"
 
 import { MenuIcon, Sparkles } from "lucide-react"

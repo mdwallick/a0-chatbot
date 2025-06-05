@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -122,7 +122,9 @@
 
   body {
     @apply bg-background text-foreground font-sans;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
   }
 
   h1,
@@ -226,9 +228,13 @@ textarea:focus {
 
 /* Copilot-style shadows */
 .shadow-copilot {
-  box-shadow: 0 1.6px 3.6px rgba(0, 0, 0, 0.132), 0 0.3px 0.9px rgba(0, 0, 0, 0.108);
+  box-shadow:
+    0 1.6px 3.6px rgba(0, 0, 0, 0.132),
+    0 0.3px 0.9px rgba(0, 0, 0, 0.108);
 }
 
 .dark .shadow-copilot {
-  box-shadow: 0 1.6px 3.6px rgba(0, 0, 0, 0.4), 0 0.3px 0.9px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 1.6px 3.6px rgba(0, 0, 0, 0.4),
+    0 0.3px 0.9px rgba(0, 0, 0, 0.3);
 }

@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu"
@@ -49,7 +48,7 @@ export default function ThemeToggle() {
               onSelect={() => setTheme(opt.value)}
               className={cn(
                 "flex items-center gap-2 px-3 py-2 text-sm cursor-pointer rounded-md hover:bg-accent transition-colors",
-                theme === opt.value && "bg-accent font-medium"
+                resolvedTheme === opt.value && "bg-accent font-medium"
               )}
             >
               {opt.icon}

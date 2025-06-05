@@ -1,4 +1,3 @@
-
 import { Sparkles } from "lucide-react"
 import Chat from "@/components/chat"
 
@@ -15,14 +14,14 @@ export default function ChatPage() {
             </div>
           </div>
           <h1 className="text-2xl font-semibold text-foreground mb-2">
-            Hey, what's on your mind today?
+            Hey, what&apos;s on your mind today?
           </h1>
         </div>
 
         {/* Chat component */}
         <div className="w-full max-w-3xl">
           <Chat id="new" />
-          
+
           {/* Suggested actions */}
           <div className="mt-6 flex flex-wrap gap-2 justify-center">
             <button className="px-4 py-2 text-sm bg-card hover:bg-accent border border-border rounded-full transition-colors">
@@ -44,9 +43,14 @@ export default function ChatPage() {
         <div className="mt-12 text-center">
           <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
             Copilot may make mistakes. Using Copilot means you agree to the{" "}
-            <a href="/tos" className="text-primary hover:underline">Terms of Use</a>. 
-            See our{" "}
-            <a href="/privacy" className="text-primary hover:underline">Privacy Statement</a>.
+            <a href="/tos" className="text-primary hover:underline">
+              Terms of Use
+            </a>
+            . See our{" "}
+            <a href="/privacy" className="text-primary hover:underline">
+              Privacy Statement
+            </a>
+            .
           </p>
         </div>
       </div>

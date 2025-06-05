@@ -31,13 +31,13 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
       title: "Prep for an interview",
       label: "practice questions",
       action: "Help me prepare for a job interview with practice questions",
-      picture: "cartoon-cat.png", // You can replace with appropriate images
+      picture: "job-interview.png",
     },
     {
       title: "Get a news roundup",
       label: "today's headlines",
       action: "Give me a summary of today's news headlines",
-      picture: "cartoon-cat.png", // You can replace with appropriate images
+      picture: "reading-news.png",
     },
   ]
 

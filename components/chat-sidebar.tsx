@@ -89,12 +89,10 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
                 <Button
                   onClick={createNewChat}
                   variant="outline"
-                  size={isSidebarExpanded ? "default" : "icon"}
-                  className={cn("gap-2", isSidebarExpanded && "justify-start")}
+                  size="icon"
                   aria-label="New chat"
                 >
                   <PencilIcon size={16} />
-                  {showExpandedContent && "New Chat"}
                 </Button>
               )}
               {showExpandedContent && <ThemeToggle />}

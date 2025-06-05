@@ -13,7 +13,7 @@ export default function Footer() {
           </Link>
         </div>
         <p className="mt-6 text-xs text-muted-foreground">
-          &copy; {new Date().getFullYear()} Okta. All Rights Reserved.
+          &copy; {new Date().getFullYear()} Auth0 by Okta. All Rights Reserved.
         </p>
       </div>
     </footer>

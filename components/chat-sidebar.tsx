@@ -1,6 +1,6 @@
 "use client"
 
-import { LogIn, Trash2Icon, PencilIcon, XIcon, Sparkles } from "lucide-react"
+import { LogIn, Trash2Icon, PencilIcon, PanelLeftDashed, Sparkles } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 
 import { cn } from "@/lib/utils"
@@ -35,7 +35,7 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
 
   const sidebarFrameClasses = cn(
     "h-full flex flex-col bg-[var(--sidebar)] text-[var(--sidebar-foreground)] border-r border-[var(--border)] transition-all duration-300",
-    isMobileDrawer ? "w-full" : isSidebarExpanded ? "w-64" : "w-20"
+    isMobileDrawer ? "w-full" : isSidebarExpanded ? "w-64" : "w-24"
   )
 
   return (
@@ -46,7 +46,7 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
           // --- Mobile Header ---
           <div className="flex items-center justify-between h-full">
             <Button onClick={toggleSidebar} variant="ghost" size="icon" aria-label="Close sidebar">
-              <XIcon size={20} />
+              <PanelLeftDashed size={20} />
             </Button>
             <div className="flex items-center gap-2">
               <ThemeToggle />
@@ -86,15 +86,10 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
                 size="icon"
                 aria-label="Toggle sidebar"
               >
-                <XIcon size={20} />
+                <PanelLeftDashed size={20} />
               </Button>
               {user && (
-                <Button
-                  onClick={createNewChat}
-                  variant="outline"
-                  size="icon"
-                  aria-label="New chat"
-                >
+                <Button onClick={createNewChat} variant="outline" size="icon" aria-label="New chat">
                   <PencilIcon size={16} />
                 </Button>
               )}

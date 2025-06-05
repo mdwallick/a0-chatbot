@@ -50,6 +50,9 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
           exit={{ opacity: 0, y: 20 }}
           transition={{ delay: 0.05 * index }}
           key={`suggested-action-${suggestedAction.title}-${index}`}
+          style={{
+            transform: `rotate(${[-2, 1, -1, 2][index]}deg)`,
+          }}
         >
           <Button
             variant="ghost"
@@ -61,7 +64,7 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
                 content: suggestedAction.action,
               })
             }}
-            className="relative h-24 w-full rounded-2xl p-4 text-left overflow-hidden border-none hover:scale-105 transition-transform duration-200"
+            className="relative h-32 w-full rounded-2xl p-4 text-left overflow-hidden border-none hover:scale-105 hover:rotate-0 transition-all duration-200"
             style={{
               backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(/${suggestedAction.picture})`,
               backgroundSize: 'cover',

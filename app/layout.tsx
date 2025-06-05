@@ -10,7 +10,7 @@ import { ChatSidebar } from "@/components/chat-sidebar"
 import { MobileChatSidebarDrawer } from "@/components/mobile-sidebar-drawer"
 import { SidebarProvider } from "@/components/sidebar-context"
 import { GooglePickerLoader } from "@/components/google-picker-loader"
-import Header from "@/components/header"
+
 import { LinkedAccountsProvider } from "@/components/use-linked-accounts-context"
 import { auth0 } from "@/lib/auth0"
 import { getLinkedAccounts } from "@/lib/auth0-mgmt"
@@ -53,8 +53,6 @@ export default async function RootLayout({
           <Auth0Provider user={session?.user}>
             <SidebarProvider>
               <div className="flex flex-col min-h-screen w-full">
-                {" "}
-                <Header />
                 <main className="flex flex-col md:flex-row flex-1 w-full mx-auto">
                   <div className="hidden md:flex flex-shrink-0">
                     {" "}

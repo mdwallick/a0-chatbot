@@ -1,6 +1,6 @@
 "use client"
 
-import { LogIn, Trash2Icon, PencilIcon, XIcon } from "lucide-react"
+import { LogIn, Trash2Icon, PencilIcon, XIcon, Sparkles } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 
 import { cn } from "@/lib/utils"
@@ -10,6 +10,7 @@ import { useSidebar } from "@/components/sidebar-context"
 import { Button } from "./ui/button"
 import Link from "next/link"
 import UserButton from "@/components/auth0/user-button"
+import ThemeToggle from "./theme-toggle"
 
 export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boolean }) {
   const router = useRouter()
@@ -41,41 +42,63 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
     <div className={sidebarFrameClasses}>
       {/* --- SIDEBAR HEADER SECTION --- */}
       <div className="p-2 border-b border-[var(--border)] h-14">
-        {" "}
         {isMobileDrawer ? (
           // --- Mobile Header ---
           <div className="flex items-center justify-between h-full">
             <Button onClick={toggleSidebar} variant="ghost" size="icon" aria-label="Close sidebar">
               <XIcon size={20} />
             </Button>
-            {user && (
-              <Button
-                onClick={async () => {
-                  await createNewChat()
-                  toggleSidebar() // Close after creating
-                }}
-                variant="outline"
-                className="gap-2" // No w-full, let it size itself
-                aria-label="New chat"
-              >
-                <PencilIcon size={16} />
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              {user && (
+                <Button
+                  onClick={async () => {
+                    await createNewChat()
+                    toggleSidebar() // Close after creating
+                  }}
+                  variant="outline"
+                  size="icon"
+                  aria-label="New chat"
+                >
+                  <PencilIcon size={16} />
+                </Button>
+              )}
+            </div>
           </div>
         ) : (
-          // --- Desktop Header (Just New Chat) ---
-          <div className={cn("flex h-full items-center", !isSidebarExpanded && "justify-center")}>
-            {user && (
-              <Button
-                onClick={createNewChat} // No toggle needed for desktop
-                variant="outline"
-                size={isSidebarExpanded ? "default" : "icon"}
-                className={cn("gap-2", isSidebarExpanded && "justify-start")}
-                aria-label="New chat"
-              >
-                <PencilIcon size={16} />
-              </Button>
-            )}
+          // --- Desktop Header ---
+          <div className="flex h-full items-center justify-between">
+            {/* Left side - Branding and New Chat */}
+            <div className="flex items-center gap-2 min-w-0">
+              {showExpandedContent ? (
+                <div className="flex items-center gap-2 text-primary">
+                  <Sparkles size={20} className="text-primary flex-shrink-0" />
+                  <span className="font-semibold text-lg">Copilot</span>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center">
+                  <Sparkles size={20} className="text-primary" />
+                </div>
+              )}
+            </div>
+            
+            {/* Right side - Theme Toggle and New Chat */}
+            <div className="flex items-center gap-1">
+              {!showExpandedContent && <ThemeToggle />}
+              {user && (
+                <Button
+                  onClick={createNewChat}
+                  variant="outline"
+                  size={isSidebarExpanded ? "default" : "icon"}
+                  className={cn("gap-2", isSidebarExpanded && "justify-start")}
+                  aria-label="New chat"
+                >
+                  <PencilIcon size={16} />
+                  {showExpandedContent && "New Chat"}
+                </Button>
+              )}
+              {showExpandedContent && <ThemeToggle />}
+            </div>
           </div>
         )}
       </div>

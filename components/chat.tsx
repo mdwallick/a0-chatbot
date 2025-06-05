@@ -47,7 +47,6 @@ export function Chat({
     <>
       <div
         className="flex flex-col min-w-0 h-dvh bg-background w-full"
-        style={{ maxHeight: "calc(100vh - 56px)" }}
       >
         <Messages
           chatId={id}

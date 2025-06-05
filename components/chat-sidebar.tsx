@@ -82,9 +82,16 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
               )}
             </div>
             
-            {/* Right side - Theme Toggle and New Chat */}
+            {/* Right side - Hamburger and New Chat */}
             <div className="flex items-center gap-1">
-              {/* {!showExpandedContent && <ThemeToggle />} */}
+              <Button
+                onClick={toggleSidebar}
+                variant="ghost"
+                size="icon"
+                aria-label="Toggle sidebar"
+              >
+                <XIcon size={20} />
+              </Button>
               {user && (
                 <Button
                   onClick={createNewChat}
@@ -95,7 +102,6 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
                   <PencilIcon size={16} />
                 </Button>
               )}
-              {/* {showExpandedContent && <ThemeToggle />} */}
             </div>
           </div>
         )}

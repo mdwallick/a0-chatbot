@@ -68,16 +68,12 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
         ) : (
           // --- Desktop Header ---
           <div className="flex h-full items-center justify-between">
-            {/* Left side - Branding and New Chat */}
+            {/* Left side - Branding */}
             <div className="flex items-center gap-2 min-w-0">
-              {showExpandedContent ? (
+              {showExpandedContent && (
                 <div className="flex items-center gap-2 text-primary">
                   <Sparkles size={20} className="text-primary flex-shrink-0" />
                   <span className="font-semibold text-lg">Copilot</span>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center">
-                  <Sparkles size={20} className="text-primary" />
                 </div>
               )}
             </div>

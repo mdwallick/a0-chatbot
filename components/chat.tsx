@@ -1,13 +1,20 @@
 "use client"
 
+import { useUser } from "@auth0/nextjs-auth0"
+
+import { LogIn } from "lucide-react"
+
 import type { UIMessage } from "ai"
 
 import { useChat } from "@ai-sdk/react"
 import { useInterruptions } from "@auth0/ai-vercel/react"
 
+import Link from "next/link"
+import UserButton from "@/components/auth0/user-button"
 import Footer from "./footer"
 import { Messages } from "./messages"
 import { MultimodalInput } from "./multimodal-input"
+import { Button } from "./ui/button"
 
 import { generateUUID } from "@/lib/utils"
 
@@ -20,6 +27,8 @@ export function Chat({
   initialMessages: Array<UIMessage>
   isReadonly: boolean
 }) {
+  const { user } = useUser()
+
   const {
     messages,
     setMessages,
@@ -45,9 +54,8 @@ export function Chat({
 
   return (
     <>
-      <div
-        className="flex flex-col min-w-0 h-dvh bg-background w-full"
-      >
+      
+      <div className="flex flex-col min-w-0 h-dvh bg-background w-full">
         <Messages
           chatId={id}
           messages={messages}

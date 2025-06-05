@@ -152,7 +152,7 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
       </div>
 
       {/* 3. BOTTOM STUCK CONTENT SECTION */}
-      <div
+      {/* <div
         className={cn(
           "p-2 border-t border-[var(--border)]",
           showExpandedContent ? "space-y-1" : ""
@@ -173,7 +173,7 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
             </Button>
           )}
         </div>
-      </div>
+      </div> */}
     </div>
   )
 }

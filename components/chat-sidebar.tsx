@@ -77,9 +77,9 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
                 </div>
               )}
             </div>
-            
+
             {/* Right side - Hamburger and New Chat */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 flex-1 justify-end">
               <Button
                 onClick={toggleSidebar}
                 variant="ghost"

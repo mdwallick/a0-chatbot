@@ -1,6 +1,6 @@
 "use client"
 
-import { LogIn, Trash2Icon, PencilIcon, XIcon } from "lucide-react"
+import { Trash2Icon, PencilIcon, PanelLeftDashed } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 
 import { cn } from "@/lib/utils"
@@ -9,7 +9,7 @@ import { useSidebar } from "@/components/sidebar-context"
 
 import { Button } from "./ui/button"
 import Link from "next/link"
-import UserButton from "@/components/auth0/user-button"
+import { MicrosoftCopilotIcon } from "./icons"
 
 export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boolean }) {
   const router = useRouter()
@@ -33,49 +33,69 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
   const currentChatId = pathname?.split("/").pop()
 
   const sidebarFrameClasses = cn(
-    "h-full flex flex-col bg-[var(--sidebar)] text-[var(--sidebar-foreground)] border-r border-[var(--border)] transition-all duration-300",
-    isMobileDrawer ? "w-full" : isSidebarExpanded ? "w-64" : "w-16"
+    "h-full flex flex-col bg-[var(--sidebar)] text-[var(--sidebar-foreground)] transition-all duration-300",
+    isMobileDrawer ? "w-full" : isSidebarExpanded ? "w-64" : "w-24"
   )
 
   return (
     <div className={sidebarFrameClasses}>
       {/* --- SIDEBAR HEADER SECTION --- */}
-      <div className="p-2 border-b border-[var(--border)] h-14">
-        {" "}
+      <div className="p-2 h-14">
         {isMobileDrawer ? (
           // --- Mobile Header ---
           <div className="flex items-center justify-between h-full">
             <Button onClick={toggleSidebar} variant="ghost" size="icon" aria-label="Close sidebar">
-              <XIcon size={20} />
+              <PanelLeftDashed size={20} />
             </Button>
-            {user && (
-              <Button
-                onClick={async () => {
-                  await createNewChat()
-                  toggleSidebar() // Close after creating
-                }}
-                variant="outline"
-                className="gap-2" // No w-full, let it size itself
-                aria-label="New chat"
-              >
-                <PencilIcon size={16} />
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {user && (
+                <Button
+                  onClick={async () => {
+                    await createNewChat()
+                    toggleSidebar() // Close after creating
+                  }}
+                  variant="outline"
+                  size="icon"
+                  aria-label="New chat"
+                >
+                  <PencilIcon size={16} />
+                </Button>
+              )}
+            </div>
           </div>
         ) : (
-          // --- Desktop Header (Just New Chat) ---
-          <div className={cn("flex h-full items-center", !isSidebarExpanded && "justify-center")}>
-            {user && (
+          // --- Desktop Header ---
+          <div className="flex h-full items-center justify-between">
+            {/* Left side - Branding */}
+            <div className="flex items-center gap-2 min-w-0">
+              {showExpandedContent && (
+                <div className="flex items-center gap-2 text-primary">
+                  <Link href="/">
+                    <MicrosoftCopilotIcon />
+                  </Link>
+                  <Link href="/">
+                    <span className="font-semibold text-lg text-theme">Copilot</span>
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* Right side - Hamburger and New Chat */}
+            <div className="flex items-center gap-1 flex-1 justify-end">
               <Button
-                onClick={createNewChat} // No toggle needed for desktop
-                variant="outline"
-                size={isSidebarExpanded ? "default" : "icon"}
-                className={cn("gap-2", isSidebarExpanded && "justify-start")}
-                aria-label="New chat"
+                onClick={toggleSidebar}
+                variant="ghost"
+                size="icon"
+                aria-label="Toggle sidebar"
               >
-                <PencilIcon size={16} />
+                <PanelLeftDashed size={20} />
               </Button>
-            )}
+              {user && (
+                <Button onClick={createNewChat} variant="outline" size="icon" aria-label="New chat">
+                  <PencilIcon size={16} />
+                </Button>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -131,30 +151,6 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
             </div>
           ))
         )}
-      </div>
-
-      {/* 3. BOTTOM STUCK CONTENT SECTION */}
-      <div
-        className={cn(
-          "p-2 border-t border-[var(--border)]",
-          showExpandedContent ? "space-y-1" : ""
-        )}
-      >
-        <div className="flex items-center justify-between h-full">
-          {user ? (
-            <UserButton user={user}>
-              <a href="/profile" className="flex gap-2 items-center text-sm w-full">
-                Profile
-              </a>
-            </UserButton>
-          ) : (
-            <Button asChild variant="outline">
-              <Link href="/auth/login">
-                <LogIn size={16} className="mr-2" />
-              </Link>
-            </Button>
-          )}
-        </div>
       </div>
     </div>
   )

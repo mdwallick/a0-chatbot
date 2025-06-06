@@ -15,29 +15,36 @@ interface SuggestedActionsProps {
 function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
   const suggestedActions = [
     {
-      title: "What are the advantages",
-      label: "of using Auth0?",
-      action: "What are the advantages of using Auth0?",
+      title: "Create an image",
+      label: "using DALL-E",
+      action: "Create an image of a cat using DALL-E",
+      picture: "cartoon-cat.png",
     },
     {
-      title: "Write code to",
-      label: `demonstrate djikstra's algorithm`,
-      action: `Write code to demonstrate djikstra's algorithm`,
+      title: "Eat healthier",
+      label: "meal planning tips",
+      action: "Give me tips for eating healthier and meal planning",
+      picture: "healthy-food.png",
     },
     {
-      title: "Help me write an essay",
-      label: `about silicon valley`,
-      action: `Help me write an essay about silicon valley`,
+      title: "Prep for an interview",
+      label: "practice questions",
+      action: "Help me prepare for a job interview with practice questions",
+      picture: "job-interview.png",
     },
     {
-      title: "What is the weather",
-      label: "in San Francisco?",
-      action: "What is the weather in San Francisco?",
+      title: "Get a news roundup",
+      label: "today's headlines",
+      action: "Give me a summary of today's news headlines",
+      picture: "reading-news.png",
     },
   ]
 
   return (
-    <div data-testid="suggested-actions" className="grid sm:grid-cols-1 gap-2 w-full">
+    <div
+      data-testid="suggested-actions"
+      className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full mb-4"
+    >
       {suggestedActions.map((suggestedAction, index) => (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -45,7 +52,9 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
           exit={{ opacity: 0, y: 20 }}
           transition={{ delay: 0.05 * index }}
           key={`suggested-action-${suggestedAction.title}-${index}`}
-          className={index > 1 ? "hidden sm:block" : "block"}
+          style={{
+            transform: `rotate(${[-2, 1, -1, 2][index]}deg)`,
+          }}
         >
           <Button
             variant="ghost"
@@ -57,10 +66,17 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
                 content: suggestedAction.action,
               })
             }}
-            className="text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start"
+            className="relative h-32 w-full rounded-2xl p-4 text-left overflow-hidden border-none hover:scale-105 hover:rotate-0 transition-all duration-200"
+            style={{
+              backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(/${suggestedAction.picture})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
           >
-            <span className="font-medium">{suggestedAction.title}</span>
-            <span className="text-muted-foreground">{suggestedAction.label}</span>
+            <div className="relative z-10 flex flex-col justify-end h-full text-white">
+              <div className="font-medium text-sm leading-tight">{suggestedAction.title}</div>
+              <div className="text-xs opacity-80 mt-1">{suggestedAction.label}</div>
+            </div>
           </Button>
         </motion.div>
       ))}

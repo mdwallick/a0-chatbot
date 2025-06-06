@@ -303,10 +303,10 @@ export const MicrosoftCopilotIcon = () => (
       y2="21.237"
       gradientUnits="userSpaceOnUse"
     >
-      <stop offset="0" stop-color="#0837c4" />
-      <stop offset=".242" stop-color="#0b4bce" />
-      <stop offset=".738" stop-color="#1071df" />
-      <stop offset="1" stop-color="#127fe6" />
+      <stop offset="0" stopColor="#0837c4" />
+      <stop offset=".242" stopColor="#0b4bce" />
+      <stop offset=".738" stopColor="#1071df" />
+      <stop offset="1" stopColor="#127fe6" />
     </linearGradient>
     <path
       fill="url(#lfK0TEarAX_CVWY9eruXya)"
@@ -320,18 +320,18 @@ export const MicrosoftCopilotIcon = () => (
       y2="1.503"
       gradientUnits="userSpaceOnUse"
     >
-      <stop offset="0" stop-color="#f8c704" />
-      <stop offset=".065" stop-color="#f1c609" />
-      <stop offset=".163" stop-color="#dcc319" />
-      <stop offset=".281" stop-color="#babe31" />
-      <stop offset=".415" stop-color="#8cb754" />
-      <stop offset=".561" stop-color="#50ae7f" />
-      <stop offset=".592" stop-color="#43ac89" />
-      <stop offset=".617" stop-color="#41ad93" />
-      <stop offset=".737" stop-color="#37b0be" />
-      <stop offset=".845" stop-color="#30b2dd" />
-      <stop offset=".936" stop-color="#2cb4f0" />
-      <stop offset="1" stop-color="#2ab4f7" />
+      <stop offset="0" stopColor="#f8c704" />
+      <stop offset=".065" stopColor="#f1c609" />
+      <stop offset=".163" stopColor="#dcc319" />
+      <stop offset=".281" stopColor="#babe31" />
+      <stop offset=".415" stopColor="#8cb754" />
+      <stop offset=".561" stopColor="#50ae7f" />
+      <stop offset=".592" stopColor="#43ac89" />
+      <stop offset=".617" stopColor="#41ad93" />
+      <stop offset=".737" stopColor="#37b0be" />
+      <stop offset=".845" stopColor="#30b2dd" />
+      <stop offset=".936" stopColor="#2cb4f0" />
+      <stop offset="1" stopColor="#2ab4f7" />
     </linearGradient>
     <path
       fill="url(#lfK0TEarAX_CVWY9eruXyb)"
@@ -353,11 +353,11 @@ export const MicrosoftCopilotIcon = () => (
       y2="35.358"
       gradientUnits="userSpaceOnUse"
     >
-      <stop offset="0" stop-color="#ffb155" />
-      <stop offset=".008" stop-color="#ffb055" />
-      <stop offset=".475" stop-color="#eb7447" />
-      <stop offset=".819" stop-color="#df4e3f" />
-      <stop offset="1" stop-color="#da403c" />
+      <stop offset="0" stopColor="#ffb155" />
+      <stop offset=".008" stopColor="#ffb055" />
+      <stop offset=".475" stopColor="#eb7447" />
+      <stop offset=".819" stopColor="#df4e3f" />
+      <stop offset="1" stopColor="#da403c" />
     </linearGradient>
     <path
       fill="url(#lfK0TEarAX_CVWY9eruXyc)"
@@ -379,9 +379,9 @@ export const MicrosoftCopilotIcon = () => (
       y2="12.068"
       gradientUnits="userSpaceOnUse"
     >
-      <stop offset="0" stop-color="#ffb152" />
-      <stop offset=".531" stop-color="#f36284" />
-      <stop offset=".994" stop-color="#a355e9" />
+      <stop offset="0" stopColor="#ffb152" />
+      <stop offset=".531" stopColor="#f36284" />
+      <stop offset=".994" stopColor="#a355e9" />
     </linearGradient>
     <path
       fill="url(#lfK0TEarAX_CVWY9eruXyd)"

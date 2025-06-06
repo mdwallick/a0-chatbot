@@ -15,7 +15,15 @@ import { AttachmentWithMeta } from "../lib/utils"
 import { AttachmentItem } from "./attachment-item"
 import { EnableIntegration } from "./enable-integration"
 import { GoogleDrivePicker, GoogleFile } from "./google-picker"
-import { ArrowUpIcon, GoogleIcon, MicrosoftIcon, SalesforceIcon, StopIcon, XboxIcon } from "./icons"
+import {
+  ArrowUpIcon,
+  GoogleIcon,
+  MicrosoftIcon,
+  MicrosoftIconRounded,
+  SalesforceIcon,
+  StopIcon,
+  XboxIcon,
+} from "./icons"
 import { IntegrationTools } from "./integration-tools"
 import { SuggestedActions } from "./suggested-actions"
 import { Button } from "./ui/button"
@@ -156,7 +164,7 @@ function PureMultimodalInput({
         <Textarea
           data-testid="multimodal-input"
           ref={textareaRef}
-          placeholder="Ask anything"
+          placeholder="Message Copilot"
           value={input}
           onChange={handleInput}
           className={cx(
@@ -282,7 +290,7 @@ function PureMultimodalInput({
               <IntegrationTools
                 append={append}
                 title="Microsoft Tools"
-                icon={<MicrosoftIcon />}
+                icon={<MicrosoftIconRounded />}
                 tools={[
                   {
                     title: "What's on my calendar?",

@@ -2,7 +2,7 @@
 
 import { useUser } from "@auth0/nextjs-auth0"
 
-import { LogIn } from "lucide-react"
+import { User } from "lucide-react"
 
 import type { UIMessage } from "ai"
 
@@ -72,7 +72,8 @@ export function Chat({
               ) : (
                 <Button asChild variant="outline">
                   <Link href="/auth/login">
-                    <LogIn size={16} className="mr-2" />
+                    <User size={16} className="mr-2" />
+                    Sign In
                   </Link>
                 </Button>
               )}

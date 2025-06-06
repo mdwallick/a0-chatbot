@@ -1,4 +1,5 @@
 export * from "./microsoft"
 export * from "./salesforce"
 export * from "./xbox"
-export * from "./web-search"
+export { WebSearchTool } from "./web-search"
+export { SerpAPISearchTool } from "./serpapi-search"

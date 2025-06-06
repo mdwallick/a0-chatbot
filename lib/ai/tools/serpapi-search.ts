@@ -7,7 +7,11 @@ const toolSchema = z.object({
   query: z.string().describe("The search query to look up"),
   location: z.string().optional().describe("Location for localized search results"),
   num: z.number().optional().default(3).describe("Number of results to return (1-10)"),
-  searchType: z.enum(["web", "images"]).optional().default("web").describe("Type of search: web for regular results, images for image results"),
+  searchType: z
+    .enum(["web", "images"])
+    .optional()
+    .default("web")
+    .describe("Type of search: web for regular results, images for image results"),
 })
 
 export const SerpAPISearchTool = tool({

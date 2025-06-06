@@ -6,7 +6,11 @@ const GOOGLE_CX = process.env.GOOGLE_CX!
 
 const toolSchema = z.object({
   query: z.string().describe("The search query to look up on Google"),
-  searchType: z.enum(["web", "images"]).optional().default("web").describe("Type of search: web for regular results, images for image results"),
+  searchType: z
+    .enum(["web", "images"])
+    .optional()
+    .default("web")
+    .describe("Type of search: web for regular results, images for image results"),
 })
 
 export const WebSearchTool = tool({
@@ -29,9 +33,7 @@ export async function googleSearch(args: any) {
     searchParams.append("searchType", "image")
   }
 
-  const res = await fetch(
-    `https://www.googleapis.com/customsearch/v1?${searchParams}`
-  )
+  const res = await fetch(`https://www.googleapis.com/customsearch/v1?${searchParams}`)
 
   const data = await res.json()
   // console.log("Raw search results", data)

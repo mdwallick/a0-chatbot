@@ -1,7 +1,7 @@
 import { tool } from "ai"
 import { z } from "zod"
 
-const SERPAPI_KEY = process.env.SERPAPI_API_KEY!
+const SERPAPI_KEY = process.env.SERP_API_KEY!
 
 const toolSchema = z.object({
   query: z.string().describe("The search query to look up"),
@@ -26,10 +26,16 @@ export async function serpAPISearch(args: any) {
     location: location,
     num: num.toString(),
   })
+  console.log("Search params", params)
 
   try {
     const res = await fetch(`https://serpapi.com/search?${params}`)
     const data = await res.json()
+
+    if (data.error) {
+      console.error("Invalid Serp API key!")
+      return { results: "Something is wrong with the search service." }
+    }
 
     if (!data.organic_results || data.organic_results.length === 0) {
       return { results: "No search results found." }

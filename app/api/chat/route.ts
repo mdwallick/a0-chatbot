@@ -22,6 +22,7 @@ import {
 } from "@/lib/ai/tools/microsoft"
 import { XboxUserProfileTool, XboxAchievementTool } from "@/lib/ai/tools/xbox"
 import { SalesforceQueryTool, SalesforceSearchTool } from "@/lib/ai/tools/salesforce"
+
 import { auth0 } from "@/lib/auth0"
 import { openai } from "@ai-sdk/openai"
 import { setAIContext } from "@auth0/ai-vercel"
@@ -41,6 +42,10 @@ export async function POST(request: Request) {
   const isAuthenticated = !!session?.user
 
   const tools = {
+    WebSearchTool,
+  }
+
+  const authenticatedTools = {
     GmailReadTool,
     GmailSendTool,
     GoogleFilesListTool,
@@ -57,7 +62,6 @@ export async function POST(request: Request) {
     MicrosoftMailSendTool,
     SalesforceQueryTool,
     SalesforceSearchTool,
-    WebSearchTool,
     XboxUserProfileTool,
     XboxAchievementTool,
   }
@@ -116,7 +120,7 @@ export async function POST(request: Request) {
           system: `The current date and time is ${now}. ${systemTemplate}`,
           messages: trimmedMessages,
           maxSteps: 5,
-          tools: isAuthenticated ? tools : {}, // Only provide tools if user is authenticated
+          tools: isAuthenticated ? { ...tools, ...authenticatedTools } : tools,
           async onFinish(finalResult) {
             if (isAuthenticated) {
               // only save the message if the user is authenticated

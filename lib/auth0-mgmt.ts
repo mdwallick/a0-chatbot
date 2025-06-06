@@ -70,13 +70,19 @@ export async function updateUser(
 }
 
 export async function getLinkedAccounts(userId: string) {
-  const response = await getUser(userId!)
-  const { data } = response
+  try {
+    console.log("Fetching linked accounts for user:", userId)
+    const response = await getUser(userId!)
+    const { data } = response
 
-  return data.identities.map(({ connection, provider, user_id: userId }, idx) => ({
-    connection,
-    provider,
-    userId,
-    isPrimary: idx === 0,
-  }))
+    return data.identities.map(({ connection, provider, user_id: userId }, idx) => ({
+      connection,
+      provider,
+      userId,
+      isPrimary: idx === 0,
+    }))
+  } catch (error) {
+    console.error("Error fetching linked accounts:", error)
+    return []
+  }
 }

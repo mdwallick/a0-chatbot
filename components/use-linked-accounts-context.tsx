@@ -1,17 +1,43 @@
 "use client"
 
-import { createContext, ReactNode, useContext } from "react"
+import { createContext, ReactNode, useContext, useState, useCallback } from "react"
 
-const LinkedAccountsContext = createContext({})
+interface LinkedAccountsContextType {
+  linkedAccounts: any
+  refreshLinkedAccounts: () => Promise<void>
+}
+
+const LinkedAccountsContext = createContext<LinkedAccountsContextType | null>(null)
 
 export const LinkedAccountsProvider = ({
-  value,
+  value: initialValue,
   children,
 }: {
   value: any
   children: ReactNode
 }) => {
-  return <LinkedAccountsContext.Provider value={value}>{children}</LinkedAccountsContext.Provider>
+  const [linkedAccounts, setLinkedAccounts] = useState(initialValue)
+
+  const refreshLinkedAccounts = useCallback(async () => {
+    try {
+      const response = await fetch("/api/integrations")
+      if (response.ok) {
+        const data = await response.json()
+        setLinkedAccounts(data)
+      }
+    } catch (error) {
+      console.error("Failed to refresh linked accounts:", error)
+    }
+  }, [])
+
+  const contextValue = {
+    linkedAccounts,
+    refreshLinkedAccounts,
+  }
+
+  return (
+    <LinkedAccountsContext.Provider value={contextValue}>{children}</LinkedAccountsContext.Provider>
+  )
 }
 
 export const useLinkedAccounts = () => {
@@ -21,5 +47,15 @@ export const useLinkedAccounts = () => {
     throw new Error("useLinkedAccounts must be used within a LinkedAccountsProvider")
   }
 
-  return context
+  return context.linkedAccounts
+}
+
+export const useRefreshLinkedAccounts = () => {
+  const context = useContext(LinkedAccountsContext)
+
+  if (!context) {
+    throw new Error("useRefreshLinkedAccounts must be used within a LinkedAccountsProvider")
+  }
+
+  return context.refreshLinkedAccounts
 }

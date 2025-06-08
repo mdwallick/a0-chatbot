@@ -29,7 +29,7 @@ import { SuggestedActions } from "./suggested-actions"
 import { Button } from "./ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Textarea } from "./ui/textarea"
-import { useLinkedAccounts } from "./use-linked-accounts-context"
+import { useLinkedAccounts, useRefreshLinkedAccounts } from "./use-linked-accounts-context"
 
 import type React from "react"
 import type { UseChatHelpers } from "@ai-sdk/react"
@@ -58,9 +58,11 @@ function PureMultimodalInput({
 }) {
   const { user } = useUser()
   const linkedAccounts: any = useLinkedAccounts()
+  const refreshLinkedAccounts = useRefreshLinkedAccounts()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [files, setFiles] = useState<GoogleFile[]>([])
   const [attachments, setAttachments] = useState<Attachment[]>([])
+  const [lastStatus, setLastStatus] = useState(status)
 
   function isConnectionEnabled(connection: string) {
     return linkedAccounts.some((account: any) => account.connection === connection)
@@ -96,6 +98,15 @@ function PureMultimodalInput({
   useEffect(() => {
     setLocalStorageInput(input)
   }, [input, setLocalStorageInput])
+
+  // Refresh linked accounts when chat processing completes
+  useEffect(() => {
+    if (lastStatus === "loading" && status === "ready") {
+      // Chat just finished processing, refresh linked accounts
+      refreshLinkedAccounts()
+    }
+    setLastStatus(status)
+  }, [status, lastStatus, refreshLinkedAccounts])
 
   const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(event.target.value)

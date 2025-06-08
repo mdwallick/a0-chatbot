@@ -43,9 +43,6 @@ export async function POST(request: Request) {
 
   const tools = {
     WebSearchTool,
-  }
-
-  const authenticatedTools = {
     GmailReadTool,
     GmailSendTool,
     GoogleFilesListTool,
@@ -120,7 +117,7 @@ export async function POST(request: Request) {
           system: `The current date and time is ${now}. ${systemTemplate}`,
           messages: trimmedMessages,
           maxSteps: 5,
-          tools: isAuthenticated ? { ...tools, ...authenticatedTools } : tools,
+          tools: tools,
           async onFinish(finalResult) {
             if (isAuthenticated) {
               // only save the message if the user is authenticated
@@ -141,7 +138,7 @@ export async function POST(request: Request) {
       },
       {
         messages,
-        tools,
+        tools: tools,
       }
     ),
     onError: errorSerializer(err => {

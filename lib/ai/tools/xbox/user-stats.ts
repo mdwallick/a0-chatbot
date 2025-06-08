@@ -60,7 +60,7 @@ export const XboxUserStatsTool = withXboxRead(
 
         // throw error
         console.error("General error:", error)
-        throw new Error(`Internal Server Error: ${error}`)
+        throw error
       }
     },
   })

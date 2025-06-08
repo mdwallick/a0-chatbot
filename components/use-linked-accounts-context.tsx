@@ -20,7 +20,7 @@ export const LinkedAccountsProvider = ({
 
   const refreshLinkedAccounts = useCallback(async () => {
     try {
-      const response = await fetch("/api/integrations")
+      const response = await fetch("/api/integrations/linked-accounts")
       if (response.ok) {
         const data = await response.json()
         setLinkedAccounts(data)

@@ -109,6 +109,8 @@ export async function POST(request: Request) {
     }
   }
 
+  const allTools = isAuthenticated ? { ...tools, ...authenticatedTools } : tools
+
   return createDataStreamResponse({
     execute: withInterruptions(
       async dataStream => {
@@ -138,7 +140,7 @@ export async function POST(request: Request) {
       },
       {
         messages,
-        tools,
+        tools: tools,
       }
     ),
     onError: errorSerializer(err => {

@@ -6,6 +6,7 @@ import { useUser } from "@auth0/nextjs-auth0"
 import { WaitingMessage } from "../util/loader"
 import { PromptUserContainer } from "../util/prompt-user-container"
 import { FederatedConnectionAuthProps } from "./FederatedConnectionAuthProps"
+import { useRefreshLinkedAccounts } from "../../use-linked-accounts-context"
 
 import { AvailableConnections } from "../../connections"
 
@@ -17,6 +18,7 @@ export function EnsureAPIAccessPopup({
   const [isLoading, setIsLoading] = useState(false)
   const [loginPopup, setLoginPopup] = useState<Window | null>(null)
   const { user } = useUser()
+  const refreshLinkedAccounts = useRefreshLinkedAccounts()
 
   // Poll for the login process until the popup is closed
   // or the user is authorized
@@ -29,6 +31,10 @@ export function EnsureAPIAccessPopup({
         setIsLoading(false)
         setLoginPopup(null)
         clearInterval(interval)
+
+        // Refresh linked accounts to capture any new connections
+        await refreshLinkedAccounts()
+
         if (typeof onFinish === "function") {
           onFinish()
         } else if (typeof resume === "function") {
@@ -41,7 +47,7 @@ export function EnsureAPIAccessPopup({
         clearInterval(interval)
       }
     }
-  }, [loginPopup, onFinish, resume])
+  }, [loginPopup, onFinish, resume, refreshLinkedAccounts])
 
   // Open the login popup
   const startLoginPopup = useCallback(async () => {

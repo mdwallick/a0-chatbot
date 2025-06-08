@@ -109,8 +109,6 @@ export async function POST(request: Request) {
     }
   }
 
-  const allTools = isAuthenticated ? { ...tools, ...authenticatedTools } : tools
-
   return createDataStreamResponse({
     execute: withInterruptions(
       async dataStream => {

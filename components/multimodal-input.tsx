@@ -62,7 +62,7 @@ function PureMultimodalInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [files, setFiles] = useState<GoogleFile[]>([])
   const [attachments, setAttachments] = useState<Attachment[]>([])
-  const [lastStatus, setLastStatus] = useState(status)
+  const [lastMessageCount, setLastMessageCount] = useState(messages.length)
 
   function isConnectionEnabled(connection: string) {
     return linkedAccounts.some((account: any) => account.connection === connection)
@@ -99,14 +99,17 @@ function PureMultimodalInput({
     setLocalStorageInput(input)
   }, [input, setLocalStorageInput])
 
-  // Refresh linked accounts when chat processing completes
+  // Refresh linked accounts when new assistant messages are added (indicating completed consent flows)
   useEffect(() => {
-    if (lastStatus === "loading" && status === "ready") {
-      // Chat just finished processing, refresh linked accounts
-      refreshLinkedAccounts()
+    if (messages.length > lastMessageCount) {
+      const lastMessage = messages[messages.length - 1]
+      if (lastMessage?.role === "assistant") {
+        // New assistant message received, refresh linked accounts to capture any new connections
+        refreshLinkedAccounts()
+      }
     }
-    setLastStatus(status)
-  }, [status, lastStatus, refreshLinkedAccounts])
+    setLastMessageCount(messages.length)
+  }, [messages.length, lastMessageCount, refreshLinkedAccounts, messages])
 
   const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(event.target.value)

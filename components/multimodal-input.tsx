@@ -29,7 +29,7 @@ import { SuggestedActions } from "./suggested-actions"
 import { Button } from "./ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Textarea } from "./ui/textarea"
-import { useLinkedAccounts, useRefreshLinkedAccounts } from "./use-linked-accounts-context"
+import { useLinkedAccounts } from "./use-linked-accounts-context"
 
 import type React from "react"
 import type { UseChatHelpers } from "@ai-sdk/react"
@@ -58,11 +58,9 @@ function PureMultimodalInput({
 }) {
   const { user } = useUser()
   const linkedAccounts: any = useLinkedAccounts()
-  const refreshLinkedAccounts = useRefreshLinkedAccounts()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [files, setFiles] = useState<GoogleFile[]>([])
   const [attachments, setAttachments] = useState<Attachment[]>([])
-  const [lastMessageCount, setLastMessageCount] = useState(messages.length)
 
   function isConnectionEnabled(connection: string) {
     return linkedAccounts.some((account: any) => account.connection === connection)
@@ -98,18 +96,6 @@ function PureMultimodalInput({
   useEffect(() => {
     setLocalStorageInput(input)
   }, [input, setLocalStorageInput])
-
-  // Refresh linked accounts when new assistant messages are added (indicating completed consent flows)
-  useEffect(() => {
-    if (messages.length > lastMessageCount) {
-      const lastMessage = messages[messages.length - 1]
-      if (lastMessage?.role === "assistant") {
-        // New assistant message received, refresh linked accounts to capture any new connections
-        refreshLinkedAccounts()
-      }
-    }
-    setLastMessageCount(messages.length)
-  }, [messages.length, lastMessageCount, refreshLinkedAccounts, messages])
 
   const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(event.target.value)

@@ -3,7 +3,7 @@ import { ThemeProvider } from "next-themes"
 import "./globals.css"
 
 import { Geist, Geist_Mono } from "next/font/google"
-
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Auth0Provider } from "@auth0/nextjs-auth0"
 
 import { ChatSidebar } from "@/components/chat-sidebar"
@@ -64,6 +64,7 @@ export default async function RootLayout({
                     {" "}
                     <LinkedAccountsProvider value={linkedAccounts}>
                       {children}
+                      <SpeedInsights />
                     </LinkedAccountsProvider>
                   </div>
                 </main>

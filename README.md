@@ -2,8 +2,7 @@
 
 ## Introduction
 
-This is a demo chatbot using Auth0's [Auth for GenAI](https://auth0.com/ai).
-This readme will be updated with all the relevant details once the first version is deployed.
+This is a demo chatbot using Auth0's [Auth for GenAI](https://auth0.ai).
 
 ## ⚠️ Disclaimer
 
@@ -27,7 +26,7 @@ variables.
 NOTE:
 
 - You will need to set up an [OpenAI Platform account](https://platform.openai.com/docs/overview) and create an API key.
-- For web search to work, you need to set up a [Google Custom search API](https://developers.google.com/custom-search/v1/overview).
+- For web search to work, you need to set up [Google Custom search API](https://developers.google.com/custom-search/v1/overview).
 
 ```bash
 cp env.sample .env.local

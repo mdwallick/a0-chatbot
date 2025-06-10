@@ -21,7 +21,6 @@ export const WebSearchTool = tool({
 
 export async function googleSearch(args: any) {
   const { query, searchType = "web" } = args
-  console.log(`Searching Google for ${query} (${searchType} search)`)
 
   const searchParams = new URLSearchParams({
     key: GOOGLE_SEARCH_API_KEY,
@@ -36,7 +35,6 @@ export async function googleSearch(args: any) {
   const res = await fetch(`https://www.googleapis.com/customsearch/v1?${searchParams}`)
 
   const data = await res.json()
-  // console.log("Raw search results", data)
 
   if (!data.items || data.items.length === 0) {
     if (data.error) {
@@ -59,7 +57,6 @@ export async function googleSearch(args: any) {
       })
       .join("\n\n")
 
-    console.log("Google image results generated")
     return {
       results: markdown,
     }
@@ -75,7 +72,6 @@ export async function googleSearch(args: any) {
       })
       .join("\n\n")
 
-    console.log("Google web results generated")
     return {
       results: markdown,
     }

@@ -18,7 +18,6 @@ export const XboxUserStatsTool = withXboxRead(
       "Get user's game statistics for a given game title/name and serviceConfigId aka SCID",
     parameters: toolSchema,
     execute: async ({ gameTitle, serviceConfigId }) => {
-      console.log("XboxUserStatsTool with args", gameTitle, serviceConfigId)
       const logs = []
 
       try {
@@ -35,14 +34,12 @@ export const XboxUserStatsTool = withXboxRead(
           userData: "no response from server",
         }
 
-        console.log(`Getting Xbox user stats for ${gameTitle}`)
         logs.push(`Getting Xbox user stats for ${gameTitle}`)
         const url = `https://${Endpoints.userstats.baseUri}/users/me/scids/${serviceConfigId}/stats/wins,kills,kdratio,headshots`
         const response = await callXboxApi(url, accessToken)
 
         if (response.status === 200) {
           userData = response.data
-          console.log(userData)
         }
 
         return {

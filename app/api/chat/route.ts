@@ -63,13 +63,6 @@ export async function POST(request: Request) {
     XboxAchievementTool,
   }
 
-  const trimmedMessages = trimMessages(messages, {
-    keepSystem: true,
-    maxMessages: 12,
-  })
-  const systemTemplate = await getSystemTemplate(isAuthenticated)
-  const now = new Date().toLocaleString("en-US", { timeZone: "US/Central" })
-
   if (isAuthenticated) {
     // only save the message if the user is authenticated
     const thread = await prisma.chatThread.upsert({
@@ -89,10 +82,8 @@ export async function POST(request: Request) {
       },
     })
 
-    console.log("# of messages", messages.length)
-    if (thread.summary === "New conversation" && messages.length >= 3) {
-      console.log("we have 3 messages, create a thread title (summary)")
-      const recentMessages = messages.slice(-3)
+    if (thread.summary === "New conversation" && messages.length > 1) {
+      const recentMessages = messages.slice(-2)
 
       const summary = await summarizeThread(
         recentMessages.reverse().map(m => ({
@@ -100,7 +91,6 @@ export async function POST(request: Request) {
           content: m.content,
         }))
       )
-      console.log("summary", summary)
 
       await prisma.chatThread.update({
         where: { id },
@@ -108,6 +98,13 @@ export async function POST(request: Request) {
       })
     }
   }
+
+  const trimmedMessages = trimMessages(messages, {
+    keepSystem: true,
+    maxMessages: 12,
+  })
+  const systemTemplate = await getSystemTemplate()
+  const now = new Date().toLocaleString("en-US", { timeZone: "US/Central" })
 
   return createDataStreamResponse({
     execute: withInterruptions(
@@ -148,39 +145,24 @@ export async function POST(request: Request) {
   })
 }
 
-async function getSystemTemplate(isAuthenticated: boolean) {
-  const authenticatedCapabilities = `
-Available integrations for authenticated users:
-- Google Drive: Search, list, read, and manage files and folders (Use google_drive_list_files to list files, google_drive_get_file to read file content)
-- OneDrive: Access and manage files
-- Salesforce: Search and manage CRM records
-
-You can offer these integration features only when the user is authenticated.
-`
-
+async function getSystemTemplate() {
   const baseTemplate = `
 You are a friendly assistant! Keep your responses concise and helpful.
 
-When providing a date or time, always output the value in full ISO 8601 format using UTC (e.g. "2025-05-24T19:00:00Z"). Use 24-hour time and include seconds.
-Only return properly formatted ISO 8601 strings for all datetime fields like startDateTime or endDateTime.
-
-
-${
-  isAuthenticated
-    ? authenticatedCapabilities
-    : "NOTE: The user is not logged in. You can only provide basic chat functionality. To use integrations with services like Google Drive, OneDrive, Salesforce, etc., the user needs to log in first."
-}
+Available integrations:
+- Google: Gmail, Google Calendar, and Google Drive files and folders
+- Microsoft: Outlook email, calendar and OneDrive files and folders
+- Salesforce: Search CRM records e.g. accounts, contacts, opportunities
+- Xbox: read player profile and achievements
 
 TOOL SELECTION RULES:
-1. You can use the 'WebSearchTool' tool to get up-to-date web information. When presenting results to the user, format them in numbered Markdown list with clickable links and brief summaries.
-2. Only use tools that are directly relevant to the user's request
+1. Use the 'WebSearchTool' tool to get up-to-date web information. When presenting results to the user, format them in numbered Markdown list with clickable links and brief summaries. Include images whenever possible.
+2. Only use tools that are directly relevant to the user's request.
 3. Do not use calendar tools unless explicitly asked about calendar/schedule/meetings
 4. Do not mix tools from different services unless specifically requested
-${
-  isAuthenticated
-    ? "4. You have access to all integration tools since the user is authenticated"
-    : "4. DO NOT offer or suggest using any integration tools since the user is not authenticated - instead, inform them they need to log in first"
-}
+
+When providing a date or time, always output the value in full ISO 8601 format using UTC (e.g. "2025-05-24T19:00:00Z"). Use 24-hour time and include seconds.
+Only return properly formatted ISO 8601 strings for all datetime fields like startDateTime or endDateTime.
 
 REASONING AND NARRATION INSTRUCTIONS:
 Always narrate your reasoning when deciding what to do.

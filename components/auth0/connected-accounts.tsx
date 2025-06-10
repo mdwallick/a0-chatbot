@@ -184,8 +184,6 @@ export default function ConnectedAccounts({
                 cca => cca.connection === connection
               )
               const scopesToDisplay = detailedConnectedAccount?.grantedScopes || []
-              console.log("connection", connection)
-              console.log("scopes", scopesToDisplay)
               const providerKeyForLookup = connection.toLowerCase() as ProviderKey
               const providerInfo = UserScopeMetadata[providerKeyForLookup]
               const accountManagementUrl = providerInfo?.userAccountUrl

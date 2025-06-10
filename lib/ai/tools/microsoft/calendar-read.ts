@@ -37,7 +37,6 @@ export const MicrosoftCalendarReadTool = withMSCalendarRead(
     execute: async ({ timeMin, timeMax, timeZone = "US/Central" }) => {
       const logs = []
 
-      console.log(timeMin, timeMax, timeZone)
       // Get the access token from Auth0 AI
       const access_token = getAccessTokenForConnection()
       logs.push("got access token from token vault")

@@ -2,7 +2,6 @@ import { NextResponse } from "next/server"
 
 import { auth0 } from "@/lib/auth0"
 import { getLinkedAccounts } from "@/lib/auth0-mgmt"
-import { link } from "fs"
 
 export async function GET() {
   try {
@@ -12,7 +11,6 @@ export async function GET() {
     }
 
     const linkedAccounts = await getLinkedAccounts(session.user.sub)
-    console.log("Got linked accounts", linkedAccounts)
     return NextResponse.json(linkedAccounts)
   } catch (error) {
     console.error("Error fetching linked accounts:", error)

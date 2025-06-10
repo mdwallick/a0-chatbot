@@ -22,7 +22,6 @@ export const SerpAPISearchTool = tool({
 
 export async function serpAPISearch(args: any) {
   const { query, location = "United States", num = 3, searchType = "web" } = args
-  console.log(`Searching with SerpAPI for ${query} (${searchType} search)`)
 
   const params = new URLSearchParams({
     engine: searchType === "images" ? "google_images" : "google",
@@ -31,7 +30,6 @@ export async function serpAPISearch(args: any) {
     location: location,
     num: num.toString(),
   })
-  console.log("Search params", params)
 
   try {
     const res = await fetch(`https://serpapi.com/search?${params}`)
@@ -59,7 +57,6 @@ export async function serpAPISearch(args: any) {
         })
         .join("\n\n")
 
-      console.log("SerpAPI image results generated")
       return { results: markdown }
     } else {
       if (!data.organic_results || data.organic_results.length === 0) {
@@ -77,7 +74,6 @@ export async function serpAPISearch(args: any) {
         })
         .join("\n\n")
 
-      console.log("SerpAPI web results generated")
       return { results: markdown }
     }
   } catch (error) {

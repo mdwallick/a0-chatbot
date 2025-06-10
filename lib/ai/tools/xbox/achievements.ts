@@ -43,7 +43,6 @@ export const XboxAchievementTool = withXboxRead(
 
         if (response.status === 200) {
           userData = response.data
-          console.log(userData)
         }
 
         return {

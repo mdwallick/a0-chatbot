@@ -14,15 +14,9 @@ export async function GET(request: NextRequest) {
 
   const connectionId = enabledConnections[strategy]
 
-  console.log("connectionId", connectionId)
-  console.log("strategy", strategy)
-  console.log("subject", subject)
-  console.log("scopes", scopes)
-
   const skipSet = new Set(["openid", "profile", "email", "address", "phone", "offline_access"])
   for (const scope of scopes) {
     if (skipSet.has(scope)) {
-      console.log("Skipping standard OIDC scope", scope)
       continue
     }
     await prisma.grantedScope.upsert({

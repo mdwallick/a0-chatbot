@@ -65,7 +65,6 @@ export const GoogleCalendarWriteTool = withGoogleCalendarWrite(
           },
         }
 
-        console.log("create event", event)
         logs.push("create event", event)
         const calendar = google.calendar({ version: "v3", auth })
 

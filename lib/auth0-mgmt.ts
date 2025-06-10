@@ -71,7 +71,6 @@ export async function updateUser(
 
 export async function getLinkedAccounts(userId: string) {
   try {
-    console.log("Fetching linked accounts for user:", userId)
     const response = await getUser(userId!)
     const { data } = response
 

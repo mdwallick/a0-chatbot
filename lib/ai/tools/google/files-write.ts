@@ -27,8 +27,6 @@ export const GoogleFilesWriteTool = withGoogleDriveWrite(
         // Create Google OAuth client.
         const auth = getGoogleAuth(access_token)
 
-        console.log("Creating", path)
-        console.log("Content", content)
         if (type === "text") {
           const newFile = createTextFile(auth, path, content)
           return newFile
@@ -79,9 +77,6 @@ async function createTextFile(auth: OAuth2Client, fileName: string, fileContent:
       fields: "id, name", // Specify which fields to return
     })
 
-    console.log(`File created successfully!`)
-    console.log("File ID:", file.data.id)
-    console.log("File Name:", file.data.name)
     return file.data
   } catch (err) {
     console.error("Error creating file:", err)

@@ -53,7 +53,6 @@ export const GmailReadTool = withGmailRead(
         const res = await gmail.users.messages.list(params)
 
         const messages = res.data.messages || []
-        console.log(`Got ${messages.length} emails...`)
         const data = [{}]
         for (const msg of messages) {
           if (typeof msg.id === "string") {
@@ -74,7 +73,6 @@ export const GmailReadTool = withGmailRead(
             const parts = message.data.payload?.parts || []
             const plainTextPart = parts.find(part => part.mimeType === "text/plain")
             const body = Buffer.from(plainTextPart?.body?.data || "", "base64").toString("utf-8")
-            console.log(`From ${from}, To ${to} Subject ${subject}`)
 
             data.push({
               id: msg.id,

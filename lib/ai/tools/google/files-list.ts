@@ -31,7 +31,6 @@ export const GoogleFilesListTool = withGoogleDriveRead(
           q: query || undefined,
           fields: "files(id, name)",
         })
-        res.data.files?.forEach(f => console.log(f.name, f.id))
         const items = res.data
 
         logs.push("Successfully retrieved items:", {

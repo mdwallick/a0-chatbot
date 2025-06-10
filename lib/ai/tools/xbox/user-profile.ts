@@ -27,7 +27,6 @@ export const XboxUserProfileTool = withXboxRead(
         // Get the access token from Auth0 AI
         const accessToken = getAccessTokenForConnection()
         logs.push("got access token from token vault")
-        console.log("msft access token", accessToken)
 
         if (!accessToken) {
           logs.push("access token missing or expired")

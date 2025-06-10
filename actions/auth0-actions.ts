@@ -38,7 +38,6 @@ export async function fetchUserIdentities() {
     }
   })
 
-  console.log("connectedAccountsWithScopes", connectedAccountsWithScopes)
   return connectedAccountsWithScopes
 }
 

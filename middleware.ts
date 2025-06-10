@@ -15,7 +15,6 @@ export async function middleware(request: NextRequest) {
     const subject = qs.get("tx_sub")
     const strategy = qs.get("tx_strategy")
     const scopes = qs.get("scopes")?.split(",") || []
-    console.log("IN middleware.js: scopes", scopes)
 
     // create a cookie to store the link-account information
     authRes.cookies.set({

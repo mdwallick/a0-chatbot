@@ -40,7 +40,6 @@ export function EnsureAPIAccessRedirect({
           returnTo.searchParams.set("tx_sub", user!.sub)
           returnTo.searchParams.set("connection", connection)
           returnTo.searchParams.set("scopes", requested_scopes)
-          console.log("returnTo", returnTo)
 
           const params = new URLSearchParams({
             connection,
@@ -49,7 +48,6 @@ export function EnsureAPIAccessRedirect({
           })
 
           const url = `/auth/login?${params.toString()}&returnTo=${returnTo}`
-          console.log("redirecting to:", url)
           window.location.href = url
         },
       }}

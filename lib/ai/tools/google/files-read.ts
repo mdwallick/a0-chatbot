@@ -36,8 +36,6 @@ export const GoogleFilesReadTool = withGoogleDriveRead(
         })
 
         const fileInfo = metaRes.data
-        console.log(`Reading file: ${fileInfo.name} (Type: ${fileInfo.mimeType})`)
-
         let content = null
 
         // 2. Get Content based on MIME Type
@@ -47,7 +45,6 @@ export const GoogleFilesReadTool = withGoogleDriveRead(
           fileInfo.mimeType === "application/vnd.google-apps.presentation"
         ) {
           // Export Google Workspace files as plain text
-          console.log("Exporting as text/plain...")
           const exportRes = await drive.files.export(
             { fileId: fileId, mimeType: "text/plain" },
             { responseType: "stream" }
@@ -55,14 +52,12 @@ export const GoogleFilesReadTool = withGoogleDriveRead(
           content = await streamToString(exportRes.data)
         } else if (fileInfo.mimeType && fileInfo.mimeType.startsWith("text/")) {
           // Download plain text files directly
-          console.log("Downloading as text...")
           const downloadRes = await drive.files.get(
             { fileId: fileId, alt: "media" },
             { responseType: "stream" }
           )
           content = await streamToString(downloadRes.data)
         } else if (fileInfo.mimeType === "application/pdf") {
-          console.log("Downloading PDF (requires parsing)...")
           const downloadRes = await drive.files.get(
             { fileId: fileId, alt: "media" },
             { responseType: "stream" }
@@ -72,7 +67,6 @@ export const GoogleFilesReadTool = withGoogleDriveRead(
           // try {
           //   const pdfData = await pdfParse(buffer);
           //   content = pdfData.text;
-          //   console.log('PDF text extracted.');
           // } catch (parseErr) {
           //    console.error("Failed to parse PDF:", parseErr);
           //    content = `[Could not parse PDF: ${fileInfo.name}]`;
@@ -82,7 +76,6 @@ export const GoogleFilesReadTool = withGoogleDriveRead(
           fileInfo.mimeType ===
           "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         ) {
-          console.log("Downloading DOCX (requires parsing)...")
           const downloadRes = await drive.files.get(
             { fileId: fileId, alt: "media" },
             { responseType: "stream" }
@@ -92,14 +85,13 @@ export const GoogleFilesReadTool = withGoogleDriveRead(
           // try {
           //   const docxData = await mammoth.extractRawText({ buffer: buffer });
           //   content = docxData.value;
-          //   console.log('DOCX text extracted.');
           // } catch (parseErr) {
           //    console.error("Failed to parse DOCX:", parseErr);
           //    content = `[Could not parse DOCX: ${fileInfo.name}]`;
           // }
           content = `[DOCX content for '${fileInfo.name}' needs parsing. Buffer length: ${buffer.length}]` // Placeholder
         } else {
-          console.log(
+          console.info(
             `Cannot extract text from MIME type: ${fileInfo.mimeType}. Only metadata will be returned.`
           )
           content = `[Content not available for this file type: ${fileInfo.name}]`

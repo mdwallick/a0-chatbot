@@ -21,7 +21,31 @@ Clone the repository and navigate to the project directory:
 git clone https://github.com/mdwallick/a0-chatbot && cd a0-chatbot
 ```
 
-Install Dependencies
+Copy `env.sample` to `.env.local` and fill in all the relevant environment
+variables.
+
+NOTE:
+
+- You will need to set up an [OpenAI Platform account](https://platform.openai.com/docs/overview) and create an API key.
+- For web search to work, you need to set up a [Google Custom search API](https://developers.google.com/custom-search/v1/overview).
+
+```bash
+cp env.sample .env.local
+```
+
+Install Postgres locally
+
+```bash
+brew install postgresql
+```
+
+Create a new empty database
+
+```bash
+createdb chatbot
+```
+
+Install Dependencies. This will also set up the necessary tables and schemas.
 
 ```bash
 npm install

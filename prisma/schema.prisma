@@ -44,3 +44,12 @@ model GrantedScope {
 
   @@unique([userId, connectionId, scope], name: "UserConnectionScopeUnique")
 }
+
+model DailyUsage {
+  id     Int      @id @default(autoincrement())
+  userId String
+  date   DateTime
+  count  Int      @default(0)
+
+  @@unique([userId, date])
+}

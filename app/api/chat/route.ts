@@ -1,6 +1,6 @@
-import { createDataStreamResponse, Message, streamText } from "ai"
+import { createDataStreamResponse, Message, streamText, Tool } from "ai"
 
-import { WebSearchTool } from "@/lib/ai/tools"
+import { DalleImageTool, WebSearchTool } from "@/lib/ai/tools"
 import {
   GmailReadTool,
   GmailSendTool,
@@ -31,6 +31,7 @@ import { errorSerializer, withInterruptions } from "@auth0/ai-vercel/interrupts"
 import { trimMessages } from "@/lib/utils"
 import { prisma } from "@/lib/prisma"
 import { summarizeThread } from "@/lib/summarize-thread"
+import { getImageCountToday, getImageCreationLimit } from "@/lib/utils"
 
 export async function POST(request: Request) {
   const { id, messages }: { id: string; messages: Array<Message>; selectedChatModel: string } =
@@ -41,7 +42,19 @@ export async function POST(request: Request) {
   const session = await auth0.getSession()
   const isAuthenticated = !!session?.user
 
-  const tools = {
+  const context = {
+    user: session?.user
+      ? {
+          // Only populate user data if a session exists
+          id: session.user.sub,
+          email: session.user.email,
+          name: session.user.name,
+        }
+      : undefined,
+  }
+
+  const toolDefinitions = {
+    DalleImageTool,
     WebSearchTool,
     GmailReadTool,
     GmailSendTool,
@@ -62,6 +75,38 @@ export async function POST(request: Request) {
     XboxUserProfileTool,
     XboxAchievementTool,
   }
+
+  // const tools = {
+  //   DalleImageTool,
+  //   WebSearchTool,
+  //   GmailReadTool,
+  //   GmailSendTool,
+  //   GoogleFilesListTool,
+  //   GoogleCalendarReadTool,
+  //   GoogleCalendarWriteTool,
+  //   GoogleFilesReadTool,
+  //   GoogleFilesWriteTool,
+  //   MicrosoftCalendarReadTool,
+  //   MicrosoftCalendarWriteTool,
+  //   MicrosoftFilesListTool,
+  //   MicrosoftFilesReadTool,
+  //   MicrosoftFilesWriteTool,
+  //   MicrosoftMailReadTool,
+  //   MicrosoftMailSendTool,
+  //   SalesforceQueryTool,
+  //   SalesforceSearchTool,
+  //   XboxUserProfileTool,
+  //   XboxAchievementTool,
+  // }
+  const tools: Record<string, Tool<any, any>> = Object.fromEntries(
+    Object.entries(toolDefinitions).map(([name, definition]) => {
+      // Check if the definition is a function (needs context) or just a static object
+      if (typeof definition === "function") {
+        return [name, definition(context)] // Call it with context to get the tool
+      }
+      return [name, definition] // It's a static tool, pass it through
+    })
+  )
 
   if (isAuthenticated) {
     // only save the message if the user is authenticated
@@ -103,41 +148,51 @@ export async function POST(request: Request) {
     keepSystem: true,
     maxMessages: 12,
   })
-  const systemTemplate = await getSystemTemplate()
+
+  let imageUsageCount: number | undefined = undefined
+
+  if (isAuthenticated && context.user?.id) {
+    imageUsageCount = await getImageCountToday(context.user.id)
+  }
+
+  const systemTemplate = await getSystemTemplate({
+    userName: context.user?.name?.split(" ")[0],
+    imageUsageCount,
+  })
   const now = new Date().toLocaleString("en-US", { timeZone: "US/Central" })
 
-  return createDataStreamResponse({
-    execute: withInterruptions(
-      async dataStream => {
-        const result = streamText({
-          model: openai(process.env.OPENAI_MODEL || "gpt-4o"),
-          system: `The current date and time is ${now}. ${systemTemplate}`,
-          messages: trimmedMessages,
-          maxSteps: 5,
-          tools: tools,
-          async onFinish(finalResult) {
-            if (isAuthenticated) {
-              // only save the message if the user is authenticated
-              await prisma.message.create({
-                data: {
-                  role: "assistant",
-                  content: finalResult.text,
-                  threadId: id,
-                },
-              })
-            }
-          },
-        })
+  const config = {
+    messages: trimmedMessages,
+    tools,
+    context,
+  } as const
 
-        result.mergeIntoDataStream(dataStream, {
-          sendReasoning: true,
-        })
-      },
-      {
-        messages,
-        tools: tools,
-      }
-    ),
+  return createDataStreamResponse({
+    execute: withInterruptions(async dataStream => {
+      const result = streamText({
+        model: openai(process.env.OPENAI_MODEL || "gpt-4o"),
+        system: `The current date and time is ${now}. ${systemTemplate}`,
+        messages: trimmedMessages,
+        maxSteps: 5,
+        tools,
+        async onFinish(finalResult) {
+          if (isAuthenticated) {
+            // only save the message if the user is authenticated
+            await prisma.message.create({
+              data: {
+                role: "assistant",
+                content: finalResult.text,
+                threadId: id,
+              },
+            })
+          }
+        },
+      })
+
+      result.mergeIntoDataStream(dataStream, {
+        sendReasoning: true,
+      })
+    }, config),
     onError: errorSerializer(err => {
       console.error(err)
       return "Oops, an error occured!"
@@ -145,9 +200,27 @@ export async function POST(request: Request) {
   })
 }
 
-async function getSystemTemplate() {
+async function getSystemTemplate({
+  userName,
+  imageUsageCount,
+}: {
+  userName?: string
+  imageUsageCount?: number
+}) {
+  const maxPerDay = getImageCreationLimit()
+
   const baseTemplate = `
 You are a friendly assistant! Keep your responses concise and helpful.
+
+You're currently helping ${userName ?? "a user"}.
+
+The maximum number of images a user can generate in a day is ${maxPerDay}.
+
+${
+  typeof imageUsageCount === "number"
+    ? `They have generated ${imageUsageCount} image${imageUsageCount !== 1 ? "s" : ""} today.`
+    : ""
+}
 
 Available integrations:
 - Google: Gmail, Google Calendar, and Google Drive files and folders

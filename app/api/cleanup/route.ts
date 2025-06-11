@@ -38,10 +38,19 @@ export async function GET(request: Request) {
       },
     })
 
+    const dailyUsageResult = await prisma.dailyUsage.deleteMany({
+      where: {
+        date: {
+          lt: yesterday,
+        },
+      },
+    })
+
     console.log("Cron job: Deleted old chat logs.")
     console.log(`${messageResult.count} messages deleted`)
     console.log(`${threadResult.count} threads deleted`)
     console.log(`${credentialResult.count} credentials deleted`)
+    console.log(`${dailyUsageResult.count} image generation counts deleted`)
     return NextResponse.json({
       message: "Successfully deleted old chat logs.",
     })

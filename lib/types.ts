@@ -4,4 +4,12 @@ export type ChatThread = {
   updatedAt: string
 }
 
-export type ThreadsApiResponse = { threads: ChatThread[] } // Expected API response shape
+export type ThreadsApiResponse = { threads: ChatThread[] }
+
+export type ChatContext = {
+  user?: {
+    id: string
+    email?: string
+    name?: string
+  }
+}

@@ -19,7 +19,9 @@ export const DalleImageTool = (context: ChatContext) =>
     parameters: toolSchema,
     execute: async ({ prompt }) => {
       const userId = context?.user?.id
-      if (!userId) throw new Error("User not authenticated")
+      if (!userId) {
+        return "Sorry, you must be signed in to generate images."
+      }
 
       await incrementImageUsage(userId)
 
@@ -27,7 +29,7 @@ export const DalleImageTool = (context: ChatContext) =>
         model: "dall-e-2",
         prompt,
         n: 1,
-        size: "1024x1024",
+        size: "512x512",
       })
 
       const url = response.data?.[0]?.url

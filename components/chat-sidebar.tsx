@@ -9,7 +9,7 @@ import { useSidebar } from "@/components/sidebar-context"
 
 import { Button } from "./ui/button"
 import Link from "next/link"
-import { MicrosoftCopilotIcon } from "./icons"
+import { Auth0Icon } from "./icons"
 
 export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boolean }) {
   const router = useRouter()
@@ -71,10 +71,10 @@ export function ChatSidebar({ isMobileDrawer = false }: { isMobileDrawer?: boole
               {showExpandedContent && (
                 <div className="flex items-center gap-2 text-primary">
                   <Link href="/">
-                    <MicrosoftCopilotIcon />
+                    <Auth0Icon className="text-black dark:text-white" />
                   </Link>
                   <Link href="/">
-                    <span className="font-semibold text-lg text-theme">Copilot</span>
+                    <span className="font-semibold text-lg text-theme">Auth0 AI | Demo</span>
                   </Link>
                 </div>
               )}

@@ -26,31 +26,51 @@ const checkoutSchema = z.object({
   currency: z.string().optional().default("USD").describe("Currency code (e.g., USD, EUR)"),
 })
 
-// Get OAuth token for commerce API
+// Get OAuth token for commerce API using merchant credentials
 async function getCommerceToken(): Promise<string> {
-  const auth0Domain = process.env.AUTH0_DOMAIN
-  if (!auth0Domain) {
-    throw new Error("AUTH0_DOMAIN not configured")
+  const merchantDomain = process.env.MERCHANT_DOMAIN
+  const merchantClientId = process.env.MERCHANT_CLIENT_ID
+  const merchantClientSecret = process.env.MERCHANT_CLIENT_SECRET
+  const merchantAudience = process.env.MERCHANT_AUDIENCE
+  const merchantScope = process.env.MERCHANT_SCOPE
+
+  if (!merchantDomain || !merchantClientId || !merchantClientSecret) {
+    throw new Error(
+      "Merchant credentials not configured (MERCHANT_DOMAIN, MERCHANT_CLIENT_ID, MERCHANT_CLIENT_SECRET)"
+    )
   }
 
-  const tokenUrl = `https://${auth0Domain}/oauth/token`
+  const tokenUrl = `https://${merchantDomain}/oauth/token`
+
+  console.log("[Token] Requesting token from:", tokenUrl)
+  console.log("[Token] Client ID:", merchantClientId)
+  console.log("[Token] Audience:", merchantAudience)
 
   try {
+    const requestBody: any = {
+      client_id: merchantClientId,
+      client_secret: merchantClientSecret,
+      grant_type: "client_credentials",
+    }
+
+    if (merchantAudience) {
+      requestBody.audience = merchantAudience
+    }
+
+    // Don't send scope - the API grants the correct scopes automatically
+    // based on the audience and the client's configured permissions
+
     const response = await fetch(tokenUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        client_id: process.env.AUTH0_CLIENT_ID,
-        client_secret: process.env.AUTH0_CLIENT_SECRET,
-        audience: "https://checkout-api.example.com",
-        grant_type: "client_credentials",
-      }),
+      body: JSON.stringify(requestBody),
     })
 
     if (!response.ok) {
-      throw new Error(`Token request failed: ${response.statusText}`)
+      const errorText = await response.text()
+      throw new Error(`Token request failed: ${response.statusText} - ${errorText}`)
     }
 
     const data = await response.json()
@@ -74,7 +94,21 @@ async function searchProducts(args: any) {
     })
 
     if (!response.ok) {
-      return { error: "Failed to fetch products", products: [] }
+      console.error(`Product feed API error: ${response.status} ${response.statusText}`)
+      return {
+        error: `Failed to fetch products: ${response.status} ${response.statusText}`,
+        products: [],
+      }
+    }
+
+    // Check if response is JSON
+    const contentType = response.headers.get("content-type")
+    if (!contentType || !contentType.includes("application/json")) {
+      console.error("Product feed API returned non-JSON response:", contentType)
+      return {
+        error: "Product feed service is currently unavailable (returned non-JSON response)",
+        products: [],
+      }
     }
 
     const data = await response.json()
@@ -95,32 +129,23 @@ async function searchProducts(args: any) {
       }
     }
 
-    // Format products as markdown with images
-    const markdown = limitedProducts
-      .map((product: any, index: number) => {
-        const title = product.title || "Product"
-        const price = product.price ? `$${product.price}` : "Price not available"
-        const description = product.description || ""
-        const image = product.image_url || product.imageUrl || ""
-        const productId = product.id || product.product_id || ""
-
-        let result = `${index + 1}. **${title}** - ${price}\n`
-        if (image) {
-          result += `![${title}](${image})\n`
-        }
-        if (description) {
-          result += `${description}\n`
-        }
-        result += `Product ID: ${productId}`
-
-        return result
-      })
-      .join("\n\n---\n\n")
-
+    // Return structured data for AI to format
+    // Convert HTTP URLs to HTTPS to avoid mixed content issues
     return {
-      message: `Found ${limitedProducts.length} product(s) matching "${query}"`,
-      products: limitedProducts,
-      formatted: markdown,
+      success: true,
+      count: limitedProducts.length,
+      query: query,
+      products: limitedProducts.map((product: any) => ({
+        id: product.id,
+        title: product.title,
+        description: product.description,
+        price: product.price?.value || null,
+        currency: product.price?.currency || "USD",
+        image_link: product.image_link?.replace(/^http:/, "https:") || null,
+        link: product.link?.replace(/^http:/, "https:") || null,
+        availability: product.availability,
+        brand: product.brand,
+      })),
     }
   } catch (error) {
     console.error("Product search error:", error)
@@ -137,7 +162,9 @@ async function createCheckout(args: any) {
 
   try {
     // Get access token
+    console.log("[Checkout] Getting merchant token...")
     const token = await getCommerceToken()
+    console.log("[Checkout] Token received:", token ? `${token.substring(0, 20)}...` : "NO TOKEN")
 
     // Format line items for checkout API
     const formattedLineItems = lineItems.map((item: any) => ({
@@ -147,6 +174,9 @@ async function createCheckout(args: any) {
       },
       quantity: item.quantity,
     }))
+
+    console.log("[Checkout] Sending checkout request to:", CHECKOUT_URL)
+    console.log("[Checkout] Line items:", JSON.stringify(formattedLineItems, null, 2))
 
     const response = await fetch(CHECKOUT_URL, {
       method: "POST",
@@ -160,8 +190,11 @@ async function createCheckout(args: any) {
       }),
     })
 
+    console.log("[Checkout] Response status:", response.status, response.statusText)
+
     if (!response.ok) {
       const errorText = await response.text()
+      console.error("[Checkout] Error response:", errorText)
       return {
         error: `Checkout failed: ${response.statusText}`,
         details: errorText,

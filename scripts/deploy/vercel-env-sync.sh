@@ -2,19 +2,19 @@
 # Sync environment variables to Vercel
 # Usage: ./scripts/deploy/vercel-env-sync.sh [environment] [options]
 #
-# Environments: production, preview, development
+# Environments: production, preview
 #
 # Options:
 #   --dry-run    Show what would be synced without making changes
 #
 # Environment file layering:
-#   - .env.local is always loaded first (shared/base values)
-#   - .env.production is layered on top for production (overrides)
+#   preview     → .env.vercel
+#   production  → .env.vercel + .env.production (overlay)
 #
-# This means .env.production only needs production-specific values like:
-#   AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET, DATABASE_URL, APP_BASE_URL, etc.
-#
-# Shared values (OPENAI_API_KEY, OPENAI_MODEL, etc.) stay in .env.local
+# File purposes:
+#   .env.local       → Local development only (not used by this script)
+#   .env.vercel      → Shared Vercel values (DATABASE_URL, API keys, dev Auth0)
+#   .env.production  → Production-only overrides (production Auth0 credentials)
 
 set -e
 
@@ -66,8 +66,16 @@ if ! vercel whoami &> /dev/null; then
 fi
 
 # Check base env file exists
-if [ ! -f ".env.local" ]; then
-    echo -e "${RED}Error: .env.local not found${NC}"
+if [ ! -f ".env.vercel" ]; then
+    echo -e "${RED}Error: .env.vercel not found${NC}"
+    echo ""
+    echo -e "${YELLOW}Create .env.vercel with shared Vercel values:${NC}"
+    echo "  DATABASE_URL      - Vercel/production database"
+    echo "  AUTH0_*           - Dev Auth0 app credentials (shared for preview)"
+    echo "  OPENAI_API_KEY    - API keys"
+    echo "  ENABLED_CONNECTIONS"
+    echo ""
+    echo "This file is used as the base for both preview and production deploys."
     exit 1
 fi
 
@@ -75,11 +83,11 @@ fi
 if [ "$ENVIRONMENT" = "production" ] && [ ! -f ".env.production" ]; then
     echo -e "${RED}Error: .env.production not found${NC}"
     echo ""
-    echo -e "${YELLOW}Create .env.production with production-specific values:${NC}"
+    echo -e "${YELLOW}Create .env.production with production-only overrides:${NC}"
     echo "  AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET,"
-    echo "  AUTH0_SECRET, AUTH0_ISSUER_BASE_URL, APP_BASE_URL, DATABASE_URL"
+    echo "  AUTH0_SECRET, AUTH0_ISSUER_BASE_URL, APP_BASE_URL"
     echo ""
-    echo "Shared values (OPENAI_API_KEY, etc.) will be read from .env.local"
+    echo "Other values will be read from .env.vercel"
     exit 1
 fi
 
@@ -87,18 +95,17 @@ fi
 MERGED_ENV=$(mktemp)
 trap "rm -f $MERGED_ENV" EXIT
 
-# Start with .env.local as base
-cp .env.local "$MERGED_ENV"
+# Start with .env.vercel as base
+cp .env.vercel "$MERGED_ENV"
 
 # For production, overlay .env.production
 if [ "$ENVIRONMENT" = "production" ] && [ -f ".env.production" ]; then
     echo -e "${BLUE}Loading:${NC}"
-    echo -e "  Base:    .env.local"
+    echo -e "  Base:    .env.vercel"
     echo -e "  Overlay: .env.production"
     echo ""
 
-    # Append .env.production (later values override earlier ones when we read)
-    # We'll handle the override logic in the get_var function
+    # Overlay .env.production values
     while IFS= read -r line || [ -n "$line" ]; do
         # Skip empty lines and comments
         [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
@@ -112,7 +119,7 @@ if [ "$ENVIRONMENT" = "production" ] && [ -f ".env.production" ]; then
         echo "$line" >> "$MERGED_ENV"
     done < .env.production
 else
-    echo -e "${BLUE}Loading:${NC} .env.local"
+    echo -e "${BLUE}Loading:${NC} .env.vercel"
     echo ""
 fi
 
@@ -167,10 +174,10 @@ get_source() {
         if grep -q "^${var}=" .env.production 2>/dev/null; then
             echo ".env.production"
         else
-            echo ".env.local"
+            echo ".env.vercel"
         fi
     else
-        echo ".env.local"
+        echo ".env.vercel"
     fi
 }
 

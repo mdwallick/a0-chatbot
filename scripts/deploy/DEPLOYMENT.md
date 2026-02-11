@@ -20,6 +20,79 @@ brew install auth0/auth0-cli/auth0
 - Auth0 tenant with Token Vault enabled
 - PostgreSQL database (e.g., Vercel Postgres, Neon, Supabase)
 
+## Environment Files
+
+This project uses three environment files for different contexts:
+
+| File              | Purpose              | Used By                      |
+| ----------------- | -------------------- | ---------------------------- |
+| `.env.local`      | Local development    | `npm run dev`                |
+| `.env.vercel`     | Shared Vercel config | Preview & Production deploys |
+| `.env.production` | Production overrides | Production deploy only       |
+
+### File Layering
+
+```
+preview     → .env.vercel
+production  → .env.vercel + .env.production (overlay)
+```
+
+### Example: .env.local (local development)
+
+```bash
+# Local database
+DATABASE_URL="postgresql://localhost:5432/chatbot"
+
+# Dev Auth0 app
+AUTH0_DOMAIN="dev-tenant.us.auth0.com"
+AUTH0_CLIENT_ID="dev-client-id"
+AUTH0_CLIENT_SECRET="dev-secret"
+AUTH0_SECRET="local-session-secret"
+AUTH0_ISSUER_BASE_URL="https://dev-tenant.us.auth0.com"
+AUTH0_CLIENT_ID_MGMT="mgmt-client-id"
+AUTH0_CLIENT_SECRET_MGMT="mgmt-secret"
+APP_BASE_URL="http://localhost:3000"
+
+# Shared values
+OPENAI_API_KEY="sk-..."
+OPENAI_MODEL="gpt-4o-mini"
+ENABLED_CONNECTIONS='{"google-oauth2":"con_xxx"}'
+```
+
+### Example: .env.vercel (shared Vercel config)
+
+```bash
+# Vercel database (same for preview and production)
+DATABASE_URL="postgres://vercel-pool.../chatbot"
+
+# Dev Auth0 app (used for preview deployments)
+AUTH0_DOMAIN="dev-tenant.us.auth0.com"
+AUTH0_CLIENT_ID="dev-client-id"
+AUTH0_CLIENT_SECRET="dev-secret"
+AUTH0_SECRET="vercel-session-secret"
+AUTH0_ISSUER_BASE_URL="https://dev-tenant.us.auth0.com"
+AUTH0_CLIENT_ID_MGMT="mgmt-client-id"
+AUTH0_CLIENT_SECRET_MGMT="mgmt-secret"
+APP_BASE_URL="https://preview.example.com"
+
+# Shared values
+OPENAI_API_KEY="sk-..."
+OPENAI_MODEL="gpt-4o-mini"
+ENABLED_CONNECTIONS='{"google-oauth2":"con_xxx"}'
+```
+
+### Example: .env.production (production overrides only)
+
+```bash
+# Production Auth0 app (overrides .env.vercel values)
+AUTH0_DOMAIN="prod-tenant.us.auth0.com"
+AUTH0_CLIENT_ID="prod-client-id"
+AUTH0_CLIENT_SECRET="prod-secret"
+AUTH0_SECRET="prod-session-secret"
+AUTH0_ISSUER_BASE_URL="https://prod-tenant.us.auth0.com"
+APP_BASE_URL="https://chatbot.example.com"
+```
+
 ## One-Time Setup
 
 ### 1. Auth0 CLI Authentication
@@ -62,7 +135,7 @@ DATABASE_URL="your-prod-db-url" npm run prisma:migrate
 Run before every deployment to validate everything is ready:
 
 ```bash
-./scripts/deploy/pre-deploy-check.sh
+npm run deploy:check
 ```
 
 This checks:
@@ -76,14 +149,17 @@ This checks:
 
 ### Environment Variable Sync
 
-Sync your local `.env.local` to Vercel:
+Sync environment variables to Vercel:
 
 ```bash
-# Sync to production
-./scripts/deploy/vercel-env-sync.sh production
+# Sync to preview (uses .env.vercel)
+npm run deploy:env preview
 
-# Sync to preview (for PR deployments)
-./scripts/deploy/vercel-env-sync.sh preview
+# Sync to production (uses .env.vercel + .env.production)
+npm run deploy:env production
+
+# Dry run to see what would be synced
+npm run deploy:env production --dry-run
 ```
 
 ## Deployment Process
@@ -93,13 +169,14 @@ Sync your local `.env.local` to Vercel:
 1. **Run pre-deployment checks:**
 
    ```bash
-   ./scripts/deploy/pre-deploy-check.sh
+   npm run deploy:check
    ```
 
 2. **Sync environment variables (if changed):**
 
    ```bash
-   ./scripts/deploy/vercel-env-sync.sh production
+   npm run deploy:env preview
+   npm run deploy:env production
    ```
 
 3. **Create PR or push to main:**
@@ -125,36 +202,6 @@ vercel --prod
 # Deploy preview
 vercel
 ```
-
-## Environment Variables
-
-### Required for Production
-
-| Variable                   | Description                    |
-| -------------------------- | ------------------------------ |
-| `AUTH0_DOMAIN`             | Your Auth0 tenant domain       |
-| `AUTH0_CLIENT_ID`          | Web application client ID      |
-| `AUTH0_CLIENT_SECRET`      | Web application client secret  |
-| `AUTH0_SECRET`             | Session encryption secret      |
-| `AUTH0_CLIENT_ID_MGMT`     | M2M client for Management API  |
-| `AUTH0_CLIENT_SECRET_MGMT` | M2M client secret              |
-| `AUTH0_ISSUER_BASE_URL`    | Full Auth0 issuer URL          |
-| `APP_BASE_URL`             | Your production URL            |
-| `DATABASE_URL`             | PostgreSQL connection string   |
-| `OPENAI_API_KEY`           | OpenAI API key                 |
-| `OPENAI_MODEL`             | Model name (e.g., gpt-4o-mini) |
-| `ENABLED_CONNECTIONS`      | JSON map of connections        |
-
-### Optional
-
-| Variable                | Description                    |
-| ----------------------- | ------------------------------ |
-| `LITELLM_API_KEY`       | LiteLLM proxy key (if using)   |
-| `LITELLM_BASE_URL`      | LiteLLM proxy URL              |
-| `GOOGLE_CX`             | Google Custom Search engine ID |
-| `GOOGLE_SEARCH_API_KEY` | Google Search API key          |
-| `SALESFORCE_LOGIN_URL`  | Salesforce tenant URL          |
-| `IMAGES_PER_DAY_LIMIT`  | DALL-E rate limit (default: 3) |
 
 ## Auth0 Configuration via Claude MCP
 

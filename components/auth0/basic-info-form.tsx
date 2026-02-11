@@ -1,49 +1,74 @@
 "use client"
 
+import { useCallback } from "react"
+import { useRouter } from "next/navigation"
+
 import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { useUser } from "@auth0/nextjs-auth0"
+
+import EditableField from "./editable-field"
+import { updateProfile } from "@/actions/profile-actions"
 
 export default function BasicInfoForm() {
   const { user } = useUser()
+  const router = useRouter()
   const name = user?.name
   const email = user?.email
   const nickname = user?.nickname
   const phone = user?.phone_number
 
+  const handleSaveName = useCallback(
+    async (value: string) => {
+      await updateProfile({ name: value })
+      router.refresh()
+    },
+    [router]
+  )
+
+  const handleSaveNickname = useCallback(
+    async (value: string) => {
+      await updateProfile({ nickname: value })
+      router.refresh()
+    },
+    [router]
+  )
+
   return (
     <Card className="w-full shadow-none">
       <CardContent className="p-4 pt-0 md:p-6 md:pt-0 md:pb-0">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="grid items-center gap-2">
-            <Label htmlFor="name">Name</Label>
-            <Input disabled type="name" id="name" placeholder="Name" defaultValue={name} />
-          </div>
-          <div className="grid items-center gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input disabled type="email" id="email" placeholder="Email" defaultValue={email} />
-          </div>
-          <div className="grid items-center gap-2">
-            <Label htmlFor="nickname">Nickname</Label>
-            <Input
-              disabled
-              type="nickname"
-              id="nickname"
-              placeholder="Nickname"
-              defaultValue={nickname}
-            />
-          </div>
-          <div className="grid items-center gap-2">
-            <Label htmlFor="phone">Phone</Label>
-            <Input
-              disabled
-              type="phone"
-              id="phone"
-              placeholder="(415) 555-5555"
-              defaultValue={phone}
-            />
-          </div>
+          <EditableField
+            label="Name"
+            value={name}
+            onSave={handleSaveName}
+            editable={true}
+            placeholder="Name"
+          />
+          <EditableField
+            label="Email"
+            value={email}
+            onSave={async () => {}}
+            editable={false}
+            hint="Cannot change"
+            type="email"
+            placeholder="Email"
+          />
+          <EditableField
+            label="Nickname"
+            value={nickname}
+            onSave={handleSaveNickname}
+            editable={true}
+            placeholder="Nickname"
+          />
+          <EditableField
+            label="Phone"
+            value={phone}
+            onSave={async () => {}}
+            editable={false}
+            hint="Contact support"
+            type="tel"
+            placeholder="(415) 555-5555"
+          />
         </div>
       </CardContent>
     </Card>

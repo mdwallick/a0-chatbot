@@ -113,7 +113,7 @@ export const UserScopeMetadata = {
     ],
   } as ProviderScopeDetails,
   salesforce: {
-    userAccountUrl: "#TODO",
+    userAccountUrl: "https://login.salesforce.com/services/oauth2/revoke",
     scopes: ["id", "api", "refresh_token"],
     friendlyScopes: [
       "See your Salesforce unique identifier",
@@ -122,12 +122,12 @@ export const UserScopeMetadata = {
     ],
   } as ProviderScopeDetails,
   xbox: {
-    userAccountUrl: "#TODO",
+    userAccountUrl: "https://account.live.com/consent/Manage",
     scopes: ["XboxLive.signin", "XboxLive.offline_access"],
     // https://learn.microsoft.com/en-us/graph/permissions-reference
     friendlyScopes: [
       "Read information from your Xbox account",
-      "Access Xbox information asyncromously",
+      "Access Xbox information asynchronously",
     ],
   } as ProviderScopeDetails,
 } as const

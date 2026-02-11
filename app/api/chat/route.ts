@@ -16,6 +16,7 @@ import {
   GoogleCalendarWriteTool,
   GoogleFilesReadTool,
   GoogleFilesWriteTool,
+  GoogleFolderCreateTool,
 } from "@/lib/ai/tools/google"
 
 import {
@@ -71,6 +72,7 @@ export async function POST(request: Request) {
     GoogleCalendarWriteTool,
     GoogleFilesReadTool,
     GoogleFilesWriteTool,
+    GoogleFolderCreateTool,
     MicrosoftCalendarReadTool,
     MicrosoftCalendarWriteTool,
     MicrosoftFilesListTool,
@@ -264,7 +266,7 @@ You can still help with general questions, web searches, and information request
 ${
   isAuthenticated
     ? `
-- **Google**: Read/send Gmail, read/write Calendar events, list/read/write Drive files
+- **Google**: Read/send/draft Gmail, read/write Calendar events, create Google Docs/Sheets/folders, list/read/write Drive files
 - **Microsoft**: Read/send Outlook mail, read/write Calendar events, list/read/write OneDrive files
 - **Salesforce**: Search and query CRM records (accounts, contacts, opportunities, leads)
 - **Xbox**: Read player profile, gamerscore, and achievement history

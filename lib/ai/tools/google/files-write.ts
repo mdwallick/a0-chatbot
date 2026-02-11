@@ -5,79 +5,185 @@ import { z } from "zod"
 import { getAccessTokenFromTokenVault } from "@auth0/ai-vercel"
 import { TokenVaultError } from "@auth0/ai/interrupts"
 import { google } from "googleapis"
-import stream from "stream" // Needed for creating a stream from a string/buffer
+import stream from "stream"
 
 import { getGoogleAuth, withGoogleDriveWrite } from "@/lib/auth0-ai/google"
 import { OAuth2Client } from "google-auth-library"
 
 const writeSchema = z.object({
-  path: z.string().describe("Full path to the file in Google Drive (e.g. /Documents/example.docx)"),
-  content: z.string().describe("Content to write to the file"),
-  type: z.enum(["text", "doc", "sheet"]).describe("Type of file to create"),
+  fileName: z
+    .string()
+    .describe("The name of the file to create (e.g., 'My Document', 'Report.txt')"),
+  content: z
+    .string()
+    .describe("Content to write to the file. For Google Docs, this will be the initial text."),
+  fileType: z
+    .enum(["text", "doc", "sheet"])
+    .describe(
+      "Type of file: 'text' for plain text, 'doc' for Google Docs, 'sheet' for Google Sheets"
+    ),
+  parentFolderId: z
+    .string()
+    .optional()
+    .nullable()
+    .describe("The ID of the parent folder. Use 'root' for My Drive top level (default)."),
 })
 
 export const GoogleFilesWriteTool = withGoogleDriveWrite(
   tool({
-    description: "Create and edit files in Google Drive",
+    description:
+      "Create files in Google Drive. Supports plain text files, Google Docs, and Google Sheets.",
     inputSchema: writeSchema,
-    execute: async ({ path, content, type }) => {
+    execute: async ({ fileName, content, fileType, parentFolderId }) => {
+      const logs: string[] = []
+
       try {
         const access_token = getAccessTokenFromTokenVault()
+        logs.push("Got access token from token vault")
 
-        // Create Google OAuth client.
         const auth = getGoogleAuth(access_token)
+        const effectiveParentId = parentFolderId || "root"
+        logs.push(`Parent folder: ${effectiveParentId}`)
 
-        if (type === "text") {
-          const newFile = createTextFile(auth, path, content)
-          return newFile
-        } else {
-          return {
-            message: "Only text messages are supported for now.",
-          }
+        let result
+
+        switch (fileType) {
+          case "text":
+            result = await createTextFile(auth, fileName, content, effectiveParentId, logs)
+            break
+          case "doc":
+            result = await createGoogleDoc(auth, fileName, content, effectiveParentId, logs)
+            break
+          case "sheet":
+            result = await createGoogleSheet(auth, fileName, effectiveParentId, logs)
+            break
+          default:
+            return {
+              error: `Unsupported file type: ${fileType}`,
+              logs,
+            }
+        }
+
+        logs.push(`Successfully created ${fileType} file: ${result.name} (ID: ${result.id})`)
+
+        return {
+          logs,
+          file: result,
         }
       } catch (error) {
         if (error instanceof GaxiosError) {
           if (error.status === 401) {
             throw new TokenVaultError(`Authorization required to access the Federated Connection`)
           }
+          logs.push(`API Error: ${error.status} - ${error.message}`)
         }
-
+        console.error("Error creating file:", error)
         throw error
       }
     },
   })
 )
 
-async function createTextFile(auth: OAuth2Client, fileName: string, fileContent: string) {
+async function createTextFile(
+  auth: OAuth2Client,
+  fileName: string,
+  fileContent: string,
+  parentFolderId: string,
+  logs: string[]
+) {
   const drive = google.drive({ version: "v3", auth })
 
+  logs.push(`Creating text file: ${fileName}`)
+
   const fileMetadata = {
-    name: fileName, // The name of the file
+    name: fileName,
     mimeType: "text/plain",
-    // To place it in a specific folder, add:
-    // parents: ['YOUR_FOLDER_ID_HERE']
+    parents: [parentFolderId],
   }
 
-  // Create a readable stream from the content
   const buffer = Buffer.from(fileContent, "utf-8")
   const bufferStream = new stream.PassThrough()
   bufferStream.end(buffer)
 
   const media = {
     mimeType: "text/plain",
-    body: bufferStream, // Use the stream here
+    body: bufferStream,
   }
 
-  try {
-    const file = await drive.files.create({
-      requestBody: fileMetadata,
-      media: media,
-      fields: "id, name", // Specify which fields to return
+  const file = await drive.files.create({
+    requestBody: fileMetadata,
+    media: media,
+    fields: "id, name, mimeType, webViewLink",
+  })
+
+  return file.data
+}
+
+async function createGoogleDoc(
+  auth: OAuth2Client,
+  fileName: string,
+  content: string,
+  parentFolderId: string,
+  logs: string[]
+) {
+  const drive = google.drive({ version: "v3", auth })
+  const docs = google.docs({ version: "v1", auth })
+
+  logs.push(`Creating Google Doc: ${fileName}`)
+
+  // Create an empty Google Doc
+  const fileMetadata = {
+    name: fileName,
+    mimeType: "application/vnd.google-apps.document",
+    parents: [parentFolderId],
+  }
+
+  const file = await drive.files.create({
+    requestBody: fileMetadata,
+    fields: "id, name, mimeType, webViewLink",
+  })
+
+  // If content is provided, insert it into the document
+  if (content && file.data.id) {
+    logs.push("Inserting content into document")
+    await docs.documents.batchUpdate({
+      documentId: file.data.id,
+      requestBody: {
+        requests: [
+          {
+            insertText: {
+              location: { index: 1 },
+              text: content,
+            },
+          },
+        ],
+      },
     })
-
-    return file.data
-  } catch (err) {
-    console.error("Error creating file:", err)
-    throw err
   }
+
+  return file.data
+}
+
+async function createGoogleSheet(
+  auth: OAuth2Client,
+  fileName: string,
+  parentFolderId: string,
+  logs: string[]
+) {
+  const drive = google.drive({ version: "v3", auth })
+
+  logs.push(`Creating Google Sheet: ${fileName}`)
+
+  const fileMetadata = {
+    name: fileName,
+    mimeType: "application/vnd.google-apps.spreadsheet",
+    parents: [parentFolderId],
+  }
+
+  const file = await drive.files.create({
+    requestBody: fileMetadata,
+    fields: "id, name, mimeType, webViewLink",
+  })
+
+  return file.data
 }

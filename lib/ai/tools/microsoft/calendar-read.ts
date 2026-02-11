@@ -2,12 +2,12 @@ import { tool } from "ai"
 import { GaxiosError } from "gaxios"
 import { z } from "zod"
 
-import { getAccessTokenForConnection } from "@auth0/ai-vercel"
-import { FederatedConnectionError } from "@auth0/ai/interrupts"
+import { TokenVaultError } from "@auth0/ai/interrupts"
 import { Client } from "@microsoft/microsoft-graph-client"
 
 import { withMSCalendarRead } from "@/lib/auth0-ai/microsoft"
 import { Event } from "@microsoft/microsoft-graph-types"
+import { debugGetAccessToken } from "@/lib/debug-token-helper"
 
 // Your calendar query will return this type
 interface CalendarResponse {
@@ -33,12 +33,12 @@ const toolSchema = z.object({
 export const MicrosoftCalendarReadTool = withMSCalendarRead(
   tool({
     description: "Check a user's schedule between the given date times on their Microsoft calendar",
-    parameters: toolSchema,
+    inputSchema: toolSchema,
     execute: async ({ timeMin, timeMax, timeZone = "US/Central" }) => {
       const logs = []
 
-      // Get the access token from Auth0 AI
-      const access_token = getAccessTokenForConnection()
+      // Get the access token from Auth0 AI with debug logging
+      const access_token = debugGetAccessToken("windowslive/Microsoft")
       logs.push("got access token from token vault")
 
       try {
@@ -68,9 +68,7 @@ export const MicrosoftCalendarReadTool = withMSCalendarRead(
       } catch (error) {
         if (error instanceof GaxiosError) {
           if (error.status === 401) {
-            throw new FederatedConnectionError(
-              `Authorization required to access the Federated Connection`
-            )
+            throw new TokenVaultError(`Authorization required to access the Federated Connection`)
           }
         }
 

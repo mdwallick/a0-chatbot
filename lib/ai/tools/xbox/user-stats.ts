@@ -2,8 +2,8 @@ import { tool } from "ai"
 import { GaxiosError } from "gaxios"
 import { z } from "zod"
 
-import { getAccessTokenForConnection } from "@auth0/ai-vercel"
-import { FederatedConnectionError } from "@auth0/ai/interrupts"
+import { getAccessTokenFromTokenVault } from "@auth0/ai-vercel"
+import { TokenVaultError } from "@auth0/ai/interrupts"
 
 import { Endpoints, callXboxApi, withXboxRead } from "@/lib/auth0-ai/xbox"
 
@@ -16,18 +16,18 @@ export const XboxUserStatsTool = withXboxRead(
   tool({
     description:
       "Get user's game statistics for a given game title/name and serviceConfigId aka SCID",
-    parameters: toolSchema,
+    inputSchema: toolSchema,
     execute: async ({ gameTitle, serviceConfigId }) => {
       const logs = []
 
       try {
         // Get the access token from Auth0 AI
-        const accessToken = getAccessTokenForConnection()
+        const accessToken = getAccessTokenFromTokenVault()
         logs.push("got access token from token vault")
 
         if (!accessToken) {
           logs.push("access token missing or expired")
-          throw new FederatedConnectionError("Authorization required to access Xbox")
+          throw new TokenVaultError("Authorization required to access Xbox")
         }
 
         let userData = {
@@ -49,9 +49,7 @@ export const XboxUserStatsTool = withXboxRead(
       } catch (error) {
         if (error instanceof GaxiosError) {
           if (error.status === 401) {
-            throw new FederatedConnectionError(
-              `Authorization required to access the Federated Connection`
-            )
+            throw new TokenVaultError(`Authorization required to access the Federated Connection`)
           }
         }
 

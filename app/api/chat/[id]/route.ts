@@ -30,11 +30,13 @@ export async function GET(request: NextRequest, context: any) {
       return NextResponse.json({ messages: [] })
     }
 
-    // Transform messages to match the UI format
+    // Transform messages to UIMessage format
     const messages = thread.messages.map(msg => ({
       id: msg.id,
-      content: msg.content,
       role: msg.role,
+      // Use stored parts if available, otherwise reconstruct from content
+      parts: msg.parts ? msg.parts : [{ type: "text", text: msg.content }],
+      content: msg.content,
     }))
 
     return NextResponse.json({ messages })

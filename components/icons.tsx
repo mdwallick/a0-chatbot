@@ -149,6 +149,19 @@ export const SparklesIcon = ({ size = 16 }: { size?: number }) => (
   </svg>
 )
 
+export const LoaderIcon = ({ size = 16 }: { size?: number }) => (
+  <svg
+    height={size}
+    width={size}
+    viewBox="0 0 16 16"
+    style={{ color: "currentcolor" }}
+    className="animate-spin"
+  >
+    <path d="M8 0a8 8 0 1 0 8 8h-1.5a6.5 6.5 0 1 1-6.5-6.5V0z" fill="currentColor" opacity="0.3" />
+    <path d="M8 0v1.5a6.5 6.5 0 0 1 6.5 6.5H16a8 8 0 0 0-8-8z" fill="currentColor" />
+  </svg>
+)
+
 export const PencilEditIcon = ({ size = 16 }: { size?: number }) => {
   return (
     <svg

@@ -2,8 +2,8 @@ import { tool } from "ai"
 import { GaxiosError } from "gaxios"
 import { z } from "zod"
 
-import { getAccessTokenForConnection } from "@auth0/ai-vercel"
-import { FederatedConnectionError } from "@auth0/ai/interrupts"
+import { getAccessTokenFromTokenVault } from "@auth0/ai-vercel"
+import { TokenVaultError } from "@auth0/ai/interrupts"
 import { Client } from "@microsoft/microsoft-graph-client"
 
 import { withMSCalendarWrite } from "@/lib/auth0-ai/microsoft"
@@ -31,7 +31,7 @@ export const MicrosoftCalendarWriteTool = withMSCalendarWrite(
   tool({
     description:
       "Create or update an event in the user's Microsoft calendar. Provide eventId to update an existing event.",
-    parameters: toolSchema,
+    inputSchema: toolSchema,
     execute: async ({
       subject,
       startDateTime,
@@ -42,7 +42,7 @@ export const MicrosoftCalendarWriteTool = withMSCalendarWrite(
       eventId,
     }) => {
       // Get the access token from Auth0 AI
-      const access_token = getAccessTokenForConnection()
+      const access_token = getAccessTokenFromTokenVault()
 
       try {
         const client = Client.initWithMiddleware({
@@ -87,9 +87,7 @@ export const MicrosoftCalendarWriteTool = withMSCalendarWrite(
       } catch (error) {
         if (error instanceof GaxiosError) {
           if (error.status === 401) {
-            throw new FederatedConnectionError(
-              `Authorization required to access the Federated Connection`
-            )
+            throw new TokenVaultError(`Authorization required to access the Federated Connection`)
           }
         }
 

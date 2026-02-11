@@ -4,8 +4,8 @@ import { z } from "zod"
 import mammoth from "mammoth"
 import * as XLSX from "xlsx"
 
-import { getAccessTokenForConnection } from "@auth0/ai-vercel"
-import { FederatedConnectionError } from "@auth0/ai/interrupts"
+import { getAccessTokenFromTokenVault } from "@auth0/ai-vercel"
+import { TokenVaultError } from "@auth0/ai/interrupts"
 import { Client, ResponseType } from "@microsoft/microsoft-graph-client"
 
 import { withMSOneDriveRead } from "@/lib/auth0-ai/microsoft"
@@ -17,17 +17,17 @@ const toolSchema = z.object({
 export const MicrosoftFilesReadTool = withMSOneDriveRead(
   tool({
     description: "Read the contents of a given file from OneDrive",
-    parameters: toolSchema,
+    inputSchema: toolSchema,
     execute: async ({ fileId }) => {
       const logs = []
 
       // Get the access token from Auth0 AI
-      const access_token = getAccessTokenForConnection()
+      const access_token = getAccessTokenFromTokenVault()
       logs.push("got access token from token vault")
 
       if (!access_token) {
         logs.push("access token missing or expired")
-        throw new FederatedConnectionError("Authorization required to access OneDrive")
+        throw new TokenVaultError("Authorization required to access OneDrive")
       }
 
       // One Drive SDK
@@ -91,9 +91,7 @@ export const MicrosoftFilesReadTool = withMSOneDriveRead(
       } catch (error) {
         if (error instanceof GaxiosError) {
           if (error.status === 401) {
-            throw new FederatedConnectionError(
-              `Authorization required to access the Federated Connection`
-            )
+            throw new TokenVaultError(`Authorization required to access the Federated Connection`)
           }
         }
 

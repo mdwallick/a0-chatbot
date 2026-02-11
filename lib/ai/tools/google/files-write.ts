@@ -2,8 +2,8 @@ import { tool } from "ai"
 import { GaxiosError } from "gaxios"
 import { z } from "zod"
 
-import { getAccessTokenForConnection } from "@auth0/ai-vercel"
-import { FederatedConnectionError } from "@auth0/ai/interrupts"
+import { getAccessTokenFromTokenVault } from "@auth0/ai-vercel"
+import { TokenVaultError } from "@auth0/ai/interrupts"
 import { google } from "googleapis"
 import stream from "stream" // Needed for creating a stream from a string/buffer
 
@@ -19,10 +19,10 @@ const writeSchema = z.object({
 export const GoogleFilesWriteTool = withGoogleDriveWrite(
   tool({
     description: "Create and edit files in Google Drive",
-    parameters: writeSchema,
+    inputSchema: writeSchema,
     execute: async ({ path, content, type }) => {
       try {
-        const access_token = getAccessTokenForConnection()
+        const access_token = getAccessTokenFromTokenVault()
 
         // Create Google OAuth client.
         const auth = getGoogleAuth(access_token)
@@ -38,9 +38,7 @@ export const GoogleFilesWriteTool = withGoogleDriveWrite(
       } catch (error) {
         if (error instanceof GaxiosError) {
           if (error.status === 401) {
-            throw new FederatedConnectionError(
-              `Authorization required to access the Federated Connection`
-            )
+            throw new TokenVaultError(`Authorization required to access the Federated Connection`)
           }
         }
 

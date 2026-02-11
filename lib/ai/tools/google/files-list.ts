@@ -2,8 +2,8 @@ import { tool } from "ai"
 import { GaxiosError } from "gaxios"
 import { z } from "zod"
 
-import { getAccessTokenForConnection } from "@auth0/ai-vercel"
-import { FederatedConnectionError } from "@auth0/ai/interrupts"
+import { getAccessTokenFromTokenVault } from "@auth0/ai-vercel"
+import { TokenVaultError } from "@auth0/ai/interrupts"
 import { google } from "googleapis"
 
 import { getGoogleAuth, withGoogleDriveRead } from "@/lib/auth0-ai/google"
@@ -15,13 +15,13 @@ const toolSchema = z.object({
 export const GoogleFilesListTool = withGoogleDriveRead(
   tool({
     description: "list files from Google Drive",
-    parameters: toolSchema,
+    inputSchema: toolSchema,
     execute: async ({ query }) => {
       const logs = []
 
       try {
         // Get the access token from Auth0 AI
-        const access_token = getAccessTokenForConnection()
+        const access_token = getAccessTokenFromTokenVault()
         logs.push("got access token from token vault")
 
         // Create Google OAuth client.
@@ -45,9 +45,7 @@ export const GoogleFilesListTool = withGoogleDriveRead(
       } catch (error) {
         if (error instanceof GaxiosError) {
           if (error.status === 401) {
-            throw new FederatedConnectionError(
-              `Authorization required to access the Federated Connection`
-            )
+            throw new TokenVaultError(`Authorization required to access the Federated Connection`)
           }
         }
 

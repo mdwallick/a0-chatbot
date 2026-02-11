@@ -42,7 +42,8 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
       .map(msg => ({
         id: msg.id,
         role: msg.role as UIMessage["role"],
-        parts: [{ type: "text", text: msg.content }],
+        // Use stored parts if available, otherwise reconstruct from content
+        parts: msg.parts ? (msg.parts as any) : [{ type: "text", text: msg.content }],
         content: msg.content,
       }))
   }

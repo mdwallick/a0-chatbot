@@ -1,4 +1,11 @@
-import { createDataStreamResponse, Message, streamText, Tool } from "ai"
+import {
+  convertToModelMessages,
+  createUIMessageStream,
+  createUIMessageStreamResponse,
+  streamText,
+  stepCountIs,
+  UIMessage,
+} from "ai"
 
 import { DalleImageTool, WebSearchTool } from "@/lib/ai/tools"
 import {
@@ -24,17 +31,17 @@ import { XboxUserProfileTool, XboxAchievementTool } from "@/lib/ai/tools/xbox"
 import { SalesforceQueryTool, SalesforceSearchTool } from "@/lib/ai/tools/salesforce"
 
 import { auth0 } from "@/lib/auth0"
-import { openai } from "@ai-sdk/openai"
+import { openai } from "@/lib/openai"
 import { setAIContext } from "@auth0/ai-vercel"
 import { errorSerializer, withInterruptions } from "@auth0/ai-vercel/interrupts"
 
-import { trimMessages } from "@/lib/utils"
+import { trimMessages, getMessageText } from "@/lib/utils"
 import { prisma } from "@/lib/prisma"
 import { summarizeThread } from "@/lib/summarize-thread"
 import { getImageCountToday, getImageCreationLimit } from "@/lib/utils"
 
 export async function POST(request: Request) {
-  const { id, messages }: { id: string; messages: Array<Message>; selectedChatModel: string } =
+  const { id, messages }: { id: string; messages: Array<UIMessage>; selectedChatModel: string } =
     await request.json()
 
   setAIContext({ threadID: id })
@@ -45,7 +52,6 @@ export async function POST(request: Request) {
   const context = {
     user: session?.user
       ? {
-          // Only populate user data if a session exists
           id: session.user.sub,
           email: session.user.email,
           name: session.user.name,
@@ -76,72 +82,37 @@ export async function POST(request: Request) {
     XboxAchievementTool,
   }
 
-  // const tools = {
-  //   DalleImageTool,
-  //   WebSearchTool,
-  //   GmailReadTool,
-  //   GmailSendTool,
-  //   GoogleFilesListTool,
-  //   GoogleCalendarReadTool,
-  //   GoogleCalendarWriteTool,
-  //   GoogleFilesReadTool,
-  //   GoogleFilesWriteTool,
-  //   MicrosoftCalendarReadTool,
-  //   MicrosoftCalendarWriteTool,
-  //   MicrosoftFilesListTool,
-  //   MicrosoftFilesReadTool,
-  //   MicrosoftFilesWriteTool,
-  //   MicrosoftMailReadTool,
-  //   MicrosoftMailSendTool,
-  //   SalesforceQueryTool,
-  //   SalesforceSearchTool,
-  //   XboxUserProfileTool,
-  //   XboxAchievementTool,
-  // }
-  const tools: Record<string, Tool<any, any>> = Object.fromEntries(
+  const tools = Object.fromEntries(
     Object.entries(toolDefinitions).map(([name, definition]) => {
-      // Check if the definition is a function (needs context) or just a static object
       if (typeof definition === "function") {
-        return [name, definition(context)] // Call it with context to get the tool
+        return [name, definition(context)]
       }
-      return [name, definition] // It's a static tool, pass it through
+      return [name, definition]
     })
   )
 
   if (isAuthenticated) {
-    // only save the message if the user is authenticated
-    const thread = await prisma.chatThread.upsert({
+    await prisma.chatThread.upsert({
       where: { id },
-      update: {}, // no update needed
+      update: {},
       create: {
         id,
         userId: session!.user.sub,
       },
     })
 
+    // Get the last user message content
+    const lastMessage = messages[messages.length - 1]
+    const messageContent = getMessageText(lastMessage)
+
     await prisma.message.create({
       data: {
         role: "user",
-        content: messages[messages.length - 1].content,
+        content: messageContent,
+        parts: lastMessage.parts as any, // Store full UIMessage parts for rich history
         threadId: id,
       },
     })
-
-    if (thread.summary === "New conversation" && messages.length > 1) {
-      const recentMessages = messages.slice(-2)
-
-      const summary = await summarizeThread(
-        recentMessages.reverse().map(m => ({
-          role: m.role, // e.g. "user" or "assistant"
-          content: m.content,
-        }))
-      )
-
-      await prisma.chatThread.update({
-        where: { id },
-        data: { summary },
-      })
-    }
   }
 
   const trimmedMessages = trimMessages(messages, {
@@ -157,100 +128,189 @@ export async function POST(request: Request) {
 
   const systemTemplate = await getSystemTemplate({
     userName: context.user?.name?.split(" ")[0],
+    userEmail: context.user?.email,
     imageUsageCount,
+    isAuthenticated,
   })
   const now = new Date().toLocaleString("en-US", { timeZone: "US/Central" })
 
-  const config = {
-    messages: trimmedMessages,
-    tools,
-    context,
-  } as const
+  const stream = createUIMessageStream({
+    originalMessages: messages,
+    execute: withInterruptions(
+      async ({ writer }) => {
+        const result = streamText({
+          model: openai(process.env.OPENAI_MODEL || "gpt-4o-mini"),
+          system: `The current date and time is ${now}. ${systemTemplate}`,
+          messages: await convertToModelMessages(trimmedMessages),
+          tools,
+          // Allow up to 5 steps for tool calls and responses
+          stopWhen: stepCountIs(5),
+          onStepFinish: async step => {
+            // Check for tool errors after each step to trigger Auth0 interruption handling
+            if (step.finishReason === "tool-calls") {
+              for (const content of step.content) {
+                if (content.type === "tool-error") {
+                  const { toolName, toolCallId, error, input } = content as any
+                  console.log("[Chat] Tool error detected:", { toolName, error: error?.message })
+                  const serializableError = {
+                    cause: error,
+                    toolCallId: toolCallId,
+                    toolName: toolName,
+                    toolArgs: input,
+                  }
+                  throw serializableError
+                }
+              }
+            }
+          },
+          onFinish: async output => {
+            if (isAuthenticated) {
+              // Save assistant response with parts
+              await prisma.message.create({
+                data: {
+                  role: "assistant",
+                  content: output.text,
+                  parts: [{ type: "text", text: output.text }] as any,
+                  threadId: id,
+                },
+              })
 
-  return createDataStreamResponse({
-    execute: withInterruptions(async dataStream => {
-      const result = streamText({
-        model: openai(process.env.OPENAI_MODEL || "gpt-4o"),
-        system: `The current date and time is ${now}. ${systemTemplate}`,
-        messages: trimmedMessages,
-        maxSteps: 5,
-        tools,
-        async onFinish(finalResult) {
-          if (isAuthenticated) {
-            // only save the message if the user is authenticated
-            await prisma.message.create({
-              data: {
-                role: "assistant",
-                content: finalResult.text,
-                threadId: id,
-              },
-            })
-          }
-        },
-      })
+              // Auto-summarize after first complete exchange
+              const thread = await prisma.chatThread.findUnique({
+                where: { id },
+                include: {
+                  messages: {
+                    orderBy: { createdAt: "asc" },
+                    take: 4, // Get first few messages for summarization
+                  },
+                },
+              })
 
-      result.mergeIntoDataStream(dataStream, {
-        sendReasoning: true,
-      })
-    }, config),
+              if (thread && thread.summary === "New conversation" && thread.messages.length >= 2) {
+                // Check if we have at least one user and one assistant message
+                const hasUser = thread.messages.some(m => m.role === "user")
+                const hasAssistant = thread.messages.some(m => m.role === "assistant")
+
+                if (hasUser && hasAssistant) {
+                  console.log("[Chat] Auto-summarizing thread after first exchange")
+
+                  const summary = await summarizeThread(
+                    thread.messages.slice(0, 4).map(m => ({
+                      role: m.role,
+                      content: m.content,
+                    }))
+                  )
+
+                  await prisma.chatThread.update({
+                    where: { id },
+                    data: { summary },
+                  })
+                }
+              }
+            }
+          },
+        })
+
+        writer.merge(
+          result.toUIMessageStream({
+            sendReasoning: true,
+          })
+        )
+      },
+      { messages, tools }
+    ),
     onError: errorSerializer(err => {
       console.error(err)
       return "Oops, an error occured!"
     }),
   })
+
+  return createUIMessageStreamResponse({ stream })
 }
 
 async function getSystemTemplate({
   userName,
+  userEmail,
   imageUsageCount,
+  isAuthenticated,
 }: {
   userName?: string
+  userEmail?: string
   imageUsageCount?: number
+  isAuthenticated: boolean
 }) {
   const maxPerDay = getImageCreationLimit()
 
   const baseTemplate = `
 You are a friendly assistant! Keep your responses concise and helpful.
 
-You're currently helping ${userName ?? "a user"}.
-
-The maximum number of images a user can generate in a day is ${maxPerDay}.
-
+## USER CONTEXT
 ${
-  typeof imageUsageCount === "number"
-    ? `They have generated ${imageUsageCount} image${imageUsageCount !== 1 ? "s" : ""} today.`
-    : ""
+  isAuthenticated
+    ? `
+You're currently helping ${userName ?? "a user"}${userEmail ? ` (${userEmail})` : ""}.
+The user is signed in and can access all available integrations.
+`
+    : `
+The user is not signed in. Many features require authentication.
+If they ask about calendar, email, files, or other personal data, politely suggest they sign in first.
+You can still help with general questions, web searches, and information requests.
+`
 }
 
-Available integrations:
-- Google: Gmail, Google Calendar, and Google Drive files and folders
-- Microsoft: Outlook email, calendar and OneDrive files and folders
-- Salesforce: Search CRM records e.g. accounts, contacts, opportunities
-- Xbox: read player profile and achievements
+## AVAILABLE INTEGRATIONS
+${
+  isAuthenticated
+    ? `
+- **Google**: Read/send Gmail, read/write Calendar events, list/read/write Drive files
+- **Microsoft**: Read/send Outlook mail, read/write Calendar events, list/read/write OneDrive files
+- **Salesforce**: Search and query CRM records (accounts, contacts, opportunities, leads)
+- **Xbox**: Read player profile, gamerscore, and achievement history
+- **Web Search**: Search the internet for current information
+- **Image Generation**: Create images with DALL-E (limit: ${maxPerDay}/day)
+${typeof imageUsageCount === "number" ? `  - Images generated today: ${imageUsageCount}/${maxPerDay}` : ""}
+`
+    : `
+- **Web Search**: Search the internet for current information
+- **Image Generation**: Requires sign-in
+- **Google/Microsoft/Salesforce/Xbox**: Requires sign-in
+`
+}
 
-TOOL SELECTION RULES:
-1. Use the 'WebSearchTool' tool to get up-to-date web information. When presenting results to the user, format them in numbered Markdown list with clickable links and brief summaries. Include images whenever possible.
-2. Only use tools that are directly relevant to the user's request.
-3. Do not use calendar tools unless explicitly asked about calendar/schedule/meetings
-4. Do not mix tools from different services unless specifically requested
+## AUTHORIZATION & CONSENT
+When a tool requires authorization to an external service (Google, Microsoft, Salesforce, Xbox):
+- The user will see a "Grant Access" prompt to authorize the connection
+- Wait for them to complete the consent flow - do not repeatedly retry
+- Once authorized, the tool will work automatically for future requests
+- If authorization fails, explain clearly and suggest they try again or check their account settings
 
-When providing a date or time, always output the value in full ISO 8601 format using UTC (e.g. "2025-05-24T19:00:00Z"). Use 24-hour time and include seconds.
-Only return properly formatted ISO 8601 strings for all datetime fields like startDateTime or endDateTime.
+## TOOL SELECTION RULES
+1. Only use tools directly relevant to the user's request
+2. Do not use calendar tools unless explicitly asked about calendar/schedule/meetings
+3. Do not use email tools unless explicitly asked about email/messages
+4. Do not mix tools from different services (Google vs Microsoft) unless specifically requested
+5. For web searches, format results as a numbered Markdown list with clickable links and brief summaries
 
-REASONING AND NARRATION INSTRUCTIONS:
-Always narrate your reasoning when deciding what to do.
+## DATE & TIME HANDLING
+- When calling tools, use ISO 8601 format in UTC (e.g., "2025-05-24T19:00:00Z")
+- When displaying times to the user, show them in a friendly format with timezone context
+- The user's current timezone appears to be US/Central based on their session
 
-If using a tool:
-- Explain briefly why you chose that tool
-- Mention any key steps taken (e.g. checking auth, refreshing tokens, handling errors)
-- Show your thought process in a helpful and friendly way
+## PRIVACY & DATA HANDLING
+- When displaying email content or file contents, summarize rather than quoting entire documents unless specifically asked
+- Be mindful of sensitive information in CRM data, emails, and files
+- Do not store or remember sensitive data beyond the current conversation
 
-If a tool returns logs, summarize any important details for the user.
+## ERROR HANDLING
+- If a tool fails, explain the issue clearly and suggest next steps
+- Do not retry failed operations repeatedly without user input
+- Common issues: expired authorization, missing permissions, service unavailable
 
-Examples:
-- “You're logged into Google — I'll query your calendar using the Google Calendar tool.”
-- “Your token expired, so I'm refreshing it now... all set.”
-- “Now searching your Drive for files containing 'Q2 report' in the name.”
+## RESPONSE STYLE
+- Be concise - avoid unnecessary verbosity
+- Only explain your reasoning when it adds value (e.g., choosing between tools, unexpected results)
+- When tools return detailed logs, summarize the key information for the user
+- Use markdown formatting for better readability (headers, lists, code blocks)
 `
 
   return baseTemplate

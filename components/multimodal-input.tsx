@@ -1,6 +1,6 @@
 "use client"
 
-import type { UIMessage } from "ai"
+import type { UIMessage, FileUIPart } from "ai"
 import cx from "classnames"
 import { Plus } from "lucide-react"
 import { memo, useCallback, useEffect, useRef, useState } from "react"
@@ -8,10 +8,8 @@ import { toast } from "sonner"
 import { useLocalStorage } from "usehooks-ts"
 
 import { Connections } from "@/lib/auth0-ai/connections"
-import { Attachment } from "@ai-sdk/ui-utils"
 import { useUser } from "@auth0/nextjs-auth0"
 
-import { AttachmentWithMeta } from "../lib/utils"
 import { AttachmentItem } from "./attachment-item"
 import { EnableIntegration } from "./enable-integration"
 import { GoogleDrivePicker, GoogleFile } from "./google-picker"
@@ -32,7 +30,17 @@ import { Textarea } from "./ui/textarea"
 import { useLinkedAccounts } from "./use-linked-accounts-context"
 
 import type React from "react"
-import type { UseChatHelpers } from "@ai-sdk/react"
+import type { ChatStatus } from "ai"
+
+// Custom attachment type that extends FileUIPart with metadata
+type Attachment = FileUIPart & {
+  metadata?: {
+    id: string
+    name: string
+    iconUrl: string
+    type: string
+  }
+}
 function PureMultimodalInput({
   chatId,
   input,
@@ -46,14 +54,14 @@ function PureMultimodalInput({
   className,
 }: {
   chatId: string
-  input: UseChatHelpers["input"]
-  setInput: UseChatHelpers["setInput"]
-  status: UseChatHelpers["status"]
+  input: string
+  setInput: (value: string) => void
+  status: ChatStatus
   stop: () => void
   messages: Array<UIMessage>
-  setMessages: UseChatHelpers["setMessages"]
-  handleSubmit: UseChatHelpers["handleSubmit"]
-  append: UseChatHelpers["append"]
+  setMessages: (messages: UIMessage[] | ((messages: UIMessage[]) => UIMessage[])) => void
+  handleSubmit: (e?: React.FormEvent, options?: { experimental_attachments?: FileUIPart[] }) => void
+  append: (message: { role: "user"; content: string }) => void
   className?: string
 }) {
   const { user } = useUser()
@@ -82,7 +90,7 @@ function PureMultimodalInput({
   const [localStorageInput, setLocalStorageInput] = useLocalStorage("input", "")
 
   useEffect(() => {
-    if (textareaRef.current) {
+    if (textareaRef.current && setInput) {
       const domValue = textareaRef.current.value
       // Prefer DOM value over localStorage to handle hydration
       const finalValue = domValue || localStorageInput || ""
@@ -98,7 +106,9 @@ function PureMultimodalInput({
   }, [input, setLocalStorageInput])
 
   const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(event.target.value)
+    if (setInput) {
+      setInput(event.target.value)
+    }
     adjustHeight()
   }
 
@@ -118,13 +128,14 @@ function PureMultimodalInput({
 
   const onDidLoad = (file: GoogleFile) => {
     setAttachments(prev => {
-      const exists = prev.some(att => (att as AttachmentWithMeta).metadata.id === file.id)
+      const exists = prev.some(att => att.metadata?.id === file.id)
 
       if (exists) return prev
 
-      const attachment = {
-        name: file.name,
-        contentType: "text/plain",
+      const attachment: Attachment = {
+        type: "file",
+        mediaType: "text/plain",
+        filename: file.name,
         url: `data:text/plain;base64,${btoa(unescape(encodeURIComponent(file.content!)))}`,
         metadata: {
           id: file.id,
@@ -140,14 +151,25 @@ function PureMultimodalInput({
 
   const handleRemoveAttachment = (file: GoogleFile) => {
     setFiles(prev => prev.filter(attachment => attachment.id !== file.id))
-    setAttachments(prev => prev.filter(attachment => attachment.name !== file.name))
+    setAttachments(prev => prev.filter(attachment => attachment.filename !== file.name))
   }
 
   return (
     <div className="relative w-full flex flex-col gap-4 pointer-events-auto">
       {messages.length === 0 && <SuggestedActions append={append} chatId={chatId} />}
 
-      <div className="rounded-2xl border border-input dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3 shadow-lg transition-[color,box-shadow] outline-none flex flex-col gap-3 focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]">
+      <div
+        className={cx(
+          "rounded-2xl border bg-white dark:bg-zinc-900 p-3 shadow-lg transition-all outline-none flex flex-col gap-3",
+          {
+            "border-input dark:border-zinc-700 focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]":
+              status === "ready",
+            "border-blue-400 dark:border-blue-500 ring-blue-400/30 ring-[3px]":
+              status === "submitted" || status === "streaming",
+            "border-red-400 dark:border-red-500 ring-red-400/30 ring-[3px]": status === "error",
+          }
+        )}
+      >
         {files.length > 0 && (
           <div className="flex flex-row gap-2">
             {files.map((attachment: GoogleFile) => (
@@ -344,7 +366,7 @@ function PureMultimodalInput({
         )}
       </div>
       <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
-        {status === "submitted" ? (
+        {status === "submitted" || status === "streaming" ? (
           <StopButton stop={stop} setMessages={setMessages} />
         ) : (
           <SendButton input={input} submitForm={submitForm} />
@@ -366,7 +388,7 @@ function PureStopButton({
   setMessages,
 }: {
   stop: () => void
-  setMessages: UseChatHelpers["setMessages"]
+  setMessages: (messages: UIMessage[] | ((messages: UIMessage[]) => UIMessage[])) => void
 }) {
   return (
     <Button
@@ -394,7 +416,7 @@ function PureSendButton({ submitForm, input }: { submitForm: () => void; input: 
         event.preventDefault()
         submitForm()
       }}
-      disabled={input.length === 0}
+      disabled={!input || input.length === 0}
     >
       <ArrowUpIcon size={14} />
     </Button>

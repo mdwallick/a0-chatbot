@@ -33,7 +33,8 @@ jobs:
           AUTH0_ISSUER_BASE_URL: https://notreal.auth0.com
           AUTH0_SECRET: dummy
           APP_BASE_URL: http://localhost:3000
-          OPENAI_API_KEY: dummy
+          LITELLM_API_KEY: dummy
+          LITELLM_BASE_URL: https://dummy.local
           OPENAI_MODEL: dummy
           ENABLED_CONNECTIONS: dummy
           SALESFORCE_LOGIN_URL: https://login.salesforce.com

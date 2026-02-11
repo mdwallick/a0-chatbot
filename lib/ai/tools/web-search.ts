@@ -15,7 +15,7 @@ const toolSchema = z.object({
 
 export const WebSearchTool = tool({
   description: "Performs a Google search (web or image search)",
-  parameters: toolSchema,
+  inputSchema: toolSchema,
   execute: googleSearch,
 })
 

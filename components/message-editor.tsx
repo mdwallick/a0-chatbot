@@ -1,24 +1,24 @@
 "use client"
 
-import { Message } from "ai"
+import type { UIMessage } from "ai"
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react"
 
-import { UseChatHelpers } from "@ai-sdk/react"
+import { getMessageText } from "@/lib/utils"
 
 import { Button } from "./ui/button"
 import { Textarea } from "./ui/textarea"
 
 export type MessageEditorProps = {
-  message: Message
+  message: UIMessage
   setMode: Dispatch<SetStateAction<"view" | "edit">>
-  setMessages: UseChatHelpers["setMessages"]
-  reload: UseChatHelpers["reload"]
+  setMessages: (messages: UIMessage[] | ((messages: UIMessage[]) => UIMessage[])) => void
+  reload: () => void
 }
 
 export function MessageEditor({ message, setMode, setMessages, reload }: MessageEditorProps) {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 
-  const [draftContent, setDraftContent] = useState<string>(message.content)
+  const [draftContent, setDraftContent] = useState<string>(getMessageText(message))
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
@@ -67,14 +67,12 @@ export function MessageEditor({ message, setMode, setMessages, reload }: Message
           onClick={async () => {
             setIsSubmitting(true)
 
-            // @ts-expect-error todo: support UIMessage in setMessages
-            setMessages(messages => {
+            setMessages((messages: UIMessage[]) => {
               const index = messages.findIndex(m => m.id === message.id)
 
               if (index !== -1) {
-                const updatedMessage = {
+                const updatedMessage: UIMessage = {
                   ...message,
-                  content: draftContent,
                   parts: [{ type: "text", text: draftContent }],
                 }
 

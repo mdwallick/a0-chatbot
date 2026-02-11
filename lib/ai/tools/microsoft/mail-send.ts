@@ -2,8 +2,8 @@ import { tool } from "ai"
 import { GaxiosError } from "gaxios"
 import { z } from "zod"
 
-import { getAccessTokenForConnection } from "@auth0/ai-vercel"
-import { FederatedConnectionError } from "@auth0/ai/interrupts"
+import { getAccessTokenFromTokenVault } from "@auth0/ai-vercel"
+import { TokenVaultError } from "@auth0/ai/interrupts"
 import { Client } from "@microsoft/microsoft-graph-client"
 
 import { withMSMailSend } from "@/lib/auth0-ai/microsoft"
@@ -24,9 +24,9 @@ const toolSchema = z.object({
 export const MicrosoftMailSendTool = withMSMailSend(
   tool({
     description: "Write/Send Microsoft Outlook emails",
-    parameters: toolSchema,
+    inputSchema: toolSchema,
     execute: async ({ subject, body, to, cc, importance = "normal" }) => {
-      const access_token = getAccessTokenForConnection()
+      const access_token = getAccessTokenFromTokenVault()
 
       try {
         const client = Client.initWithMiddleware({
@@ -62,9 +62,7 @@ export const MicrosoftMailSendTool = withMSMailSend(
       } catch (error) {
         if (error instanceof GaxiosError) {
           if (error.status === 401) {
-            throw new FederatedConnectionError(
-              `Authorization required to access the Federated Connection`
-            )
+            throw new TokenVaultError(`Authorization required to access the Federated Connection`)
           }
         }
 

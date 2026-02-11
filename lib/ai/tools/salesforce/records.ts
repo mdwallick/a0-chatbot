@@ -2,8 +2,8 @@ import { tool } from "ai"
 import { GaxiosError } from "gaxios"
 import { z } from "zod"
 
-import { getAccessTokenForConnection } from "@auth0/ai-vercel"
-import { FederatedConnectionError } from "@auth0/ai/interrupts"
+import { getAccessTokenFromTokenVault } from "@auth0/ai-vercel"
+import { TokenVaultError } from "@auth0/ai/interrupts"
 
 import { withSalesforce } from "../../../auth0-ai/salesforce"
 
@@ -16,17 +16,17 @@ const querySchema = z.object({
 export const SalesforceQueryTool = withSalesforce(
   tool({
     description: "Query Salesforce records using SOQL",
-    parameters: querySchema,
+    inputSchema: querySchema,
     execute: async ({ query }) => {
       const logs = []
 
       // Get the access token from Auth0 AI
-      const access_token = getAccessTokenForConnection()
+      const access_token = getAccessTokenFromTokenVault()
       logs.push("got access token from token vault")
 
       if (!access_token) {
         logs.push("access token missing or expired")
-        throw new FederatedConnectionError("Authorization required to access Salesforce")
+        throw new TokenVaultError("Authorization required to access Salesforce")
       }
 
       try {
@@ -46,9 +46,7 @@ export const SalesforceQueryTool = withSalesforce(
       } catch (error) {
         if (error instanceof GaxiosError) {
           if (error.status === 401) {
-            throw new FederatedConnectionError(
-              `Authorization required to access the Federated Connection`
-            )
+            throw new TokenVaultError(`Authorization required to access the Federated Connection`)
           }
         }
 
@@ -66,17 +64,17 @@ const createSchema = z.object({
 export const SalesforceCreateTool = withSalesforce(
   tool({
     description: "Create a new record in Salesforce",
-    parameters: createSchema,
+    inputSchema: createSchema,
     execute: async ({ objectType, data }) => {
       const logs = []
 
       // Get the access token from Auth0 AI
-      const access_token = getAccessTokenForConnection()
+      const access_token = getAccessTokenFromTokenVault()
       logs.push("got access token from token vault")
 
       if (!access_token) {
         logs.push("access token missing or expired")
-        throw new FederatedConnectionError("Authorization required to access Salesforce")
+        throw new TokenVaultError("Authorization required to access Salesforce")
       }
 
       try {
@@ -96,9 +94,7 @@ export const SalesforceCreateTool = withSalesforce(
       } catch (error) {
         if (error instanceof GaxiosError) {
           if (error.status === 401) {
-            throw new FederatedConnectionError(
-              `Authorization required to access the Federated Connection`
-            )
+            throw new TokenVaultError(`Authorization required to access the Federated Connection`)
           }
         }
 

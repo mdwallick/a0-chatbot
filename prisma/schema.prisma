@@ -19,7 +19,8 @@ model ChatThread {
 
 model Message {
   id        String     @id @default(cuid())
-  content   String
+  content   String     // Plain text fallback for queries and backwards compatibility
+  parts     Json?      // Full UIMessage parts array (tool calls, reasoning, etc.)
   role      String
   threadId  String
   createdAt DateTime   @default(now())

@@ -25,7 +25,7 @@ variables.
 
 NOTE:
 
-- You will need to set up an [OpenAI Platform account](https://platform.openai.com/docs/overview) and create an API key.
+- You will need a [liteLLM](https://docs.litellm.ai/) instance with a virtual API key.
 - For web search to work, you need to set up [Google Custom search API](https://developers.google.com/custom-search/v1/overview).
 
 ```bash

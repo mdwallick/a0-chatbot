@@ -1,4 +1,4 @@
-import type { Message } from "ai"
+import type { UIMessage } from "ai"
 
 import { memo } from "react"
 import { toast } from "sonner"
@@ -13,8 +13,7 @@ export function PureMessageActions({
   isLoading,
 }: {
   chatId: string
-  message: Message
-
+  message: UIMessage
   isLoading: boolean
 }) {
   const [, copyToClipboard] = useCopyToClipboard()

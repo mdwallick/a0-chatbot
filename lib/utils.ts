@@ -1,12 +1,21 @@
-import { Attachment } from "ai"
+import type { UIMessage, FileUIPart } from "ai"
 import { ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
 import { GoogleFile } from "@/components/google-picker"
 
-import type { Message } from "ai"
-
 import { startOfDay } from "date-fns"
+
+/**
+ * Extract text content from a UIMessage
+ * In AI SDK v6, messages use parts array instead of content string
+ */
+export function getMessageText(message: UIMessage): string {
+  return message.parts
+    .filter((part): part is { type: "text"; text: string } => part.type === "text")
+    .map(part => part.text)
+    .join("")
+}
 import { prisma } from "@/lib/prisma"
 
 export function cn(...inputs: ClassValue[]) {
@@ -26,17 +35,17 @@ export function getImageCreationLimit() {
   return raw > 0 ? raw : 3
 }
 
-export interface AttachmentWithMeta extends Attachment {
+export interface AttachmentWithMeta extends FileUIPart {
   metadata: GoogleFile
 }
 
 export function trimMessages(
-  messages: Message[],
+  messages: UIMessage[],
   options: {
     keepSystem?: boolean
     maxMessages?: number
   } = {}
-): Message[] {
+): UIMessage[] {
   const { keepSystem = true, maxMessages = 10 } = options
 
   const systemMessages = keepSystem ? messages.filter(m => m.role === "system") : []

@@ -113,6 +113,7 @@ export const UserScopeMetadata = {
   windowslive: {
     userAccountUrl: "https://account.microsoft.com/privacy/app-access",
     scopes: [
+      "offline_access", // REQUIRED for refresh tokens!
       "https://graph.microsoft.com/User.Read",
       "https://graph.microsoft.com/Mail.Read",
       "https://graph.microsoft.com/Mail.ReadWrite",
@@ -124,6 +125,7 @@ export const UserScopeMetadata = {
     ],
     // https://learn.microsoft.com/en-us/graph/permissions-reference
     friendlyScopes: [
+      "Maintain access to data when you're not using this app",
       "Read your public profile",
       "Read your email messages",
       "Make changes to your mailbox such as moving or deleting messages",

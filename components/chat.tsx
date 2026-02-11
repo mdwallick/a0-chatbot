@@ -4,10 +4,12 @@ import { useUser } from "@auth0/nextjs-auth0"
 
 import { User } from "lucide-react"
 
-import type { UIMessage } from "ai"
+import type { UIMessage, FileUIPart } from "ai"
+import { DefaultChatTransport, generateId } from "ai"
 
 import { useChat } from "@ai-sdk/react"
 import { useInterruptions } from "@auth0/ai-vercel/react"
+import { toast } from "sonner"
 
 import Link from "next/link"
 import UserButton from "@/components/auth0/user-button"
@@ -17,7 +19,7 @@ import { MultimodalInput } from "./multimodal-input"
 import { Button } from "./ui/button"
 import ThemeToggle from "./theme-toggle"
 
-import { generateUUID } from "@/lib/utils"
+import { useState, useCallback } from "react"
 
 export function Chat({
   id,
@@ -30,27 +32,48 @@ export function Chat({
 }) {
   const { user } = useUser()
 
-  const {
-    messages,
-    setMessages,
-    append,
-    status,
-    reload,
-    input,
-    setInput,
-    stop,
-    handleSubmit,
-    toolInterrupt,
-  } = useInterruptions(handler =>
-    useChat({
-      id,
-      body: { id },
-      initialMessages,
-      experimental_throttle: 100,
-      sendExtraMessageFields: true,
-      generateId: generateUUID,
-      onError: handler(error => console.error("Chat error:", error)),
-    })
+  // Local state for input
+  const [input, setInput] = useState("")
+
+  // Use useInterruptions to wrap useChat directly (Auth0 recommended pattern)
+  const { messages, setMessages, sendMessage, status, regenerate, stop, toolInterrupt } =
+    useInterruptions(handler =>
+      useChat({
+        id,
+        messages: initialMessages,
+        transport: new DefaultChatTransport({
+          api: "/api/chat",
+          body: { id },
+        }),
+        experimental_throttle: 30,
+        generateId,
+        onError: handler(error => {
+          console.error("Chat error:", error)
+          toast.error("Something went wrong. Please try again.")
+        }),
+      })
+    )
+
+  // Create handleSubmit wrapper
+  const handleSubmit = useCallback(
+    (e?: React.FormEvent, options?: { experimental_attachments?: FileUIPart[] }) => {
+      e?.preventDefault()
+      if (!input.trim()) return
+      sendMessage({
+        text: input,
+        files: options?.experimental_attachments,
+      })
+      setInput("")
+    },
+    [input, sendMessage]
+  )
+
+  // Create append wrapper that uses sendMessage
+  const append = useCallback(
+    (message: { role: "user"; content: string }) => {
+      return sendMessage({ text: message.content })
+    },
+    [sendMessage]
   )
 
   return (
@@ -88,7 +111,7 @@ export function Chat({
             messages={messages}
             setMessages={setMessages}
             status={status}
-            reload={reload}
+            reload={regenerate}
             isReadonly={isReadonly}
             toolInterrupt={toolInterrupt}
           />

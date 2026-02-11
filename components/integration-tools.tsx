@@ -4,7 +4,6 @@ import { ArrowUpRight } from "lucide-react"
 import { generateUUID } from "@/lib/utils"
 import { PopoverClose } from "@radix-ui/react-popover"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
-import type { UseChatHelpers } from "@ai-sdk/react"
 import type React from "react"
 
 type ToolDescription = {
@@ -21,7 +20,7 @@ export function IntegrationTools({
   title: string
   icon: React.ReactNode
   tools: ToolDescription[]
-  append: UseChatHelpers["append"]
+  append: (message: { role: "user"; content: string }) => void
 }) {
   return (
     <Popover>

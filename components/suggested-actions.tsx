@@ -3,13 +3,11 @@
 import { motion } from "framer-motion"
 import { memo } from "react"
 
-import { UseChatHelpers } from "@ai-sdk/react"
-
 import { Button } from "./ui/button"
 
 interface SuggestedActionsProps {
   chatId: string
-  append: UseChatHelpers["append"]
+  append: (message: { role: "user"; content: string }) => void
 }
 
 function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {

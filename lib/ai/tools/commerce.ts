@@ -6,6 +6,45 @@ const TOKEN_URL = "https://agentic-commerce-merchant.cic-demo-platform.auth0app.
 const CHECKOUT_URL =
   "https://3ufw32ejnj76pybzbj6ovbzlvm0zzkur.lambda-url.us-east-1.on.aws/checkout-sessions"
 
+// Helper function to generate identity linking authorization URL
+// Only generates URL if user is authenticated
+function generateIdentityLinkingUrl(sessionId: string, userId?: string): string | null {
+  // Require user authentication
+  if (!userId) {
+    console.log("[Identity Linking] User not authenticated, skipping identity linking")
+    return null
+  }
+
+  const idlinkClientId = process.env.MERCHANT_IDLINK_CLIENT_ID
+  const idlinkDomain = process.env.MERCHANT_IDLINK_DOMAIN
+  const appBaseUrl = process.env.APP_BASE_URL || process.env.AUTH0_BASE_URL
+
+  if (!idlinkClientId || !idlinkDomain || !appBaseUrl) {
+    console.warn("[Identity Linking] Missing configuration, skipping identity linking")
+    return null
+  }
+
+  // Generate state parameter for CSRF protection
+  const state = Buffer.from(
+    JSON.stringify({
+      sessionId,
+      timestamp: Date.now(),
+    })
+  ).toString("base64url")
+
+  const redirectUri = `${appBaseUrl}/api/ucp/identity-linking/callback`
+
+  const authUrl = new URL(`https://${idlinkDomain}/authorize`)
+  authUrl.searchParams.set("client_id", idlinkClientId)
+  authUrl.searchParams.set("response_type", "code")
+  authUrl.searchParams.set("redirect_uri", redirectUri)
+  authUrl.searchParams.set("state", state)
+  authUrl.searchParams.set("scope", "openid profile email offline_access") // offline_access for refresh token
+  authUrl.searchParams.set("prompt", "consent") // Force consent for linking
+
+  return authUrl.toString()
+}
+
 // Schema for product search
 const productSearchSchema = z.object({
   query: z.string().describe("The search query to find products (e.g., 'pony', 'shoes', 'laptop')"),
@@ -157,64 +196,80 @@ async function searchProducts(args: any) {
 }
 
 // Create checkout session
-async function createCheckout(args: any) {
-  const { lineItems, currency = "USD" } = args
+// Accepts userId from context to enable identity linking
+function createCheckoutWithContext(userId?: string) {
+  return async (args: any) => {
+    const { lineItems, currency = "USD" } = args
 
-  try {
-    // Get access token
-    console.log("[Checkout] Getting merchant token...")
-    const token = await getCommerceToken()
-    console.log("[Checkout] Token received:", token ? `${token.substring(0, 20)}...` : "NO TOKEN")
+    try {
+      // Get access token
+      console.log("[Checkout] Getting merchant token...")
+      const token = await getCommerceToken()
+      console.log("[Checkout] Token received:", token ? `${token.substring(0, 20)}...` : "NO TOKEN")
 
-    // Format line items for checkout API
-    const formattedLineItems = lineItems.map((item: any) => ({
-      item: {
-        id: item.productId,
-        title: item.productTitle,
-      },
-      quantity: item.quantity,
-    }))
+      // Format line items for checkout API
+      const formattedLineItems = lineItems.map((item: any) => ({
+        item: {
+          id: item.productId,
+          title: item.productTitle,
+        },
+        quantity: item.quantity,
+      }))
 
-    console.log("[Checkout] Sending checkout request to:", CHECKOUT_URL)
-    console.log("[Checkout] Line items:", JSON.stringify(formattedLineItems, null, 2))
+      console.log("[Checkout] Sending checkout request to:", CHECKOUT_URL)
+      console.log("[Checkout] Line items:", JSON.stringify(formattedLineItems, null, 2))
 
-    const response = await fetch(CHECKOUT_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        line_items: formattedLineItems,
-        currency: currency,
-      }),
-    })
+      const response = await fetch(CHECKOUT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          line_items: formattedLineItems,
+          currency: currency,
+        }),
+      })
 
-    console.log("[Checkout] Response status:", response.status, response.statusText)
+      console.log("[Checkout] Response status:", response.status, response.statusText)
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error("[Checkout] Error response:", errorText)
-      return {
-        error: `Checkout failed: ${response.statusText}`,
-        details: errorText,
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("[Checkout] Error response:", errorText)
+        return {
+          error: `Checkout failed: ${response.statusText}`,
+          details: errorText,
+        }
       }
-    }
 
-    const data = await response.json()
+      const data = await response.json()
 
-    return {
-      success: true,
-      message: "Checkout session created successfully!",
-      checkoutUrl: data.url || data.checkout_url,
-      sessionId: data.id || data.session_id,
-      ...data,
-    }
-  } catch (error) {
-    console.error("Checkout error:", error)
-    return {
-      error: "Error occurred while creating checkout session",
-      details: error instanceof Error ? error.message : String(error),
+      const sessionId = data.id || data.session_id
+
+      // Generate identity linking URL (requires authenticated user)
+      const identityLinkingUrl = generateIdentityLinkingUrl(sessionId, userId)
+
+      console.log("[Checkout] Session created:", sessionId)
+      if (identityLinkingUrl) {
+        console.log("[Checkout] Identity linking URL generated")
+      } else if (!userId) {
+        console.log("[Checkout] No identity linking URL - user not authenticated")
+      }
+
+      return {
+        success: true,
+        message: "Checkout session created successfully!",
+        checkoutUrl: data.url || data.checkout_url,
+        sessionId: sessionId,
+        identityLinkingUrl: identityLinkingUrl,
+        ...data,
+      }
+    } catch (error) {
+      console.error("Checkout error:", error)
+      return {
+        error: "Error occurred while creating checkout session",
+        details: error instanceof Error ? error.message : String(error),
+      }
     }
   }
 }
@@ -227,9 +282,14 @@ export const ProductSearchTool = tool({
   execute: searchProducts,
 })
 
-export const CheckoutTool = tool({
-  description:
-    "Create a checkout session for purchasing products. Requires product IDs and quantities from a previous product search.",
-  parameters: checkoutSchema,
-  execute: createCheckout,
-})
+// CheckoutTool is a function that accepts context to enable identity linking
+export const CheckoutTool = (context?: { user?: { id?: string } }) => {
+  const userId = context?.user?.id
+
+  return tool({
+    description:
+      "Create a checkout session for purchasing products. Requires product IDs and quantities from a previous product search. If user is authenticated, an identity linking URL will be provided.",
+    parameters: checkoutSchema,
+    execute: createCheckoutWithContext(userId),
+  })
+}

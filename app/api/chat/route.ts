@@ -217,9 +217,14 @@ TOOL SELECTION RULES:
    - Product image using markdown: ![Product Title](image_link)
    - Description text
    - Product ID for checkout reference
-3. Only use tools that are directly relevant to the user's request.
-4. Do not use calendar tools unless explicitly asked about calendar/schedule/meetings
-5. Do not mix tools from different services unless specifically requested
+3. Use the 'CheckoutTool' to create checkout sessions. After creating a checkout:
+   - If an identityLinkingUrl is returned, present it to the user as a clickable link: [Link your account to complete checkout](identityLinkingUrl)
+   - Explain that linking their account enables order tracking, saved payment methods, and personalized features
+   - If no identityLinkingUrl is returned and user is not signed in, inform them they need to sign in first to link their merchant account
+   - Show the checkout session ID for reference
+4. Only use tools that are directly relevant to the user's request.
+5. Do not use calendar tools unless explicitly asked about calendar/schedule/meetings
+6. Do not mix tools from different services unless specifically requested
 
 When providing a date or time, always output the value in full ISO 8601 format using UTC (e.g. "2025-05-24T19:00:00Z"). Use 24-hour time and include seconds.
 Only return properly formatted ISO 8601 strings for all datetime fields like startDateTime or endDateTime.

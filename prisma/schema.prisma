@@ -53,3 +53,15 @@ model DailyUsage {
 
   @@unique([userId, date])
 }
+
+model MerchantIdentityLink {
+  id                String   @id @default(cuid())
+  chatbotUserId     String   @unique
+  merchantUserId    String
+  refreshToken      String?
+  linkedAt          DateTime @default(now())
+  lastRefreshedAt   DateTime @updatedAt
+
+  @@index([chatbotUserId])
+  @@index([merchantUserId])
+}

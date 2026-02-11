@@ -3,5 +3,5 @@ import { Connections } from "./connections"
 
 export const withSalesforce = auth0AI.withTokenVault({
   ...Connections.salesforce,
-  //scopes: ["id", "api", "refresh_token"],
+  scopes: ["id", "api", "refresh_token"],
 })

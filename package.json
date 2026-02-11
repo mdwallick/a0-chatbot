@@ -19,7 +19,8 @@
     "prisma:truncate": "dotenv -e .env.local -- tsx prisma/scripts/clear-db.ts",
     "prepare": "husky",
     "deploy:check": "./scripts/deploy/pre-deploy-check.sh",
-    "deploy:env": "./scripts/deploy/vercel-env-sync.sh"
+    "deploy:env": "./scripts/deploy/vercel-env-sync.sh",
+    "deploy:env:dry": "./scripts/deploy/vercel-env-sync.sh --dry-run"
   },
   "husky": {
     "hooks": {

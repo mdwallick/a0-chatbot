@@ -149,18 +149,20 @@ This checks:
 
 ### Environment Variable Sync
 
-Sync environment variables to Vercel:
+Sync environment variables to Vercel (handles all environments in one run):
 
 ```bash
-# Sync to preview (uses .env.vercel)
-npm run deploy:env preview
-
-# Sync to production (uses .env.vercel + .env.production)
-npm run deploy:env production
+# Sync all variables to Vercel
+npm run deploy:env
 
 # Dry run to see what would be synced
-npm run deploy:env production --dry-run
+npm run deploy:env:dry
 ```
+
+The script automatically:
+
+- Sets shared variables (from `.env.vercel`) for **all environments** (production, preview, development)
+- Sets production-only variables (from `.env.production`) for **production only**
 
 ## Deployment Process
 
@@ -175,8 +177,7 @@ npm run deploy:env production --dry-run
 2. **Sync environment variables (if changed):**
 
    ```bash
-   npm run deploy:env preview
-   npm run deploy:env production
+   npm run deploy:env
    ```
 
 3. **Create PR or push to main:**

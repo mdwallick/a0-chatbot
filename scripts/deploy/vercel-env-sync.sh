@@ -1,20 +1,57 @@
 #!/bin/bash
 # Sync environment variables to Vercel
-# Usage: ./scripts/deploy/vercel-env-sync.sh [environment]
+# Usage: ./scripts/deploy/vercel-env-sync.sh [environment] [options]
+#
 # Environments: production, preview, development
+#
+# Options:
+#   --dry-run    Show what would be synced without making changes
+#
+# Environment file layering:
+#   - .env.local is always loaded first (shared/base values)
+#   - .env.production is layered on top for production (overrides)
+#
+# This means .env.production only needs production-specific values like:
+#   AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET, DATABASE_URL, APP_BASE_URL, etc.
+#
+# Shared values (OPENAI_API_KEY, OPENAI_MODEL, etc.) stay in .env.local
 
 set -e
 
 ENVIRONMENT=${1:-production}
-ENV_FILE=".env.local"
+DRY_RUN=false
+
+# Parse options
+shift || true
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --dry-run)
+            DRY_RUN=true
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
 
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${YELLOW}Syncing environment variables to Vercel ($ENVIRONMENT)${NC}"
+echo -e "${BLUE}========================================${NC}"
+echo -e "${BLUE}  Vercel Environment Sync${NC}"
+echo -e "${BLUE}========================================${NC}"
+echo ""
+echo -e "Target: ${YELLOW}$ENVIRONMENT${NC}"
+if [ "$DRY_RUN" = true ]; then
+    echo -e "Mode: ${YELLOW}DRY RUN (no changes will be made)${NC}"
+fi
+echo ""
 
 # Check if Vercel CLI is installed
 if ! command -v vercel &> /dev/null; then
@@ -28,29 +65,76 @@ if ! vercel whoami &> /dev/null; then
     exit 1
 fi
 
-# Check if .env.local exists
-if [ ! -f "$ENV_FILE" ]; then
-    echo -e "${RED}Error: $ENV_FILE not found${NC}"
+# Check base env file exists
+if [ ! -f ".env.local" ]; then
+    echo -e "${RED}Error: .env.local not found${NC}"
     exit 1
 fi
 
-# Required environment variables for production
-REQUIRED_VARS=(
+# For production, check if .env.production exists
+if [ "$ENVIRONMENT" = "production" ] && [ ! -f ".env.production" ]; then
+    echo -e "${RED}Error: .env.production not found${NC}"
+    echo ""
+    echo -e "${YELLOW}Create .env.production with production-specific values:${NC}"
+    echo "  AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET,"
+    echo "  AUTH0_SECRET, AUTH0_ISSUER_BASE_URL, APP_BASE_URL, DATABASE_URL"
+    echo ""
+    echo "Shared values (OPENAI_API_KEY, etc.) will be read from .env.local"
+    exit 1
+fi
+
+# Create a temporary merged env file
+MERGED_ENV=$(mktemp)
+trap "rm -f $MERGED_ENV" EXIT
+
+# Start with .env.local as base
+cp .env.local "$MERGED_ENV"
+
+# For production, overlay .env.production
+if [ "$ENVIRONMENT" = "production" ] && [ -f ".env.production" ]; then
+    echo -e "${BLUE}Loading:${NC}"
+    echo -e "  Base:    .env.local"
+    echo -e "  Overlay: .env.production"
+    echo ""
+
+    # Append .env.production (later values override earlier ones when we read)
+    # We'll handle the override logic in the get_var function
+    while IFS= read -r line || [ -n "$line" ]; do
+        # Skip empty lines and comments
+        [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+
+        # Extract variable name
+        var_name=$(echo "$line" | cut -d'=' -f1)
+
+        # Remove existing line with same var name and add new one
+        grep -v "^${var_name}=" "$MERGED_ENV" > "${MERGED_ENV}.tmp" || true
+        mv "${MERGED_ENV}.tmp" "$MERGED_ENV"
+        echo "$line" >> "$MERGED_ENV"
+    done < .env.production
+else
+    echo -e "${BLUE}Loading:${NC} .env.local"
+    echo ""
+fi
+
+# All variables to sync
+AUTH0_VARS=(
     "AUTH0_DOMAIN"
     "AUTH0_CLIENT_ID"
     "AUTH0_CLIENT_SECRET"
     "AUTH0_SECRET"
+    "AUTH0_ISSUER_BASE_URL"
     "AUTH0_CLIENT_ID_MGMT"
     "AUTH0_CLIENT_SECRET_MGMT"
-    "AUTH0_ISSUER_BASE_URL"
     "APP_BASE_URL"
+)
+
+REQUIRED_VARS=(
     "DATABASE_URL"
     "OPENAI_API_KEY"
     "OPENAI_MODEL"
     "ENABLED_CONNECTIONS"
 )
 
-# Optional but recommended
 OPTIONAL_VARS=(
     "LITELLM_API_KEY"
     "LITELLM_BASE_URL"
@@ -60,77 +144,138 @@ OPTIONAL_VARS=(
     "IMAGES_PER_DAY_LIMIT"
 )
 
-echo ""
-echo -e "${YELLOW}Checking required variables...${NC}"
-
-missing_vars=()
-for var in "${REQUIRED_VARS[@]}"; do
-    value=$(grep "^${var}=" "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d '"' | tr -d "'")
+# Function to check if variable exists and has value
+check_var() {
+    local var=$1
+    local value=$(grep "^${var}=" "$MERGED_ENV" 2>/dev/null | tail -1 | cut -d'=' -f2- | tr -d '"' | tr -d "'")
     if [ -z "$value" ] || [ "$value" == "" ]; then
-        missing_vars+=("$var")
-        echo -e "  ${RED}✗ $var is missing or empty${NC}"
+        return 1
+    fi
+    return 0
+}
+
+# Function to get variable value
+get_var() {
+    local var=$1
+    grep "^${var}=" "$MERGED_ENV" | tail -1 | cut -d'=' -f2- | tr -d '"' | tr -d "'"
+}
+
+# Function to get variable source
+get_source() {
+    local var=$1
+    if [ "$ENVIRONMENT" = "production" ] && [ -f ".env.production" ]; then
+        if grep -q "^${var}=" .env.production 2>/dev/null; then
+            echo ".env.production"
+        else
+            echo ".env.local"
+        fi
     else
-        echo -e "  ${GREEN}✓ $var${NC}"
+        echo ".env.local"
+    fi
+}
+
+# Function to sync a variable
+sync_var() {
+    local var=$1
+    local value=$(get_var "$var")
+    if [ -n "$value" ]; then
+        if [ "$DRY_RUN" = true ]; then
+            echo -e "  ${BLUE}[DRY RUN]${NC} Would set $var"
+        else
+            echo -n "  Setting $var... "
+            vercel env rm "$var" "$ENVIRONMENT" -y 2>/dev/null || true
+            echo "$value" | vercel env add "$var" "$ENVIRONMENT" 2>/dev/null
+            echo -e "${GREEN}done${NC}"
+        fi
+    fi
+}
+
+echo -e "${YELLOW}Checking variables...${NC}"
+echo ""
+
+# Check Auth0 credentials
+echo -e "${YELLOW}Auth0 Credentials:${NC}"
+for var in "${AUTH0_VARS[@]}"; do
+    if check_var "$var"; then
+        source=$(get_source "$var")
+        echo -e "  ${GREEN}✓${NC} $var ${BLUE}← $source${NC}"
+    else
+        echo -e "  ${RED}✗${NC} $var (missing)"
     fi
 done
 
-if [ ${#missing_vars[@]} -ne 0 ]; then
+echo ""
+echo -e "${YELLOW}Required Variables:${NC}"
+missing_required=false
+for var in "${REQUIRED_VARS[@]}"; do
+    if check_var "$var"; then
+        source=$(get_source "$var")
+        echo -e "  ${GREEN}✓${NC} $var ${BLUE}← $source${NC}"
+    else
+        echo -e "  ${RED}✗${NC} $var (missing)"
+        missing_required=true
+    fi
+done
+
+if [ "$missing_required" = true ]; then
     echo ""
-    echo -e "${RED}Error: Missing required environment variables: ${missing_vars[*]}${NC}"
-    echo -e "${YELLOW}Please update $ENV_FILE and try again.${NC}"
+    echo -e "${RED}Error: Missing required variables${NC}"
     exit 1
 fi
 
 echo ""
-echo -e "${YELLOW}Checking optional variables...${NC}"
+echo -e "${YELLOW}Optional Variables:${NC}"
 for var in "${OPTIONAL_VARS[@]}"; do
-    value=$(grep "^${var}=" "$ENV_FILE" 2>/dev/null | cut -d'=' -f2- | tr -d '"' | tr -d "'")
-    if [ -z "$value" ] || [ "$value" == "" ]; then
-        echo -e "  ${YELLOW}⚠ $var is not set (optional)${NC}"
+    if check_var "$var"; then
+        source=$(get_source "$var")
+        echo -e "  ${GREEN}✓${NC} $var ${BLUE}← $source${NC}"
     else
-        echo -e "  ${GREEN}✓ $var${NC}"
+        echo -e "  ${YELLOW}⚠${NC} $var (not set)"
     fi
 done
 
 echo ""
-read -p "Do you want to sync these variables to Vercel $ENVIRONMENT? (y/N) " -n 1 -r
-echo ""
-
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Aborted."
-    exit 0
+if [ "$DRY_RUN" = true ]; then
+    echo -e "${BLUE}DRY RUN - showing what would be synced:${NC}"
+else
+    read -p "Sync these variables to Vercel $ENVIRONMENT? (y/N) " -n 1 -r
+    echo ""
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Aborted."
+        exit 0
+    fi
 fi
 
 echo ""
-echo -e "${YELLOW}Syncing variables to Vercel...${NC}"
+echo -e "${YELLOW}Syncing to Vercel ($ENVIRONMENT)...${NC}"
 
-# Sync each required variable
-for var in "${REQUIRED_VARS[@]}"; do
-    value=$(grep "^${var}=" "$ENV_FILE" | cut -d'=' -f2- | tr -d '"' | tr -d "'")
-    if [ -n "$value" ]; then
-        echo -n "  Setting $var... "
-        # Remove existing and add new
-        vercel env rm "$var" "$ENVIRONMENT" -y 2>/dev/null || true
-        echo "$value" | vercel env add "$var" "$ENVIRONMENT" 2>/dev/null
-        echo -e "${GREEN}done${NC}"
+# Sync all variables
+for var in "${AUTH0_VARS[@]}"; do
+    if check_var "$var"; then
+        sync_var "$var"
     fi
 done
 
-# Sync optional variables that have values
+for var in "${REQUIRED_VARS[@]}"; do
+    if check_var "$var"; then
+        sync_var "$var"
+    fi
+done
+
 for var in "${OPTIONAL_VARS[@]}"; do
-    value=$(grep "^${var}=" "$ENV_FILE" | cut -d'=' -f2- | tr -d '"' | tr -d "'")
-    if [ -n "$value" ]; then
-        echo -n "  Setting $var... "
-        vercel env rm "$var" "$ENVIRONMENT" -y 2>/dev/null || true
-        echo "$value" | vercel env add "$var" "$ENVIRONMENT" 2>/dev/null
-        echo -e "${GREEN}done${NC}"
+    if check_var "$var"; then
+        sync_var "$var"
     fi
 done
 
 echo ""
-echo -e "${GREEN}Environment variables synced successfully!${NC}"
+if [ "$DRY_RUN" = true ]; then
+    echo -e "${BLUE}DRY RUN complete. No changes were made.${NC}"
+else
+    echo -e "${GREEN}Environment variables synced successfully!${NC}"
+fi
+
 echo ""
 echo -e "${YELLOW}Next steps:${NC}"
-echo "  1. Run database migrations if schema changed: npm run prisma:migrate"
-echo "  2. Deploy to Vercel: git push origin main"
-echo "  3. Or trigger manual deploy: vercel --prod"
+echo "  • Verify in Vercel dashboard: https://vercel.com"
+echo "  • Deploy: git push origin main"

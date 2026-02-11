@@ -165,13 +165,15 @@ sync_var() {
             vercel env rm "$var" "$env" -y 2>/dev/null || true
         done
 
-        # Add to target environments
+        # Add to target environments (vercel env add only accepts one environment at a time)
         if [ "$target_envs" = "production" ]; then
             echo -n "  Setting $var (production only)... "
             echo "$value" | vercel env add "$var" production 2>/dev/null
         else
             echo -n "  Setting $var (all environments)... "
-            echo "$value" | vercel env add "$var" production preview development 2>/dev/null
+            for env in production preview development; do
+                echo "$value" | vercel env add "$var" "$env" 2>/dev/null
+            done
         fi
         echo -e "${GREEN}done${NC}"
     fi

@@ -7,7 +7,15 @@ import { memo, useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { useLocalStorage } from "usehooks-ts"
 
-import { Connections } from "@/lib/auth0-ai/connections"
+import { ConnectionsMetadata } from "@/lib/auth0-ai/connections-metadata"
+
+// Map connection names to connection IDs for client use
+const Connections = {
+  google: { connection: ConnectionsMetadata.find(c => c.name === "google")!.connection },
+  microsoft: { connection: ConnectionsMetadata.find(c => c.name === "microsoft")!.connection },
+  salesforce: { connection: ConnectionsMetadata.find(c => c.name === "salesforce")!.connection },
+  xbox: { connection: ConnectionsMetadata.find(c => c.name === "xbox")!.connection },
+}
 import { Attachment } from "@ai-sdk/ui-utils"
 import { useUser } from "@auth0/nextjs-auth0"
 

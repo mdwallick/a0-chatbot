@@ -1,27 +1,6 @@
 import { createDataStreamResponse, Message, streamText, Tool } from "ai"
 
-import { DalleImageTool, WebSearchTool } from "@/lib/ai/tools"
-import {
-  GmailReadTool,
-  GmailSendTool,
-  GoogleFilesListTool,
-  GoogleCalendarReadTool,
-  GoogleCalendarWriteTool,
-  GoogleFilesReadTool,
-  GoogleFilesWriteTool,
-} from "@/lib/ai/tools/google"
-
-import {
-  MicrosoftCalendarReadTool,
-  MicrosoftCalendarWriteTool,
-  MicrosoftFilesListTool,
-  MicrosoftFilesReadTool,
-  MicrosoftFilesWriteTool,
-  MicrosoftMailReadTool,
-  MicrosoftMailSendTool,
-} from "@/lib/ai/tools/microsoft"
-import { XboxUserProfileTool, XboxAchievementTool } from "@/lib/ai/tools/xbox"
-import { SalesforceQueryTool, SalesforceSearchTool } from "@/lib/ai/tools/salesforce"
+import { DalleImageTool, WebSearchTool, ProductSearchTool, CheckoutTool } from "@/lib/ai/tools"
 
 import { auth0 } from "@/lib/auth0"
 import { openai } from "@ai-sdk/openai"
@@ -34,170 +13,173 @@ import { summarizeThread } from "@/lib/summarize-thread"
 import { getImageCountToday, getImageCreationLimit } from "@/lib/utils"
 
 export async function POST(request: Request) {
-  const { id, messages }: { id: string; messages: Array<Message>; selectedChatModel: string } =
-    await request.json()
+  try {
+    const { id, messages }: { id: string; messages: Array<Message>; selectedChatModel: string } =
+      await request.json()
 
-  setAIContext({ threadID: id })
+    console.log("[CHAT API] Request received:", { id, messageCount: messages.length })
 
-  const session = await auth0.getSession()
-  const isAuthenticated = !!session?.user
+    setAIContext({ threadID: id })
 
-  const context = {
-    user: session?.user
-      ? {
-          // Only populate user data if a session exists
-          id: session.user.sub,
-          email: session.user.email,
-          name: session.user.name,
-        }
-      : undefined,
-  }
+    const session = await auth0.getSession()
+    console.log("[CHAT API] Session:", session ? "authenticated" : "unauthenticated")
+    const isAuthenticated = !!session?.user
 
-  const toolDefinitions = {
-    DalleImageTool,
-    WebSearchTool,
-    GmailReadTool,
-    GmailSendTool,
-    GoogleFilesListTool,
-    GoogleCalendarReadTool,
-    GoogleCalendarWriteTool,
-    GoogleFilesReadTool,
-    GoogleFilesWriteTool,
-    MicrosoftCalendarReadTool,
-    MicrosoftCalendarWriteTool,
-    MicrosoftFilesListTool,
-    MicrosoftFilesReadTool,
-    MicrosoftFilesWriteTool,
-    MicrosoftMailReadTool,
-    MicrosoftMailSendTool,
-    SalesforceQueryTool,
-    SalesforceSearchTool,
-    XboxUserProfileTool,
-    XboxAchievementTool,
-  }
-
-  // const tools = {
-  //   DalleImageTool,
-  //   WebSearchTool,
-  //   GmailReadTool,
-  //   GmailSendTool,
-  //   GoogleFilesListTool,
-  //   GoogleCalendarReadTool,
-  //   GoogleCalendarWriteTool,
-  //   GoogleFilesReadTool,
-  //   GoogleFilesWriteTool,
-  //   MicrosoftCalendarReadTool,
-  //   MicrosoftCalendarWriteTool,
-  //   MicrosoftFilesListTool,
-  //   MicrosoftFilesReadTool,
-  //   MicrosoftFilesWriteTool,
-  //   MicrosoftMailReadTool,
-  //   MicrosoftMailSendTool,
-  //   SalesforceQueryTool,
-  //   SalesforceSearchTool,
-  //   XboxUserProfileTool,
-  //   XboxAchievementTool,
-  // }
-  const tools: Record<string, Tool<any, any>> = Object.fromEntries(
-    Object.entries(toolDefinitions).map(([name, definition]) => {
-      // Check if the definition is a function (needs context) or just a static object
-      if (typeof definition === "function") {
-        return [name, definition(context)] // Call it with context to get the tool
-      }
-      return [name, definition] // It's a static tool, pass it through
-    })
-  )
-
-  if (isAuthenticated) {
-    // only save the message if the user is authenticated
-    const thread = await prisma.chatThread.upsert({
-      where: { id },
-      update: {}, // no update needed
-      create: {
-        id,
-        userId: session!.user.sub,
-      },
-    })
-
-    await prisma.message.create({
-      data: {
-        role: "user",
-        content: messages[messages.length - 1].content,
-        threadId: id,
-      },
-    })
-
-    if (thread.summary === "New conversation" && messages.length > 1) {
-      const recentMessages = messages.slice(-2)
-
-      const summary = await summarizeThread(
-        recentMessages.reverse().map(m => ({
-          role: m.role, // e.g. "user" or "assistant"
-          content: m.content,
-        }))
-      )
-
-      await prisma.chatThread.update({
-        where: { id },
-        data: { summary },
-      })
-    }
-  }
-
-  const trimmedMessages = trimMessages(messages, {
-    keepSystem: true,
-    maxMessages: 12,
-  })
-
-  let imageUsageCount: number | undefined = undefined
-
-  if (isAuthenticated && context.user?.id) {
-    imageUsageCount = await getImageCountToday(context.user.id)
-  }
-
-  const systemTemplate = await getSystemTemplate({
-    userName: context.user?.name?.split(" ")[0],
-    imageUsageCount,
-  })
-  const now = new Date().toLocaleString("en-US", { timeZone: "US/Central" })
-
-  const config = {
-    messages: trimmedMessages,
-    tools,
-    context,
-  } as const
-
-  return createDataStreamResponse({
-    execute: withInterruptions(async dataStream => {
-      const result = streamText({
-        model: openai(process.env.OPENAI_MODEL || "gpt-4o"),
-        system: `The current date and time is ${now}. ${systemTemplate}`,
-        messages: trimmedMessages,
-        maxSteps: 5,
-        tools,
-        async onFinish(finalResult) {
-          if (isAuthenticated) {
-            // only save the message if the user is authenticated
-            await prisma.message.create({
-              data: {
-                role: "assistant",
-                content: finalResult.text,
-                threadId: id,
-              },
-            })
+    const context = {
+      user: session?.user
+        ? {
+            // Only populate user data if a session exists
+            id: session.user.sub,
+            email: session.user.email,
+            name: session.user.name,
           }
+        : undefined,
+    }
+
+    // Temporarily disable integration tools to test commerce functionality
+    // TODO: Fix googleapis/google-auth-library bundling issues
+    const toolDefinitions = {
+      DalleImageTool,
+      WebSearchTool,
+      ProductSearchTool,
+      CheckoutTool,
+    }
+
+    // const tools = {
+    //   DalleImageTool,
+    //   WebSearchTool,
+    //   GmailReadTool,
+    //   GmailSendTool,
+    //   GoogleFilesListTool,
+    //   GoogleCalendarReadTool,
+    //   GoogleCalendarWriteTool,
+    //   GoogleFilesReadTool,
+    //   GoogleFilesWriteTool,
+    //   MicrosoftCalendarReadTool,
+    //   MicrosoftCalendarWriteTool,
+    //   MicrosoftFilesListTool,
+    //   MicrosoftFilesReadTool,
+    //   MicrosoftFilesWriteTool,
+    //   MicrosoftMailReadTool,
+    //   MicrosoftMailSendTool,
+    //   SalesforceQueryTool,
+    //   SalesforceSearchTool,
+    //   XboxUserProfileTool,
+    //   XboxAchievementTool,
+    // }
+    const tools: Record<string, Tool<any, any>> = Object.fromEntries(
+      Object.entries(toolDefinitions).map(([name, definition]) => {
+        // Check if the definition is a function (needs context) or just a static object
+        if (typeof definition === "function") {
+          return [name, definition(context)] // Call it with context to get the tool
+        }
+        return [name, definition] // It's a static tool, pass it through
+      })
+    )
+
+    if (isAuthenticated) {
+      // only save the message if the user is authenticated
+      const thread = await prisma.chatThread.upsert({
+        where: { id },
+        update: {}, // no update needed
+        create: {
+          id,
+          userId: session!.user.sub,
         },
       })
 
-      result.mergeIntoDataStream(dataStream, {
-        sendReasoning: true,
+      await prisma.message.create({
+        data: {
+          role: "user",
+          content: messages[messages.length - 1].content,
+          threadId: id,
+        },
       })
-    }, config),
-    onError: errorSerializer(err => {
-      console.error(err)
-      return "Oops, an error occured!"
-    }),
-  })
+
+      if (thread.summary === "New conversation" && messages.length > 1) {
+        const recentMessages = messages.slice(-2)
+
+        const summary = await summarizeThread(
+          recentMessages.reverse().map(m => ({
+            role: m.role, // e.g. "user" or "assistant"
+            content: m.content,
+          }))
+        )
+
+        await prisma.chatThread.update({
+          where: { id },
+          data: { summary },
+        })
+      }
+    }
+
+    const trimmedMessages = trimMessages(messages, {
+      keepSystem: true,
+      maxMessages: 12,
+    })
+
+    let imageUsageCount: number | undefined = undefined
+
+    if (isAuthenticated && context.user?.id) {
+      imageUsageCount = await getImageCountToday(context.user.id)
+    }
+
+    const systemTemplate = await getSystemTemplate({
+      userName: context.user?.name?.split(" ")[0],
+      imageUsageCount,
+    })
+    const now = new Date().toLocaleString("en-US", { timeZone: "US/Central" })
+
+    const config = {
+      messages: trimmedMessages,
+      tools,
+      context,
+    } as const
+
+    return createDataStreamResponse({
+      execute: withInterruptions(async dataStream => {
+        const result = streamText({
+          model: openai(process.env.OPENAI_MODEL || "gpt-4o"),
+          system: `The current date and time is ${now}. ${systemTemplate}`,
+          messages: trimmedMessages,
+          maxSteps: 5,
+          tools,
+          async onFinish(finalResult) {
+            if (isAuthenticated) {
+              // only save the message if the user is authenticated
+              await prisma.message.create({
+                data: {
+                  role: "assistant",
+                  content: finalResult.text,
+                  threadId: id,
+                },
+              })
+            }
+          },
+        })
+
+        result.mergeIntoDataStream(dataStream, {
+          sendReasoning: true,
+        })
+      }, config),
+      onError: errorSerializer(err => {
+        console.error("[CHAT API] Stream error:", err)
+        return "Oops, an error occured!"
+      }),
+    })
+  } catch (error) {
+    console.error("[CHAT API] Fatal error:", error)
+    return new Response(
+      JSON.stringify({
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : String(error),
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    )
+  }
 }
 
 async function getSystemTemplate({

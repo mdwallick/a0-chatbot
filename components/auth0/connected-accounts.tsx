@@ -280,8 +280,8 @@ export default function ConnectedAccounts({
   )
 }
 
-import type { ProviderKey } from "@/lib/auth0-ai/connections"
-import { UserScopeMetadata } from "@/lib/auth0-ai/connections"
+import type { ProviderKey } from "@/lib/auth0-ai/connections-metadata"
+import { UserScopeMetadata } from "@/lib/auth0-ai/connections-metadata"
 
 /**
  * Finds the friendly name for a technical scope given a provider.

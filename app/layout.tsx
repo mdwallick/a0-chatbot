@@ -42,7 +42,13 @@ export default async function RootLayout({
   let linkedAccounts: any[] = []
 
   if (session?.user?.sub) {
-    linkedAccounts = await getLinkedAccounts(session.user.sub)
+    try {
+      linkedAccounts = await getLinkedAccounts(session.user.sub)
+    } catch (error) {
+      // Management API may not be configured yet - gracefully continue
+      console.warn("Could not fetch linked accounts:", error)
+      linkedAccounts = []
+    }
   }
 
   return (

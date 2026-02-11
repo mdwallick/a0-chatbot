@@ -1,64 +1,60 @@
-import { auth0 } from "@/lib/auth0"
+// Client-safe connection metadata (no server-side imports)
 
-// Server-only connection handlers with refresh token functions
-// For client-safe metadata, import from "./connections-metadata"
-export const Connections = {
-  google: {
-    connection: "google-oauth2",
-    refreshToken: async () => {
-      const session = await auth0.getSession()
-      const refreshToken = session?.tokenSet.refreshToken as string
-      return refreshToken
-    },
-  },
-  microsoft: {
-    connection: "windowslive",
-    refreshToken: async () => {
-      const session = await auth0.getSession()
-      const refreshToken = session?.tokenSet.refreshToken as string
-      return refreshToken
-    },
-  },
-  salesforce: {
-    connection: "salesforce",
-    refreshToken: async () => {
-      const session = await auth0.getSession()
-      const refreshToken = session?.tokenSet.refreshToken as string
-      return refreshToken
-    },
-  },
-  xbox: {
-    connection: "xbox",
-    refreshToken: async () => {
-      const session = await auth0.getSession()
-      const refreshToken = session?.tokenSet.refreshToken as string
-      return refreshToken
-    },
-  },
-}
-
-export interface ConnectionEntry {
+type ConnectionEntry = {
   name: string
   connection: string
-  scopes?: readonly string[]
-  friendlyScopes?: readonly string[]
+  scopes: string[]
+  friendlyScopes: string[]
 }
-
-export const ConnectionsMetadata: ConnectionEntry[] = Object.entries(Connections).map(
-  ([name, { connection }]) => ({
-    name,
-    connection,
-  })
-)
-
-// Define a type for the known provider keys
-export type ProviderKey = keyof typeof UserScopeMetadata // This will be "google" | "microsoft" | "salesforce" | "xbox"
 
 interface ProviderScopeDetails {
   scopes: readonly string[]
   friendlyScopes: readonly string[]
   userAccountUrl?: string
 }
+
+export const ConnectionsMetadata: ConnectionEntry[] = [
+  {
+    name: "google",
+    connection: "google-oauth2",
+    scopes: [],
+    friendlyScopes: [
+      "Read your email",
+      "Make changes to your mailbox such as moving or deleting messages",
+      "Send email on your behalf",
+      "Read your calendar events",
+      "Create, update, or delete calendar events",
+      "Read and write to your files in Google Drive",
+    ],
+  },
+  {
+    name: "microsoft",
+    connection: "windowslive",
+    scopes: [],
+    friendlyScopes: [
+      "Read your email",
+      "Make changes to your mailbox such as moving or deleting messages",
+      "Send email on your behalf",
+      "Read your calendar events",
+      "Create, update, or delete calendar events",
+      "Read and write to your files in OneDrive",
+    ],
+  },
+  {
+    name: "salesforce",
+    connection: "salesforce",
+    scopes: [],
+    friendlyScopes: ["Read and write data to Salesforce as your user."],
+  },
+  {
+    name: "xbox",
+    connection: "xbox",
+    scopes: [],
+    friendlyScopes: ["Read information from your profile"],
+  },
+]
+
+export type ProviderKey = keyof typeof UserScopeMetadata
 
 export const UserScopeMetadata = {
   "google-oauth2": {
@@ -89,7 +85,6 @@ export const UserScopeMetadata = {
   windowslive: {
     userAccountUrl: "https://account.microsoft.com/privacy/app-access",
     scopes: [
-      "offline_access", // REQUIRED for refresh tokens!
       "https://graph.microsoft.com/User.Read",
       "https://graph.microsoft.com/Mail.Read",
       "https://graph.microsoft.com/Mail.ReadWrite",
@@ -99,9 +94,7 @@ export const UserScopeMetadata = {
       "https://graph.microsoft.com/Files.Read",
       "https://graph.microsoft.com/Files.ReadWrite",
     ],
-    // https://learn.microsoft.com/en-us/graph/permissions-reference
     friendlyScopes: [
-      "Maintain access to data when you're not using this app",
       "Read your public profile",
       "Read your email messages",
       "Make changes to your mailbox such as moving or deleting messages",
@@ -124,7 +117,6 @@ export const UserScopeMetadata = {
   xbox: {
     userAccountUrl: "#TODO",
     scopes: ["XboxLive.signin", "XboxLive.offline_access"],
-    // https://learn.microsoft.com/en-us/graph/permissions-reference
     friendlyScopes: [
       "Read information from your Xbox account",
       "Access Xbox information asyncromously",

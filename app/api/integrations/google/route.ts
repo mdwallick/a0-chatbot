@@ -2,12 +2,14 @@ import { google } from "googleapis"
 import { NextRequest, NextResponse } from "next/server"
 
 import { auth0 } from "@/lib/auth0"
-import { Connections } from "@/lib/auth0-ai/connections"
+import { ConnectionsMetadata } from "@/lib/auth0-ai/connections-metadata"
+
+const googleConnection = ConnectionsMetadata.find(c => c.name === "google")!.connection
 
 export async function GET(request: NextRequest) {
   const documentId = request.nextUrl.searchParams.get("documentID")!
   const token = await auth0.getAccessTokenForConnection({
-    connection: Connections.google.connection,
+    connection: googleConnection,
   })
 
   const docs = google.docs({ version: "v1" })

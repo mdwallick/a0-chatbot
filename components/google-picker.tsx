@@ -1,6 +1,11 @@
 "use client"
 
-import { Connections } from "@/lib/auth0-ai/connections"
+import { ConnectionsMetadata } from "@/lib/auth0-ai/connections-metadata"
+
+// Get Google connection data
+const Connections = {
+  google: ConnectionsMetadata.find(c => c.name === "google")!,
+}
 
 export type GoogleFile = {
   id: string

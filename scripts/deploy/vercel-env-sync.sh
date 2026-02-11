@@ -6,13 +6,12 @@
 #   --dry-run    Show what would be synced without making changes
 #
 # Environment files:
-#   .env.vercel      → Shared values (set for ALL Vercel environments)
-#   .env.production  → Production overrides (set for production ONLY)
+#   .env.vercel      → Values for preview and development environments
+#   .env.production  → Values for production environment (overrides .env.vercel)
 #
-# Variables in .env.vercel that are NOT overridden in .env.production
-# will be set for all environments (production, preview, development).
-#
-# Variables in .env.production will only be set for production.
+# All variables from .env.vercel are set for preview and development.
+# For production, values from .env.production take precedence, falling back
+# to .env.vercel for variables not overridden.
 
 set -e
 
@@ -65,14 +64,14 @@ fi
 if [ ! -f ".env.vercel" ]; then
     echo -e "${RED}Error: .env.vercel not found${NC}"
     echo ""
-    echo -e "${YELLOW}Create .env.vercel with shared Vercel values:${NC}"
+    echo -e "${YELLOW}Create .env.vercel with values for preview/development:${NC}"
     echo "  DATABASE_URL, OPENAI_API_KEY, dev Auth0 credentials, etc."
     exit 1
 fi
 
 if [ ! -f ".env.production" ]; then
     echo -e "${YELLOW}Warning: .env.production not found${NC}"
-    echo "All variables will be set for all environments."
+    echo "Production will use .env.vercel values."
     echo ""
 fi
 
@@ -123,66 +122,29 @@ get_var_from_file() {
     grep "^${var}=" "$file" 2>/dev/null | tail -1 | cut -d'=' -f2- | tr -d '"' | tr -d "'"
 }
 
-# Function to get the effective value (production override or vercel base)
-get_effective_value() {
+# Function to sync a variable to specific environments
+sync_var_to_env() {
     local var=$1
-    if [ -f ".env.production" ] && var_in_file "$var" ".env.production"; then
-        get_var_from_file "$var" ".env.production"
-    else
-        get_var_from_file "$var" ".env.vercel"
-    fi
-}
-
-# Function to determine target environments
-get_target_envs() {
-    local var=$1
-    if [ -f ".env.production" ] && var_in_file "$var" ".env.production"; then
-        echo "production"
-    else
-        echo "production preview development"
-    fi
-}
-
-# Function to sync a variable
-sync_var() {
-    local var=$1
-    local value=$(get_effective_value "$var")
-    local target_envs=$(get_target_envs "$var")
+    local value=$2
+    local env=$3
 
     if [ -z "$value" ]; then
         return
     fi
 
     if [ "$DRY_RUN" = true ]; then
-        if [ "$target_envs" = "production" ]; then
-            echo -e "  ${BLUE}[DRY RUN]${NC} Would set $var → ${CYAN}production only${NC}"
-        else
-            echo -e "  ${BLUE}[DRY RUN]${NC} Would set $var → ${GREEN}all environments${NC}"
-        fi
-    else
-        # Remove from all environments first
-        for env in production preview development; do
-            vercel env rm "$var" "$env" -y 2>/dev/null || true
-        done
-
-        # Add to target environments (vercel env add only accepts one environment at a time)
-        if [ "$target_envs" = "production" ]; then
-            echo -n "  Setting $var (production only)... "
-            echo "$value" | vercel env add "$var" production 2>/dev/null
-        else
-            echo -n "  Setting $var (all environments)... "
-            for env in production preview development; do
-                echo "$value" | vercel env add "$var" "$env" 2>/dev/null
-            done
-        fi
-        echo -e "${GREEN}done${NC}"
+        return
     fi
+
+    # Remove existing and add new
+    vercel env rm "$var" "$env" -y 2>/dev/null || true
+    echo "$value" | vercel env add "$var" "$env" 2>/dev/null
 }
 
 echo -e "${BLUE}Loading:${NC}"
-echo -e "  Base:      .env.vercel"
+echo -e "  Preview/Development: .env.vercel"
 if [ -f ".env.production" ]; then
-    echo -e "  Overrides: .env.production"
+    echo -e "  Production:          .env.production (with .env.vercel fallback)"
 fi
 echo ""
 
@@ -192,11 +154,14 @@ echo ""
 # Check Auth0 credentials
 echo -e "${YELLOW}Auth0 Credentials:${NC}"
 for var in "${AUTH0_VARS[@]}"; do
-    value=$(get_effective_value "$var")
-    if [ -n "$value" ]; then
-        target=$(get_target_envs "$var")
-        if [ "$target" = "production" ]; then
-            echo -e "  ${GREEN}✓${NC} $var ${CYAN}← .env.production (production only)${NC}"
+    vercel_value=$(get_var_from_file "$var" ".env.vercel")
+    prod_value=$(get_var_from_file "$var" ".env.production")
+
+    if [ -n "$vercel_value" ] || [ -n "$prod_value" ]; then
+        if [ -n "$prod_value" ]; then
+            echo -e "  ${GREEN}✓${NC} $var"
+            echo -e "      ${BLUE}preview/dev${NC}: .env.vercel"
+            echo -e "      ${CYAN}production${NC}:  .env.production"
         else
             echo -e "  ${GREEN}✓${NC} $var ${BLUE}← .env.vercel (all environments)${NC}"
         fi
@@ -209,11 +174,14 @@ echo ""
 echo -e "${YELLOW}Required Variables:${NC}"
 missing_required=false
 for var in "${REQUIRED_VARS[@]}"; do
-    value=$(get_effective_value "$var")
-    if [ -n "$value" ]; then
-        target=$(get_target_envs "$var")
-        if [ "$target" = "production" ]; then
-            echo -e "  ${GREEN}✓${NC} $var ${CYAN}← .env.production (production only)${NC}"
+    vercel_value=$(get_var_from_file "$var" ".env.vercel")
+    prod_value=$(get_var_from_file "$var" ".env.production")
+
+    if [ -n "$vercel_value" ] || [ -n "$prod_value" ]; then
+        if [ -n "$prod_value" ]; then
+            echo -e "  ${GREEN}✓${NC} $var"
+            echo -e "      ${BLUE}preview/dev${NC}: .env.vercel"
+            echo -e "      ${CYAN}production${NC}:  .env.production"
         else
             echo -e "  ${GREEN}✓${NC} $var ${BLUE}← .env.vercel (all environments)${NC}"
         fi
@@ -232,11 +200,14 @@ fi
 echo ""
 echo -e "${YELLOW}Optional Variables:${NC}"
 for var in "${OPTIONAL_VARS[@]}"; do
-    value=$(get_effective_value "$var")
-    if [ -n "$value" ]; then
-        target=$(get_target_envs "$var")
-        if [ "$target" = "production" ]; then
-            echo -e "  ${GREEN}✓${NC} $var ${CYAN}← .env.production (production only)${NC}"
+    vercel_value=$(get_var_from_file "$var" ".env.vercel")
+    prod_value=$(get_var_from_file "$var" ".env.production")
+
+    if [ -n "$vercel_value" ] || [ -n "$prod_value" ]; then
+        if [ -n "$prod_value" ]; then
+            echo -e "  ${GREEN}✓${NC} $var"
+            echo -e "      ${BLUE}preview/dev${NC}: .env.vercel"
+            echo -e "      ${CYAN}production${NC}:  .env.production"
         else
             echo -e "  ${GREEN}✓${NC} $var ${BLUE}← .env.vercel (all environments)${NC}"
         fi
@@ -249,6 +220,21 @@ echo ""
 if [ "$DRY_RUN" = true ]; then
     echo -e "${BLUE}DRY RUN - showing what would be synced:${NC}"
     echo ""
+    for var in "${ALL_VARS[@]}"; do
+        vercel_value=$(get_var_from_file "$var" ".env.vercel")
+        prod_value=$(get_var_from_file "$var" ".env.production")
+
+        if [ -n "$vercel_value" ]; then
+            echo -e "  ${BLUE}[DRY RUN]${NC} $var → preview, development"
+        fi
+        if [ -n "$prod_value" ]; then
+            echo -e "  ${CYAN}[DRY RUN]${NC} $var → production (override)"
+        elif [ -n "$vercel_value" ]; then
+            echo -e "  ${BLUE}[DRY RUN]${NC} $var → production (from .env.vercel)"
+        fi
+    done
+    echo ""
+    echo -e "${BLUE}DRY RUN complete. No changes were made.${NC}"
 else
     read -p "Sync these variables to Vercel? (y/N) " -n 1 -r
     echo ""
@@ -257,29 +243,41 @@ else
         exit 0
     fi
     echo ""
-fi
 
-echo -e "${YELLOW}Syncing to Vercel...${NC}"
+    echo -e "${YELLOW}Syncing to Vercel...${NC}"
 
-# Sync all variables
-for var in "${ALL_VARS[@]}"; do
-    value=$(get_effective_value "$var")
-    if [ -n "$value" ]; then
-        sync_var "$var"
-    fi
-done
+    for var in "${ALL_VARS[@]}"; do
+        vercel_value=$(get_var_from_file "$var" ".env.vercel")
+        prod_value=$(get_var_from_file "$var" ".env.production")
 
-echo ""
-if [ "$DRY_RUN" = true ]; then
-    echo -e "${BLUE}DRY RUN complete. No changes were made.${NC}"
-else
+        # Set preview and development from .env.vercel
+        if [ -n "$vercel_value" ]; then
+            echo -n "  Setting $var (preview, development)... "
+            sync_var_to_env "$var" "$vercel_value" "preview"
+            sync_var_to_env "$var" "$vercel_value" "development"
+            echo -e "${GREEN}done${NC}"
+        fi
+
+        # Set production from .env.production (or fall back to .env.vercel)
+        if [ -n "$prod_value" ]; then
+            echo -n "  Setting $var (production - override)... "
+            sync_var_to_env "$var" "$prod_value" "production"
+            echo -e "${GREEN}done${NC}"
+        elif [ -n "$vercel_value" ]; then
+            echo -n "  Setting $var (production - from .env.vercel)... "
+            sync_var_to_env "$var" "$vercel_value" "production"
+            echo -e "${GREEN}done${NC}"
+        fi
+    done
+
+    echo ""
     echo -e "${GREEN}Environment variables synced successfully!${NC}"
 fi
 
 echo ""
 echo -e "${YELLOW}Summary:${NC}"
-echo -e "  ${BLUE}Blue${NC} = set for all environments (production, preview, development)"
-echo -e "  ${CYAN}Cyan${NC} = set for production only"
+echo -e "  ${BLUE}preview/development${NC} ← .env.vercel"
+echo -e "  ${CYAN}production${NC}          ← .env.production (with .env.vercel fallback)"
 echo ""
 echo -e "${YELLOW}Next steps:${NC}"
 echo "  • Verify in Vercel dashboard: https://vercel.com"

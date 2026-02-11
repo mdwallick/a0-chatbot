@@ -268,3 +268,5 @@ Temporary Items
 
 # Prisma
 /lib/generated/prisma
+.env.vercel
+.claude/settings.local.json

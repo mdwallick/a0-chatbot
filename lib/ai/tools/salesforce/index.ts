@@ -1,2 +1,2 @@
-export { SalesforceQueryTool, SalesforceCreateTool } from "./records"
-export { SalesforceSearchTool } from "./search"
+export { SalesforceCreateTool } from "./records"
+export { SalesforceTool } from "./salesforce"

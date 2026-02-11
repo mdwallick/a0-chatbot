@@ -1,9 +1,7 @@
-import { Auth0AI } from "@auth0/ai-vercel"
+import { auth0AI } from "./index"
 import { Connections } from "./connections"
 
-const auth0AI = new Auth0AI()
-
-export const withSalesforce = auth0AI.withTokenForConnection({
+export const withSalesforce = auth0AI.withTokenVault({
   ...Connections.salesforce,
   //scopes: ["id", "api", "refresh_token"],
 })

@@ -2,7 +2,6 @@ import { tool } from "ai"
 import { z } from "zod"
 
 const PRODUCT_FEED_URL = "https://product-feed-f2f9b7df68ba.herokuapp.com/api/ucp/products"
-const TOKEN_URL = "https://agentic-commerce-merchant.cic-demo-platform.auth0app.com/oauth/token"
 const CHECKOUT_URL =
   "https://3ufw32ejnj76pybzbj6ovbzlvm0zzkur.lambda-url.us-east-1.on.aws/checkout-sessions"
 
@@ -77,7 +76,6 @@ async function getCommerceToken(): Promise<string> {
   const merchantClientId = process.env.MERCHANT_CLIENT_ID
   const merchantClientSecret = process.env.MERCHANT_CLIENT_SECRET
   const merchantAudience = process.env.MERCHANT_AUDIENCE
-  const merchantScope = process.env.MERCHANT_SCOPE
 
   if (!merchantDomain || !merchantClientId || !merchantClientSecret) {
     throw new Error(
@@ -127,7 +125,7 @@ async function getCommerceToken(): Promise<string> {
 }
 
 // Search products
-async function searchProducts(args: any) {
+async function searchProducts(args: z.infer<typeof productSearchSchema>) {
   const { query, limit = 5 } = args
 
   try {
@@ -201,10 +199,10 @@ async function searchProducts(args: any) {
   }
 }
 
-// Create checkout session
+// Create checkout session with identity linking support
 // Accepts userId from context to enable identity linking
 function createCheckoutWithContext(userId?: string) {
-  return async (args: any) => {
+  return async (args: z.infer<typeof checkoutSchema>) => {
     const { lineItems, currency = "USD" } = args
 
     try {
@@ -284,7 +282,7 @@ function createCheckoutWithContext(userId?: string) {
 export const ProductSearchTool = tool({
   description:
     "Search for products in the commerce catalog using UCP protocol. Returns product details including images, prices, and descriptions.",
-  parameters: productSearchSchema,
+  inputSchema: productSearchSchema,
   execute: searchProducts,
 })
 
@@ -295,7 +293,7 @@ export const CheckoutTool = (context?: { user?: { id?: string } }) => {
   return tool({
     description:
       "Create a checkout session for purchasing products. Requires product IDs and quantities from a previous product search. If user is authenticated, an identity linking URL will be provided.",
-    parameters: checkoutSchema,
+    inputSchema: checkoutSchema,
     execute: createCheckoutWithContext(userId),
   })
 }

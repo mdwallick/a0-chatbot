@@ -2,8 +2,8 @@ import { tool } from "ai"
 import { GaxiosError } from "gaxios"
 import { z } from "zod"
 
-import { getAccessTokenForConnection } from "@auth0/ai-vercel"
-import { FederatedConnectionError } from "@auth0/ai/interrupts"
+import { getAccessTokenFromTokenVault } from "@auth0/ai-vercel"
+import { TokenVaultError } from "@auth0/ai/interrupts"
 import { google } from "googleapis"
 
 import { getGoogleAuth, withGoogleCalendarWrite } from "@/lib/auth0-ai/google"
@@ -32,7 +32,7 @@ export const GoogleCalendarWriteTool = withGoogleCalendarWrite(
   tool({
     description:
       "Create or update an event in the user's Google calendar. Provide eventId to update an existing event.",
-    parameters: toolSchema,
+    inputSchema: toolSchema,
     execute: async ({
       summary,
       description,
@@ -45,7 +45,7 @@ export const GoogleCalendarWriteTool = withGoogleCalendarWrite(
       const logs = []
 
       // Get the access token from Auth0 AI
-      const access_token = getAccessTokenForConnection()
+      const access_token = getAccessTokenFromTokenVault()
       const auth = getGoogleAuth(access_token)
 
       try {
@@ -87,9 +87,7 @@ export const GoogleCalendarWriteTool = withGoogleCalendarWrite(
       } catch (error) {
         if (error instanceof GaxiosError) {
           if (error.status === 401) {
-            throw new FederatedConnectionError(
-              `Authorization required to access the Federated Connection`
-            )
+            throw new TokenVaultError(`Authorization required to access the Federated Connection`)
           }
         }
 

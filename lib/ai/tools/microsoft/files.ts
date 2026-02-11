@@ -1,3 +1,2 @@
-export { MicrosoftFilesListTool } from "./files-list"
-export { MicrosoftFilesReadTool } from "./files-read"
+export { MicrosoftOneDriveTool } from "./onedrive"
 export { MicrosoftFilesWriteTool } from "./files-write"

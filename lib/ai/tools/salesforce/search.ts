@@ -3,8 +3,8 @@ import { GaxiosError } from "gaxios"
 import { Connection } from "jsforce"
 import { z } from "zod"
 
-import { getAccessTokenForConnection } from "@auth0/ai-vercel"
-import { FederatedConnectionError } from "@auth0/ai/interrupts"
+import { getAccessTokenFromTokenVault } from "@auth0/ai-vercel"
+import { TokenVaultError } from "@auth0/ai/interrupts"
 
 import { withSalesforce } from "../../../auth0-ai/salesforce"
 
@@ -20,17 +20,17 @@ const toolSchema = z.object({
 export const SalesforceSearchTool = withSalesforce(
   tool({
     description: "Query Salesforce records using SOQL",
-    parameters: toolSchema,
+    inputSchema: toolSchema,
     execute: async ({ searchTerm, scope }) => {
       const logs = []
 
       // Get the access token from Auth0 AI
-      const access_token = getAccessTokenForConnection()
+      const access_token = getAccessTokenFromTokenVault()
       logs.push("got access token from token vault")
 
       if (!access_token) {
         logs.push("access token missing or expired")
-        throw new FederatedConnectionError("Authorization required to access Salesforce")
+        throw new TokenVaultError("Authorization required to access Salesforce")
       }
 
       try {
@@ -47,9 +47,7 @@ export const SalesforceSearchTool = withSalesforce(
       } catch (error) {
         if (error instanceof GaxiosError) {
           if (error.status === 401) {
-            throw new FederatedConnectionError(
-              `Authorization required to access the Federated Connection`
-            )
+            throw new TokenVaultError(`Authorization required to access the Federated Connection`)
           }
         }
 

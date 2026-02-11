@@ -1,46 +1,43 @@
-import { Auth0AI } from "@auth0/ai-vercel"
+import { auth0AI } from "./index"
 import { Connections } from "./connections"
 
-const auth0AI = new Auth0AI()
+// Note: offline_access is needed during consent flow to get refresh tokens,
+// but should NOT be included in the withTokenVault scopes check.
+// The Token Vault stores refresh tokens separately and offline_access
+// won't appear in the returned access token scopes.
+// https://learn.microsoft.com/en-us/graph/permissions-reference
 
-export const withMSCalendarRead = auth0AI.withTokenForConnection({
+export const withMSCalendarRead = auth0AI.withTokenVault({
   ...Connections.microsoft,
   scopes: ["https://graph.microsoft.com/Calendars.Read"],
-  // https://learn.microsoft.com/en-us/graph/permissions-reference
 })
 
-export const withMSCalendarWrite = auth0AI.withTokenForConnection({
+export const withMSCalendarWrite = auth0AI.withTokenVault({
   ...Connections.microsoft,
   scopes: ["https://graph.microsoft.com/Calendars.ReadWrite"],
-  // https://learn.microsoft.com/en-us/graph/permissions-reference
 })
 
-export const withMSOneDriveRead = auth0AI.withTokenForConnection({
+export const withMSOneDriveRead = auth0AI.withTokenVault({
   ...Connections.microsoft,
   scopes: ["https://graph.microsoft.com/Files.Read"],
-  // https://learn.microsoft.com/en-us/graph/permissions-reference
 })
 
-export const withMSOneDriveWrite = auth0AI.withTokenForConnection({
+export const withMSOneDriveWrite = auth0AI.withTokenVault({
   ...Connections.microsoft,
   scopes: ["https://graph.microsoft.com/Files.ReadWrite"],
-  // https://learn.microsoft.com/en-us/graph/permissions-reference
 })
 
-export const withMSMailRead = auth0AI.withTokenForConnection({
+export const withMSMailRead = auth0AI.withTokenVault({
   ...Connections.microsoft,
   scopes: ["https://graph.microsoft.com/Mail.Read"],
-  // https://learn.microsoft.com/en-us/graph/permissions-reference
 })
 
-export const withMSMailWrite = auth0AI.withTokenForConnection({
+export const withMSMailWrite = auth0AI.withTokenVault({
   ...Connections.microsoft,
   scopes: ["https://graph.microsoft.com/Mail.ReadWrite"],
-  // https://learn.microsoft.com/en-us/graph/permissions-reference
 })
 
-export const withMSMailSend = auth0AI.withTokenForConnection({
+export const withMSMailSend = auth0AI.withTokenVault({
   ...Connections.microsoft,
   scopes: ["https://graph.microsoft.com/Mail.Send"],
-  // https://learn.microsoft.com/en-us/graph/permissions-reference
 })

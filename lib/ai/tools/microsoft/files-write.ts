@@ -2,8 +2,8 @@ import { tool } from "ai"
 import { GaxiosError } from "gaxios"
 import { z } from "zod"
 
-import { getAccessTokenForConnection } from "@auth0/ai-vercel"
-import { FederatedConnectionError } from "@auth0/ai/interrupts"
+import { getAccessTokenFromTokenVault } from "@auth0/ai-vercel"
+import { TokenVaultError } from "@auth0/ai/interrupts"
 import { Client } from "@microsoft/microsoft-graph-client"
 
 import { withMSOneDriveWrite } from "@/lib/auth0-ai/microsoft"
@@ -20,10 +20,10 @@ const writeSchema = z.object({
 export const MicrosoftFilesWriteTool = withMSOneDriveWrite(
   tool({
     description: "Create and edit files in OneDrive",
-    parameters: writeSchema,
+    inputSchema: writeSchema,
     execute: async ({ path, content, type }) => {
       try {
-        const access_token = getAccessTokenForConnection()
+        const access_token = getAccessTokenFromTokenVault()
 
         const client = Client.initWithMiddleware({
           authProvider: {
@@ -93,9 +93,7 @@ export const MicrosoftFilesWriteTool = withMSOneDriveWrite(
       } catch (error) {
         if (error instanceof GaxiosError) {
           if (error.status === 401) {
-            throw new FederatedConnectionError(
-              `Authorization required to access the Federated Connection`
-            )
+            throw new TokenVaultError(`Authorization required to access the Federated Connection`)
           }
         }
 

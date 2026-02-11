@@ -4,227 +4,296 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-a0-chatbot is a demonstration chatbot application that integrates Auth0's Auth for GenAI with multiple third-party services (Google, Microsoft, Salesforce, Xbox). It uses Next.js 15, OpenAI's API via the Vercel AI SDK, and PostgreSQL with Prisma for data persistence.
+This is a demo AI chatbot application built with Next.js 15 that showcases Auth0's [Auth for GenAI](https://auth0.ai). The application enables authenticated users to interact with an AI assistant that can access various third-party services (Google Workspace, Microsoft 365, Salesforce, Xbox) through Auth0's token vault and linked accounts.
 
-**Key Architecture Principles:**
-
-- This is a **demo/educational project**, not production-ready
-- Authentication and token management are handled via Auth0 with linked accounts
-- AI tools are dynamically enabled based on user-linked accounts and granted scopes
-- All chat messages and threads are persisted to PostgreSQL for authenticated users
+**Important**: This is a demo project, not production-ready. See README.md disclaimer.
 
 ## Development Commands
 
+### Setup
+
 ```bash
-# Development
-npm run dev                # Start dev server with Turbopack
-npm run build              # Production build
-npm start                  # Start production server
+# Install dependencies (also runs prisma:generate via postinstall hook)
+npm install
 
-# Code Quality
-npm run lint               # Run ESLint
-npm run type-check         # TypeScript type checking
-npm run format             # Format code with Prettier
-
-# Database (Prisma)
-npm run prisma:generate    # Generate Prisma client
-npm run prisma:migrate     # Run migrations (uses .env.local)
-npm run prisma:push        # Push schema changes
-npm run prisma:studio      # Open Prisma Studio GUI
-npm run prisma:truncate    # Clear database (runs prisma/scripts/clear-db.ts)
+# Copy environment template and configure
+cp env.sample .env.local
+# Edit .env.local with your Auth0, OpenAI, and database credentials
 ```
 
-**Note:** All `prisma:*` commands use `dotenv -e .env.local` to load environment variables from `.env.local` rather than `.env`.
+### Running the Application
 
-## Environment Setup
+```bash
+# Start development server with Turbopack
+npm run dev
 
-1. Copy `env.sample` to `.env.local` and fill in all required variables
-2. Install PostgreSQL: `brew install postgresql`
-3. Create database: `createdb chatbot`
-4. Run `npm install` (this automatically runs `prisma:generate` via postinstall hook)
-5. Run migrations if needed: `npm run prisma:migrate`
+# Build for production
+npm run build
 
-**Required Environment Variables:**
-
-- Auth0 credentials (web client + management API M2M client)
-- OpenAI API key
-- PostgreSQL connection string
-- `ENABLED_CONNECTIONS`: JSON map of connection names to Auth0 connection IDs
-- Google Custom Search API credentials (for web search tool)
-- Salesforce login URL (if enabling Salesforce)
-- `IMAGES_PER_DAY_LIMIT`: Image generation limit per user
-
-## Architecture
-
-### Authentication Flow
-
-Auth0 handles all authentication via `@auth0/nextjs-auth0`. The middleware (middleware.ts:6-44) protects paths like `/profile` and `/api/*`. When users link accounts (e.g., Google, Microsoft), tokens are stored in Auth0's token vault and refreshed automatically.
-
-**Linked Accounts:**
-
-- Users can link multiple identity providers (Google, Microsoft, Salesforce, Xbox)
-- Each connection has specific OAuth scopes defined in `lib/auth0-ai/connections.ts`
-- The `GrantedScope` Prisma model tracks which scopes users have approved
-- Linking happens via query params: `?tx=link-account&tx_sub=...&tx_strategy=...&scopes=...`
-
-### AI Chat System
-
-**Main Chat Endpoint:** `app/api/chat/route.ts`
-
-The chat API uses Vercel AI SDK with `streamText()` and Auth0's `@auth0/ai-vercel` interrupts system:
-
-1. Receives messages array and thread ID
-2. Sets AI context with `setAIContext({ threadID })`
-3. Dynamically constructs tools based on user session
-4. Streams responses with `maxSteps: 5` for multi-step tool execution
-5. Saves messages to PostgreSQL (for authenticated users only)
-6. Auto-generates thread summaries after first exchange using `lib/summarize-thread.ts`
-
-**Tool Architecture:**
-
-- Tools are defined in `lib/ai/tools/` organized by provider (google, microsoft, salesforce, xbox)
-- Each tool is wrapped with Auth0's interrupts system to handle:
-  - Missing linked accounts → prompts user to link account
-  - Missing scopes → triggers incremental consent flow
-  - Token refresh and error handling
-- Tools that need user context are functions that accept `context` parameter
-- Static tools (like WebSearchTool) are plain objects
-
-**Example Tool Pattern:**
-
-```typescript
-export const GoogleCalendarReadTool = (context: Context) => {
-  return GoogleDriveTool({
-    connection: "google-oauth2",
-    handler: async ({ params }) => {
-      // Tool implementation with automatic token refresh
-    },
-  })
-}
+# Start production server
+npm start
 ```
+
+### Code Quality
+
+```bash
+# Lint code
+npm run lint
+
+# Type check without emitting files
+npm run type-check
+
+# Format code with Prettier
+npm run format
+```
+
+### Database (Prisma)
+
+```bash
+# Generate Prisma client (runs automatically on postinstall)
+npm run prisma:generate
+
+# Create and apply migration
+npm run prisma:migrate
+
+# Push schema changes without migration
+npm run prisma:push
+
+# Pull schema from existing database
+npm run prisma:pull
+
+# Open Prisma Studio GUI
+npm run prisma:studio
+
+# Clear all data from database
+npm run prisma:truncate
+```
+
+Note: All prisma commands use `dotenv-cli` to load `.env.local` automatically.
+
+## Architecture Overview
+
+### Core Tech Stack
+
+- **Framework**: Next.js 15 (App Router) with React 19
+- **Authentication**: Auth0 with `@auth0/nextjs-auth0` and `@auth0/ai-vercel`
+- **AI**: Vercel AI SDK with liteLLM proxy (supporting multiple LLM providers)
+- **Database**: PostgreSQL with Prisma ORM
+- **Styling**: Tailwind CSS 4 + Radix UI components
+
+### Directory Structure
+
+- `app/` - Next.js App Router pages and API routes
+  - `api/chat/` - Chat streaming endpoints
+  - `api/integrations/` - Third-party integration management
+  - `api/link-account/` - Auth0 linked accounts
+  - `chat/[id]/` - Individual chat thread pages
+- `lib/` - Core application logic
+  - `ai/tools/` - AI tool definitions organized by provider
+  - `auth0-ai/` - Auth0 token management and connection helpers
+  - `generated/prisma/` - Generated Prisma client
+- `components/` - React components (UI, chat interface, auth)
+- `prisma/` - Database schema and migrations
+- `actions/` - Server actions
+
+### Authentication & Authorization Flow
+
+1. **Auth0 Middleware** (`middleware.ts`): Protects routes, handles linked account transactions
+2. **Token Management** (`lib/auth0-ai/`): Each provider (Google, Microsoft, Salesforce, Xbox) has:
+   - Connection definition in `lib/auth0-ai/connections.ts`
+   - Provider-specific helper functions using `Auth0AI.withTokenForConnection()`
+   - Scope definitions for granular permissions
+3. **Linked Accounts**: Users can connect multiple third-party accounts via Auth0's linked accounts feature
+
+### AI Tools Architecture
+
+AI tools are organized by provider in `lib/ai/tools/`:
+
+```
+lib/ai/tools/
+├── google/          # Gmail, Calendar, Drive tools
+├── microsoft/       # Outlook, OneDrive tools
+├── salesforce/      # CRM query/search tools
+├── xbox/            # Xbox profile and achievements
+├── dalle.ts         # Image generation (rate limited)
+├── web-search.ts    # Google Custom Search
+└── index.ts         # Tool exports
+```
+
+**Tool Pattern**:
+
+1. Each tool uses `auth0AI.withTokenForConnection()` to wrap the tool definition
+2. Token is automatically retrieved via `getAccessTokenForConnection()` inside execute
+3. Tools handle `FederatedConnectionError` for auth failures (triggers consent flow)
+4. Context object passed to tools includes `user` info when authenticated
+
+**Key Tool Characteristics**:
+
+- Tools are functions that accept a `context` object (for user info)
+- Use Zod schemas for parameter validation
+- Return logs and structured data for LLM consumption
+- Integrate with Vercel AI SDK's `tool()` function
+
+### Chat Flow
+
+1. User sends message to `POST /api/chat`
+2. Request includes thread ID and messages array
+3. Server:
+   - Sets AI context with thread ID via `setAIContext()`
+   - Retrieves user session and constructs context object
+   - Loads all available tools (some are context-dependent)
+   - Saves user message to database (if authenticated)
+   - Streams response using `streamText()` with Auth0 interruptions support
+   - Auto-generates thread summary after first exchange
+   - Saves assistant response to database on finish
+4. Tools can trigger interruptions (e.g., consent flows) via `withInterruptions()`
 
 ### Database Schema (Prisma)
 
-**Models:**
-
-- `ChatThread`: User's conversation threads with auto-generated summaries
-- `Message`: Individual messages within threads (cascade delete with thread)
-- `XboxCredential`: Cached Xbox authentication tokens
-- `GrantedScope`: Tracks OAuth scopes approved by users per connection
-- `DailyUsage`: Rate limiting for image generation
-
-**Key Details:**
-
-- Prisma client is generated to `lib/generated/prisma` (not default location)
-- All database operations use the singleton `prisma` instance from `lib/prisma.ts`
-- Threads are user-scoped but messages are not directly tied to users
-
-### Third-Party Integrations
-
-Each integration has its own folder in `lib/auth0-ai/`:
-
-- **Google** (`lib/auth0-ai/google.ts`): Gmail, Calendar, Drive via googleapis
-- **Microsoft** (`lib/auth0-ai/microsoft.ts`): Outlook, Calendar, OneDrive via Microsoft Graph
-- **Salesforce** (`lib/auth0-ai/salesforce.ts`): CRM queries via jsforce
-- **Xbox** (`lib/auth0-ai/xbox.ts`): Profile and achievements via custom Xbox Live API
-
-**Common Pattern:** Each integration exports helper functions that:
-
-1. Get refresh token from Auth0 session
-2. Exchange for access token
-3. Initialize provider SDK client
-4. Return client for tool use
-
-### Frontend Structure
-
-- **Pages:** Next.js App Router in `app/` directory
-  - `/` - Main chat interface (app/page.tsx)
-  - `/chat/[id]` - Individual thread view
-  - `/profile` - User profile and linked accounts management
-  - `/api/*` - API routes
-- **Components:** Organized in `components/` (React with TypeScript)
-  - `chat.tsx` - Main chat interface using `useChat()` hook
-  - `chat-sidebar.tsx` - Conversation history sidebar
-  - `auth0/` - Auth0-specific components
-  - `auth0-ai/` - Integration management UI
-- **Styling:** Tailwind CSS with shadcn/ui components
-- **State:** React hooks + SWR for data fetching + Context providers
-
-### API Routes
-
-- `/api/chat` (POST) - Main streaming chat endpoint
-- `/api/chat/threads` (GET) - List user's threads
-- `/api/chat/[id]` (GET/DELETE) - Get or delete specific thread
-- `/api/integrations` (GET) - List available integrations
-- `/api/integrations/linked-accounts` (GET/DELETE) - Manage linked accounts
-- `/api/link-account` (POST) - Complete account linking flow
-- `/api/cleanup` (POST) - Delete user data (requires auth)
-
-## Pull Request Guidelines
-
-Use Conventional Commits with required scopes:
-
-**Format:** `<type>(<scope>): description`
-
-**Types:** feat, fix, chore, docs, refactor, style, test
-
-**Scopes:** auth, calendar, files, mail, ui, ci, deps, ai, infra
-
-**Examples:**
-
-- `feat(ai): add new tool for calendar events`
-- `fix(auth): handle expired refresh token`
-- `chore(deps): update prisma to 6.8.2`
-
-PRs must follow this format. See CONTRIBUTING.md for full guidelines.
-
-## Important Implementation Details
-
-### Token Refresh
-
-All API tools automatically handle token refresh via Auth0's token vault. If a token expires, the integration helpers will fetch a new one before executing the tool.
+- `ChatThread`: Conversation threads with auto-generated summaries
+- `Message`: Individual chat messages (linked to threads)
+- `XboxCredential`: Xbox Live tokens and user hashes
+- `GrantedScope`: Tracks user-granted scopes per connection
+- `DailyUsage`: Tracks image generation rate limits
 
 ### Rate Limiting
 
-Image generation is rate-limited per user via `DailyUsage` table. Check with `getImageCountToday()` and enforce with `IMAGES_PER_DAY_LIMIT` env var.
+Image generation via DALL-E is rate limited per user per day:
+
+- Limit configured via `IMAGES_PER_DAY_LIMIT` env var (default: 3)
+- Tracked in `DailyUsage` table
+- Enforced in system prompt and tool execution
+
+### Environment Variables
+
+See `env.sample` for complete list. Key variables:
+
+- Auth0 web client credentials (`AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, etc.)
+- Auth0 M2M client for management API (`AUTH0_CLIENT_ID_MGMT`, scopes: read/update/delete users)
+- liteLLM API key and base URL (`LITELLM_API_KEY`, `LITELLM_BASE_URL`)
+- Model name for routing (`OPENAI_MODEL` - e.g., gpt-4o-mini)
+- PostgreSQL connection string
+- `ENABLED_CONNECTIONS`: JSON map of connection names to Auth0 connection IDs
+- Google Custom Search API credentials (for web search)
+
+## Development Guidelines
+
+### Adding New AI Tools
+
+1. Create tool file in `lib/ai/tools/<provider>/`
+2. Define Zod schema for parameters
+3. Create token wrapper using `auth0AI.withTokenForConnection()` with required scopes
+4. Implement tool with `tool()` from AI SDK
+5. Export from `lib/ai/tools/<provider>/index.ts`
+6. Export from `lib/ai/tools/index.ts`
+7. Add to `toolDefinitions` object in `app/api/chat/route.ts`
+8. Update system prompt in `getSystemTemplate()` if needed
+
+### Adding New Providers
+
+1. Add connection config to `lib/auth0-ai/connections.ts`
+2. Create provider file in `lib/auth0-ai/<provider>.ts` with scope-specific wrappers
+3. Create tools directory: `lib/ai/tools/<provider>/`
+4. Implement tools following existing patterns
+5. Add provider to `ENABLED_CONNECTIONS` environment variable
+
+### Prisma Workflow
+
+After schema changes in `prisma/schema.prisma`:
+
+```bash
+npm run prisma:migrate  # Creates migration and applies it
+npm run prisma:generate # Regenerates client (also runs via postinstall)
+```
+
+### Pre-commit Hooks
+
+Husky + lint-staged automatically runs on commit:
+
+- ESLint with auto-fix on `.ts`, `.tsx`, `.js`, `.jsx`
+- Prettier formatting on all supported files
+
+### PR Guidelines
+
+Follow Conventional Commits format: `<type>(<scope>): description`
+
+**Types**: feat, fix, chore, docs, refactor, style, test
+
+**Scopes**: auth, calendar, files, mail, ui, ci, deps, ai, infra
+
+See CONTRIBUTING.md for full details.
+
+## Key Concepts
+
+### Auth0 AI SDK Patterns
+
+- **Token Vault**: Auth0 securely stores and refreshes OAuth tokens
+- **Linked Accounts**: Users can connect multiple identities to one Auth0 account
+- **withTokenForConnection()**: Higher-order function that handles token retrieval and error handling
+- **Interruptions**: Auth0 AI SDK can pause LLM execution to trigger consent/auth flows via `withInterruptions()`
 
 ### Message Trimming
 
-Chat history is trimmed to the last 12 messages (configurable in `lib/utils.ts:trimMessages()`) to stay within model context limits while keeping system messages.
+The application keeps last 12 messages (via `trimMessages()`) to manage context window while preserving system messages. Adjust `maxMessages` in `app/api/chat/route.ts` if needed.
 
-### Unauthenticated Users
+### System Prompt
 
-The app allows unauthenticated chat, but:
+Defined in `getSystemTemplate()` in `app/api/chat/route.ts`. Includes:
 
-- Messages are not persisted
-- No access to integration tools
-- No image generation
-- Tools requiring auth will trigger login prompts via interrupts
+- User name, image usage limits
+- Available integrations
+- Tool selection rules (prevent mixing tools unnecessarily)
+- Date/time formatting requirements (ISO 8601 UTC)
+- Reasoning/narration instructions
 
-### Husky Pre-commit Hooks
+## Common Tasks
 
-Configured to run `lint-staged` which auto-fixes ESLint issues and formats code with Prettier before commits.
+### Debugging Token Issues
 
-## Common Patterns
+1. Check `lib/auth0-ai/<provider>.ts` for correct scope definitions
+2. Verify `ENABLED_CONNECTIONS` mapping in `.env.local`
+3. Check Auth0 connection configuration (scopes must be enabled)
+4. Use browser DevTools Network tab to inspect token exchange
 
-**Adding a New AI Tool:**
+### Testing Tools Locally
 
-1. Create tool file in appropriate `lib/ai/tools/<provider>/` directory
-2. Export from `lib/ai/tools/<provider>/index.ts`
-3. Import and add to `toolDefinitions` object in `app/api/chat/route.ts`
-4. If tool needs user context, make it a function that accepts `context` parameter
-5. Wrap with appropriate connection provider helper from `lib/auth0-ai/`
+1. Ensure user has linked the required account via `/profile` page
+2. Use chat interface to invoke tool
+3. Check server logs for tool execution details
+4. Verify tool returns proper structure for LLM consumption
 
-**Adding a New Integration:**
+### Database Inspection
 
-1. Create provider helper in `lib/auth0-ai/<provider>.ts`
-2. Add connection metadata to `lib/auth0-ai/connections.ts`
-3. Add to `ENABLED_CONNECTIONS` env var mapping
-4. Create tool files in `lib/ai/tools/<provider>/`
-5. Update system prompt in `app/api/chat/route.ts:getSystemTemplate()`
+```bash
+npm run prisma:studio  # Opens GUI at http://localhost:5555
+```
 
-**Working with Prisma:**
+## liteLLM Integration
 
-- Always use `npm run prisma:migrate` to create migrations (don't use `prisma:push` in production)
-- Schema changes require running `prisma:generate` to update the client
-- Import the singleton client from `@/lib/prisma` not `@prisma/client`
+This project uses liteLLM as a unified proxy for LLM providers instead of calling OpenAI directly.
+
+### Configuration
+
+The liteLLM provider is configured in `lib/litellm.ts`:
+
+- Uses `createOpenAI()` from Vercel AI SDK with custom `baseURL`
+- Set `compatibility: "compatible"` for 3rd party provider support
+- Requires `LITELLM_API_KEY` and `LITELLM_BASE_URL` environment variables
+
+### Model Routing
+
+liteLLM handles model routing based on the model name passed to it:
+
+- Chat/completion: Uses model specified in `OPENAI_MODEL` env var
+- Image generation (DALL-E): Configured in `lib/ai/tools/dalle.ts`
+- Thread summarization: Uses `gpt-4o` model
+
+Ensure your liteLLM instance is configured with the appropriate model mappings.
+
+### Image Generation Notes
+
+DALL-E image generation goes through liteLLM (`lib/ai/tools/dalle.ts`). If your liteLLM instance doesn't support image generation:
+
+1. Add a separate `OPENAI_API_KEY` environment variable
+2. Update `dalle.ts` to use direct OpenAI client with that key
+3. Keep other endpoints using liteLLM

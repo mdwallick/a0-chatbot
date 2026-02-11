@@ -2,8 +2,8 @@ import { tool } from "ai"
 import { GaxiosError } from "gaxios"
 import { z } from "zod"
 
-import { getAccessTokenForConnection } from "@auth0/ai-vercel"
-import { FederatedConnectionError } from "@auth0/ai/interrupts"
+import { getAccessTokenFromTokenVault } from "@auth0/ai-vercel"
+import { TokenVaultError } from "@auth0/ai/interrupts"
 import { Readable } from "stream"
 import { google } from "googleapis"
 
@@ -16,12 +16,12 @@ const toolSchema = z.object({
 export const GoogleFilesReadTool = withGoogleDriveRead(
   tool({
     description: "Read the contents of a given file from OneDrive",
-    parameters: toolSchema,
+    inputSchema: toolSchema,
     execute: async ({ fileId }) => {
       const logs = []
 
       // Get the access token from Auth0 AI
-      const access_token = getAccessTokenForConnection()
+      const access_token = getAccessTokenFromTokenVault()
       logs.push("got access token from token vault")
 
       const auth = getGoogleAuth(access_token)
@@ -107,9 +107,7 @@ export const GoogleFilesReadTool = withGoogleDriveRead(
       } catch (error) {
         if (error instanceof GaxiosError) {
           if (error.status === 401) {
-            throw new FederatedConnectionError(
-              `Authorization required to access the Federated Connection`
-            )
+            throw new TokenVaultError(`Authorization required to access the Federated Connection`)
           }
         }
 

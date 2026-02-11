@@ -16,7 +16,7 @@ const toolSchema = z.object({
 
 export const SerpAPISearchTool = tool({
   description: "Performs a web search using SerpAPI (Google Search)",
-  parameters: toolSchema,
+  inputSchema: toolSchema,
   execute: serpAPISearch,
 })
 

@@ -2,8 +2,8 @@ import { tool } from "ai"
 import { GaxiosError } from "gaxios"
 import { z } from "zod"
 
-import { getAccessTokenForConnection } from "@auth0/ai-vercel"
-import { FederatedConnectionError } from "@auth0/ai/interrupts"
+import { getAccessTokenFromTokenVault } from "@auth0/ai-vercel"
+import { TokenVaultError } from "@auth0/ai/interrupts"
 
 import { google, gmail_v1 } from "googleapis"
 import { getGoogleAuth, withGmailRead } from "@/lib/auth0-ai/google"
@@ -26,11 +26,11 @@ const toolSchema = z.object({
 export const GmailReadTool = withGmailRead(
   tool({
     description: "Read Gmail messages",
-    parameters: toolSchema,
+    inputSchema: toolSchema,
     execute: async ({ query, labels, top }) => {
       const logs = []
 
-      const access_token = getAccessTokenForConnection()
+      const access_token = getAccessTokenFromTokenVault()
       logs.push("got access token from token vault")
 
       // Create Google OAuth client.
@@ -95,9 +95,7 @@ export const GmailReadTool = withGmailRead(
       } catch (error) {
         if (error instanceof GaxiosError) {
           if (error.status === 401) {
-            throw new FederatedConnectionError(
-              `Authorization required to access the Federated Connection`
-            )
+            throw new TokenVaultError(`Authorization required to access the Federated Connection`)
           }
         }
 

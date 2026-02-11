@@ -4,15 +4,13 @@
  */
 
 import { auth0 } from "@/lib/auth0"
-import { Auth0AI } from "@auth0/ai-vercel"
 import { prisma } from "@/lib/prisma"
 import axios from "axios"
 
+import { auth0AI } from "./index"
 import { Connections } from "./connections"
 
-const auth0AI = new Auth0AI()
-
-export const withXboxRead = auth0AI.withTokenForConnection({
+export const withXboxRead = auth0AI.withTokenVault({
   ...Connections.xbox,
   scopes: ["XboxLive.signin", "XboxLive.offline_access"],
 })

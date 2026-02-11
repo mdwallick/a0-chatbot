@@ -2,8 +2,8 @@ import { tool } from "ai"
 import { z } from "zod"
 
 import { withMSOneDriveRead } from "@/lib/auth0-ai/microsoft"
-import { getAccessTokenForConnection } from "@auth0/ai-vercel"
-import { FederatedConnectionError } from "@auth0/ai/interrupts"
+import { getAccessTokenFromTokenVault } from "@auth0/ai-vercel"
+import { TokenVaultError } from "@auth0/ai/interrupts"
 import { Client } from "@microsoft/microsoft-graph-client"
 
 const toolSchema = z.object({
@@ -17,18 +17,18 @@ const toolSchema = z.object({
 export const MicrosoftFilesListTool = withMSOneDriveRead(
   tool({
     description: "list files from One Drive",
-    parameters: toolSchema,
+    inputSchema: toolSchema,
     execute: async ({ path = "" }) => {
       const logs = []
 
       try {
         // Get the access token from Auth0 AI
-        const access_token = getAccessTokenForConnection()
+        const access_token = getAccessTokenFromTokenVault()
         logs.push("got access token from token vault")
 
         if (!access_token) {
           logs.push("access token missing or expired")
-          throw new FederatedConnectionError("Authorization required to access OneDrive")
+          throw new TokenVaultError("Authorization required to access OneDrive")
         }
 
         // Initialize OneDrive client
@@ -69,14 +69,14 @@ export const MicrosoftFilesListTool = withMSOneDriveRead(
           errorStatus: error?.response?.status,
         })
 
-        if (error instanceof FederatedConnectionError) {
+        if (error instanceof TokenVaultError) {
           console.error("[ERROR] Federation connection error:", error.message)
           throw error
         }
 
         if (error?.response?.status === 401 || error?.response?.status === 403) {
           console.error("[ERROR] Authentication error:", error.response.status)
-          throw new FederatedConnectionError("Authorization required to access OneDrive")
+          throw new TokenVaultError("Authorization required to access OneDrive")
         }
 
         throw new Error(

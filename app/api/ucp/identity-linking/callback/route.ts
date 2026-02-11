@@ -13,7 +13,8 @@ function decodeJwt(token: string): any {
 }
 
 // Exchange authorization code for tokens
-async function exchangeCodeForTokens(code: string, redirectUri: string) {
+// Supports streamlined linking with optional intent parameter
+async function exchangeCodeForTokens(code: string, redirectUri: string, intent?: string) {
   const idlinkDomain = process.env.MERCHANT_IDLINK_DOMAIN
   const idlinkClientId = process.env.MERCHANT_IDLINK_CLIENT_ID
   const idlinkClientSecret = process.env.MERCHANT_IDLINK_CLIENT_SECRET
@@ -25,19 +26,29 @@ async function exchangeCodeForTokens(code: string, redirectUri: string) {
   const tokenUrl = `https://${idlinkDomain}/oauth/token`
 
   console.log("[Identity Linking] Exchanging code for tokens...")
+  if (intent) {
+    console.log("[Identity Linking] Intent:", intent)
+  }
+
+  const requestBody: any = {
+    client_id: idlinkClientId,
+    client_secret: idlinkClientSecret,
+    code: code,
+    redirect_uri: redirectUri,
+    grant_type: "authorization_code",
+  }
+
+  // Include intent for streamlined linking
+  if (intent) {
+    requestBody.intent = intent
+  }
 
   const response = await fetch(tokenUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      client_id: idlinkClientId,
-      client_secret: idlinkClientSecret,
-      code: code,
-      redirect_uri: redirectUri,
-      grant_type: "authorization_code",
-    }),
+    body: JSON.stringify(requestBody),
   })
 
   if (!response.ok) {
@@ -48,6 +59,9 @@ async function exchangeCodeForTokens(code: string, redirectUri: string) {
 
   const tokenData = await response.json()
   console.log("[Identity Linking] Tokens received successfully")
+  if (tokenData.intent) {
+    console.log("[Identity Linking] Response intent:", tokenData.intent)
+  }
 
   return tokenData
 }
@@ -75,6 +89,7 @@ export async function GET(request: NextRequest) {
     const state = searchParams.get("state")
     const error = searchParams.get("error")
     const errorDescription = searchParams.get("error_description")
+    const intent = searchParams.get("intent") // Streamlined linking intent (check/create/get)
 
     // Handle OAuth errors
     if (error) {
@@ -117,7 +132,7 @@ export async function GET(request: NextRequest) {
     const appBaseUrl = process.env.APP_BASE_URL || process.env.AUTH0_BASE_URL
     const redirectUri = `${appBaseUrl}/api/ucp/identity-linking/callback`
 
-    const tokenData = await exchangeCodeForTokens(code, redirectUri)
+    const tokenData = await exchangeCodeForTokens(code, redirectUri, intent || undefined)
 
     console.log("[Identity Linking] Tokens received:")
     console.log("- Access token:", tokenData.access_token ? "present" : "missing")

@@ -44,6 +44,11 @@ function testIdentityLinkingUrlGeneration() {
   authUrl.searchParams.set("scope", "openid profile email offline_access")
   authUrl.searchParams.set("prompt", "consent")
 
+  // Streamlined linking callback URLs
+  authUrl.searchParams.set("check", `${appBaseUrl}/api/ucp/account/check`)
+  authUrl.searchParams.set("create", `${appBaseUrl}/api/ucp/account/create`)
+  authUrl.searchParams.set("get", `${appBaseUrl}/api/ucp/account/get`)
+
   console.log("✅ Identity Linking URL Generated:\n")
   console.log(authUrl.toString())
   console.log()
@@ -56,6 +61,12 @@ function testIdentityLinkingUrlGeneration() {
   console.log("- Scope:", authUrl.searchParams.get("scope"))
   console.log("- Prompt:", authUrl.searchParams.get("prompt"))
   console.log("- State (encoded session):", state.substring(0, 40) + "...")
+  console.log()
+
+  console.log("Streamlined Linking Endpoints:")
+  console.log("- Check account:", authUrl.searchParams.get("check"))
+  console.log("- Create account:", authUrl.searchParams.get("create"))
+  console.log("- Get account:", authUrl.searchParams.get("get"))
   console.log()
 
   // Decode state to verify

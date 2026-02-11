@@ -71,11 +71,24 @@ State: base64url({sessionId, timestamp})
 - Explains benefits (order tracking, saved payments)
 - Guides users to sign in if not authenticated
 
-### 7. Documentation
+### 7. Streamlined Account Linking
+
+✅ **Implemented Google's OAuth with Sign-In Linking**:
+
+- Added `check`, `create`, `get` parameters to authorization URL
+- Created three account management endpoints:
+  - `POST /api/ucp/account/check` - Check if account link exists
+  - `POST /api/ucp/account/create` - Create new account link
+  - `POST /api/ucp/account/get` - Retrieve account information
+- Support for `intent` parameter in token exchange
+- Enables seamless account creation during OAuth flow
+
+### 8. Documentation
 
 ✅ Created comprehensive docs:
 
 - `UCP_IDENTITY_LINKING.md`: Full architecture and flow
+- `STREAMLINED_LINKING.md`: Streamlined account linking guide
 - `IMPLEMENTATION_SUMMARY.md`: This file
 
 ## Key Security Features
@@ -213,8 +226,13 @@ https://your-production-domain.com/api/ucp/identity-linking/callback
 
 - `app/api/ucp/identity-linking/callback/route.ts` - OAuth callback
 - `app/api/ucp/identity-linking/status/route.ts` - Status endpoint
+- `app/api/ucp/account/check/route.ts` - Check account (streamlined linking)
+- `app/api/ucp/account/create/route.ts` - Create account (streamlined linking)
+- `app/api/ucp/account/get/route.ts` - Get account (streamlined linking)
 - `test-idlink-url.ts` - URL generation test
+- `test-checkout-authenticated.ts` - Authentication test
 - `IMPLEMENTATION_SUMMARY.md` - This file
+- `STREAMLINED_LINKING.md` - Streamlined linking guide
 
 ## Next Steps
 

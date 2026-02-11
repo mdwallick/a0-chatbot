@@ -42,6 +42,12 @@ function generateIdentityLinkingUrl(sessionId: string, userId?: string): string 
   authUrl.searchParams.set("scope", "openid profile email offline_access") // offline_access for refresh token
   authUrl.searchParams.set("prompt", "consent") // Force consent for linking
 
+  // Streamlined linking callback URLs for Google UCP
+  // These endpoints allow the OAuth server to check/create/get account info
+  authUrl.searchParams.set("check", `${appBaseUrl}/api/ucp/account/check`)
+  authUrl.searchParams.set("create", `${appBaseUrl}/api/ucp/account/create`)
+  authUrl.searchParams.set("get", `${appBaseUrl}/api/ucp/account/get`)
+
   return authUrl.toString()
 }
 

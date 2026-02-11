@@ -137,8 +137,9 @@ sync_var_to_env() {
     fi
 
     # Remove existing and add new
+    # Use printf instead of echo to avoid trailing newline
     vercel env rm "$var" "$env" -y 2>/dev/null || true
-    echo "$value" | vercel env add "$var" "$env" 2>/dev/null
+    printf '%s' "$value" | vercel env add "$var" "$env" 2>/dev/null
 }
 
 echo -e "${BLUE}Loading:${NC}"

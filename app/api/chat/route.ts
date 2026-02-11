@@ -11,10 +11,9 @@ import { DalleImageTool, WebSearchTool, ProductSearchTool, CheckoutTool } from "
 import {
   GmailReadTool,
   GmailSendTool,
-  GoogleFilesListTool,
+  GoogleDriveTool,
   GoogleCalendarReadTool,
   GoogleCalendarWriteTool,
-  GoogleFilesReadTool,
   GoogleFilesWriteTool,
   GoogleFolderCreateTool,
 } from "@/lib/ai/tools/google"
@@ -22,14 +21,13 @@ import {
 import {
   MicrosoftCalendarReadTool,
   MicrosoftCalendarWriteTool,
-  MicrosoftFilesListTool,
-  MicrosoftFilesReadTool,
+  MicrosoftOneDriveTool,
   MicrosoftFilesWriteTool,
   MicrosoftMailReadTool,
   MicrosoftMailSendTool,
 } from "@/lib/ai/tools/microsoft"
 import { XboxUserProfileTool, XboxAchievementTool } from "@/lib/ai/tools/xbox"
-import { SalesforceQueryTool, SalesforceSearchTool } from "@/lib/ai/tools/salesforce"
+import { SalesforceTool } from "@/lib/ai/tools/salesforce"
 
 import { auth0 } from "@/lib/auth0"
 import { openai } from "@/lib/openai"
@@ -67,21 +65,18 @@ export async function POST(request: Request) {
     CheckoutTool,
     GmailReadTool,
     GmailSendTool,
-    GoogleFilesListTool,
+    GoogleDriveTool,
     GoogleCalendarReadTool,
     GoogleCalendarWriteTool,
-    GoogleFilesReadTool,
     GoogleFilesWriteTool,
     GoogleFolderCreateTool,
     MicrosoftCalendarReadTool,
     MicrosoftCalendarWriteTool,
-    MicrosoftFilesListTool,
-    MicrosoftFilesReadTool,
+    MicrosoftOneDriveTool,
     MicrosoftFilesWriteTool,
     MicrosoftMailReadTool,
     MicrosoftMailSendTool,
-    SalesforceQueryTool,
-    SalesforceSearchTool,
+    SalesforceTool,
     XboxUserProfileTool,
     XboxAchievementTool,
   }
@@ -266,9 +261,9 @@ You can still help with general questions, web searches, and information request
 ${
   isAuthenticated
     ? `
-- **Google**: Read/send/draft Gmail, read/write Calendar events, create Google Docs/Sheets/folders, list/read/write Drive files
-- **Microsoft**: Read/send Outlook mail, read/write Calendar events, list/read/write OneDrive files
-- **Salesforce**: Search and query CRM records (accounts, contacts, opportunities, leads)
+- **Google**: Read/send/draft Gmail, read/write Calendar events, search/read Drive files (single tool), write files, create folders
+- **Microsoft**: Read/send Outlook mail, read/write Calendar events, browse/read OneDrive files (single tool), write files
+- **Salesforce**: Search and query CRM records (single tool with action parameter)
 - **Xbox**: Read player profile, gamerscore, and achievement history
 - **Commerce**: Search products and create checkout sessions
 - **Web Search**: Search the internet for current information

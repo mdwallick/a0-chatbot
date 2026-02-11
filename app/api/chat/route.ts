@@ -7,7 +7,7 @@ import {
   UIMessage,
 } from "ai"
 
-import { DalleImageTool, WebSearchTool } from "@/lib/ai/tools"
+import { DalleImageTool, WebSearchTool, ProductSearchTool, CheckoutTool } from "@/lib/ai/tools"
 import {
   GmailReadTool,
   GmailSendTool,
@@ -62,6 +62,8 @@ export async function POST(request: Request) {
   const toolDefinitions = {
     DalleImageTool,
     WebSearchTool,
+    ProductSearchTool,
+    CheckoutTool,
     GmailReadTool,
     GmailSendTool,
     GoogleFilesListTool,
@@ -266,12 +268,14 @@ ${
 - **Microsoft**: Read/send Outlook mail, read/write Calendar events, list/read/write OneDrive files
 - **Salesforce**: Search and query CRM records (accounts, contacts, opportunities, leads)
 - **Xbox**: Read player profile, gamerscore, and achievement history
+- **Commerce**: Search products and create checkout sessions
 - **Web Search**: Search the internet for current information
 - **Image Generation**: Create images with DALL-E (limit: ${maxPerDay}/day)
 ${typeof imageUsageCount === "number" ? `  - Images generated today: ${imageUsageCount}/${maxPerDay}` : ""}
 `
     : `
 - **Web Search**: Search the internet for current information
+- **Commerce**: Search products and create checkout sessions
 - **Image Generation**: Requires sign-in
 - **Google/Microsoft/Salesforce/Xbox**: Requires sign-in
 `

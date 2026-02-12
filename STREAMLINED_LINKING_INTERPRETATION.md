@@ -7,6 +7,7 @@ This document explains how we've mapped Google's streamlined identity linking pa
 ## Google's Pattern
 
 In Google's streamlined linking:
+
 - **Google** acts as the OAuth provider (like our Auth0 merchant)
 - **Partner** provides services (like our chatbot/shopping assistant)
 - Users have a **Google account** (like our merchant account)
@@ -29,10 +30,11 @@ The merchant knows the user by their merchant identity (email, sub, etc.). The c
 ## Our Implementation
 
 ### Step 1: Database Link Check
+
 ```typescript
 // Check if merchant user is already explicitly linked
 const existingLink = await prisma.merchantIdentityLink.findFirst({
-  where: { merchantUserId: merchantUserId }
+  where: { merchantUserId: merchantUserId },
 })
 
 if (existingLink) {
@@ -43,6 +45,7 @@ if (existingLink) {
 **Meaning**: "Has this merchant user already been linked to a chatbot user?"
 
 ### Step 2: Email Lookup (NEW!)
+
 ```typescript
 // Search chatbot Auth0 tenant for user with same email
 const chatbotUser = await searchUserByEmail(merchantEmail)
@@ -51,7 +54,7 @@ if (chatbotUser) {
   return {
     account_found: true,
     user_id: chatbotUser.user_id,
-    match_method: "email_lookup"
+    match_method: "email_lookup",
   }
 }
 ```
@@ -108,6 +111,7 @@ User: merchant@example.com             User: merchant@example.com
 ## Benefits of This Approach
 
 ### 1. **Seamless User Experience**
+
 ```
 User has:
 ✓ Merchant account (merchant@example.com)
@@ -128,12 +132,14 @@ New flow:
 ### 2. **Prevents Duplicate Accounts**
 
 Without email lookup:
+
 ```
 User links merchant → Creates new chatbot account
 User already had chatbot account → Now has TWO accounts!
 ```
 
 With email lookup:
+
 ```
 User links merchant → Finds existing chatbot account
 User already had chatbot account → Links to existing account ✅
@@ -142,6 +148,7 @@ User already had chatbot account → Links to existing account ✅
 ### 3. **Matches Google's Intent**
 
 Google's streamlined linking is designed to:
+
 - Detect existing accounts automatically
 - Link accounts seamlessly
 - Avoid duplicate accounts
@@ -161,20 +168,21 @@ const token = await getManagementToken()
 
 // Lucene search for user by email
 const query = `email:"${email}"`
-const response = await fetch(
-  `https://${domain}/api/v2/users?q=${query}&search_engine=v3`,
-  { headers: { Authorization: `Bearer ${token}` } }
-)
+const response = await fetch(`https://${domain}/api/v2/users?q=${query}&search_engine=v3`, {
+  headers: { Authorization: `Bearer ${token}` },
+})
 ```
 
 ### Required Scopes
 
 The M2M client needs:
+
 - ✅ `read:users` - To search for users by email
 
 ### Verbose Debugging
 
 The updated `/check` endpoint logs:
+
 ```
 [Account Check] ===== REQUEST RECEIVED =====
 [Account Check] JWT claims decoded:
@@ -192,15 +200,20 @@ The updated `/check` endpoint logs:
 ## Comparison: Old vs New
 
 ### OLD: Database-Only Check
-```typescript
-POST /api/ucp/account/check
-{ assertion: "JWT{email: user@example.com}" }
 
-Response:
-{ account_found: false }  // ❌ Even though user exists!
+```typescript
+POST / api / ucp / account / check
+{
+  assertion: "JWT{email: user@example.com}"
+}
+
+Response: {
+  account_found: false
+} // ❌ Even though user exists!
 ```
 
 ### NEW: Database + Email Lookup
+
 ```typescript
 POST /api/ucp/account/check
 { assertion: "JWT{email: user@example.com}" }
@@ -216,11 +229,13 @@ Response:
 ## Testing
 
 ### Test the Check Webhook
+
 ```bash
 npx tsx test-check-webhook.ts
 ```
 
 This simulates what the merchant OAuth server sends and shows:
+
 1. JWT assertion decoding
 2. Database link check
 3. Auth0 email lookup
@@ -229,6 +244,7 @@ This simulates what the merchant OAuth server sends and shows:
 ### Expected Output
 
 **If user exists in chatbot Auth0**:
+
 ```
 ✅ ACCOUNT FOUND!
   - Chatbot User ID: auth0|chatbot123
@@ -242,6 +258,7 @@ This means:
 ```
 
 **If user doesn't exist**:
+
 ```
 ❌ ACCOUNT NOT FOUND
   - Merchant User ID: auth0|merchant456
@@ -258,6 +275,7 @@ This means:
 **Correct interpretation**: ✅
 
 The `/check` webhook should:
+
 1. ✅ Check database for existing link (by merchant user ID)
 2. ✅ Search Auth0 for user by email (by email)
 3. ✅ Return `account_found: true` if either is found

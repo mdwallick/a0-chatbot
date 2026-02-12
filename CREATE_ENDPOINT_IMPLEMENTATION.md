@@ -7,6 +7,7 @@ The `/api/ucp/account/create` endpoint now implements **true streamlined linking
 ## Two Scenarios
 
 ### Scenario 1: User IS Authenticated in Chatbot ✅
+
 ```
 User clicks identity linking URL
   → Already signed into chatbot
@@ -15,12 +16,14 @@ User clicks identity linking URL
 ```
 
 **Flow**:
+
 1. Check session: User is authenticated
 2. Get chatbot user ID from session
 3. Create `MerchantIdentityLink` record
 4. Return success with existing user ID
 
 ### Scenario 2: User is NOT Authenticated (NEW!) ✅
+
 ```
 User clicks identity linking URL
   → NOT signed into chatbot
@@ -30,6 +33,7 @@ User clicks identity linking URL
 ```
 
 **Flow**:
+
 1. Check session: No authentication
 2. Extract email/name from merchant JWT
 3. **Create new user in Auth0** using Management API
@@ -60,6 +64,7 @@ Content-Type: application/json
 ### Response Handling
 
 **Success (201 Created)**:
+
 ```json
 {
   "user_id": "auth0|new_chatbot_user_123",
@@ -70,6 +75,7 @@ Content-Type: application/json
 ```
 
 **User Already Exists (409 Conflict)**:
+
 - Handled gracefully
 - Searches for existing user by email
 - Returns existing user for linking
@@ -77,6 +83,7 @@ Content-Type: application/json
 ### Password Generation
 
 Secure 32-character random password:
+
 - Charset: `a-z`, `A-Z`, `0-9`, special characters
 - Generated using Node.js `crypto.randomBytes()`
 - Never stored or logged
@@ -85,12 +92,14 @@ Secure 32-character random password:
 ## Required Auth0 Scopes
 
 The M2M client needs:
+
 - ✅ `read:users` - Search for users
 - ✅ **`create:users`** - Create new users (NEW!)
 
 ### Updating M2M Client Scopes
 
 In Auth0 Dashboard:
+
 1. Go to Applications → APIs → Auth0 Management API
 2. Find your M2M client
 3. Expand "Machine to Machine Applications"
@@ -154,9 +163,11 @@ All steps are logged:
 ## Benefits
 
 ### 1. True Streamlined Linking ✅
+
 No pre-registration required. Users are created automatically during OAuth.
 
 ### 2. Seamless User Experience ✅
+
 ```
 OLD flow:
 - User clicks link
@@ -173,12 +184,15 @@ NEW flow:
 ```
 
 ### 3. Email Verification ✅
+
 New users receive verification email automatically, ensuring valid email addresses.
 
 ### 4. Secure Passwords ✅
+
 Random 32-character passwords that users never see. They use "Forgot Password" to set their own.
 
 ### 5. Duplicate Prevention ✅
+
 - Checks if user exists first (409 handling)
 - Uses email as unique identifier
 - Links to existing user if found
@@ -186,21 +200,25 @@ Random 32-character passwords that users never see. They use "Forgot Password" t
 ## Security Considerations
 
 ### Password Security
+
 - ✅ 32 characters, cryptographically random
 - ✅ Never logged or stored in plain text
 - ✅ Auth0 handles hashing automatically
 - ✅ User gets verification email with password reset
 
 ### Email Verification
+
 - ✅ New users start with `email_verified: false`
 - ✅ Verification email sent automatically
 - ✅ User must verify before full access
 
 ### Rate Limiting
+
 - ⚠️ TODO: Add rate limiting to prevent abuse
 - Limit account creation to prevent spam
 
 ### Input Validation
+
 - ✅ Email format validation
 - ✅ Required claims validation (sub, email)
 - ✅ JWT decoding with error handling
@@ -240,6 +258,7 @@ WHERE "chatbotUserId" = 'auth0|NEW_USER_ID';
 ```
 
 Should show:
+
 - Chatbot user ID (newly created)
 - Merchant user ID (from JWT)
 - Linked timestamp
@@ -247,6 +266,7 @@ Should show:
 ## Error Handling
 
 ### User Already Exists (409)
+
 ```
 [Account Create] Create user failed: {...}
 [Account Create] User already exists (409), continuing...
@@ -257,6 +277,7 @@ Should show:
 Result: Links existing user instead of failing.
 
 ### Missing Email Claim
+
 ```
 [Account Create] ❌ ERROR: Missing required claims
 Response: {
@@ -266,6 +287,7 @@ Response: {
 ```
 
 ### Management API Failure
+
 ```
 [Account Create] ❌ EXCEPTION: Failed to create user
 Response: {
@@ -279,6 +301,7 @@ Check: M2M client has `create:users` scope.
 ## Comparison: Before vs After
 
 ### BEFORE ❌
+
 ```
 /create endpoint:
 - Requires user authentication
@@ -288,6 +311,7 @@ Check: M2M client has `create:users` scope.
 ```
 
 ### AFTER ✅
+
 ```
 /create endpoint:
 - Works with or without authentication
@@ -299,6 +323,7 @@ Check: M2M client has `create:users` scope.
 ## Summary
 
 The `/create` endpoint now:
+
 - ✅ Detects if user is authenticated
 - ✅ Creates NEW Auth0 users when needed
 - ✅ Generates secure random passwords

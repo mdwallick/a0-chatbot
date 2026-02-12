@@ -16,7 +16,7 @@ async function testCheckWebhook() {
   // In production, this would be a real JWT signed by the merchant
   const mockClaims = {
     sub: "auth0|merchant_test_user_123",
-    email: "test@example.com",  // Email to search in chatbot Auth0
+    email: "test@example.com", // Email to search in chatbot Auth0
     name: "Test User",
     iss: "https://agentic-commerce-merchant.cic-demo-platform.auth0app.com/",
     aud: "U5xtIqc7cu707C28nQHeCKplg9ec2VPe",
@@ -88,7 +88,6 @@ async function testCheckWebhook() {
       console.log("  → No chatbot user with this email")
       console.log("  → Need to call /create endpoint")
     }
-
   } catch (error) {
     console.error("❌ Error:", error)
     console.error()

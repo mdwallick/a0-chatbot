@@ -2,18 +2,16 @@ import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
   /* config options here */
-  experimental: {
-    serverComponentsExternalPackages: [
-      "googleapis",
-      "google-auth-library",
-      "@microsoft/microsoft-graph-client",
-      "canvas",
-      "gtoken",
-      "jws",
-      "jwa",
-      "buffer-equal-constant-time",
-    ],
-  },
+  serverExternalPackages: [
+    "googleapis",
+    "google-auth-library",
+    "@microsoft/microsoft-graph-client",
+    "canvas",
+    "gtoken",
+    "jws",
+    "jwa",
+    "buffer-equal-constant-time",
+  ],
   webpack: (config, { isServer }) => {
     if (isServer) {
       // Externalize all problematic packages

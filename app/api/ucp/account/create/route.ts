@@ -1,3 +1,4 @@
+import crypto from "crypto"
 import { NextRequest, NextResponse } from "next/server"
 import { auth0 } from "@/lib/auth0"
 import { prisma } from "@/lib/prisma"
@@ -138,7 +139,6 @@ function generateSecurePassword(): string {
   const length = 32
   const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
   let password = ""
-  const crypto = require("crypto")
   const randomBytes = crypto.randomBytes(length)
 
   for (let i = 0; i < length; i++) {
@@ -287,8 +287,14 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const elapsed = Date.now() - startTime
     console.error("[Account Create] ❌ EXCEPTION:", error)
-    console.error("[Account Create] Error type:", error instanceof Error ? error.constructor.name : typeof error)
-    console.error("[Account Create] Error message:", error instanceof Error ? error.message : String(error))
+    console.error(
+      "[Account Create] Error type:",
+      error instanceof Error ? error.constructor.name : typeof error
+    )
+    console.error(
+      "[Account Create] Error message:",
+      error instanceof Error ? error.message : String(error)
+    )
     console.error("[Account Create] Stack trace:", error instanceof Error ? error.stack : "N/A")
     console.error("[Account Create] Processing time before error:", elapsed, "ms")
     console.log("=".repeat(80))

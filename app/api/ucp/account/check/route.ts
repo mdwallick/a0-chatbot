@@ -289,8 +289,14 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const elapsed = Date.now() - startTime
     console.error("[Account Check] ❌ EXCEPTION:", error)
-    console.error("[Account Check] Error type:", error instanceof Error ? error.constructor.name : typeof error)
-    console.error("[Account Check] Error message:", error instanceof Error ? error.message : String(error))
+    console.error(
+      "[Account Check] Error type:",
+      error instanceof Error ? error.constructor.name : typeof error
+    )
+    console.error(
+      "[Account Check] Error message:",
+      error instanceof Error ? error.message : String(error)
+    )
     console.error("[Account Check] Stack trace:", error instanceof Error ? error.stack : "N/A")
     console.error("[Account Check] Processing time before error:", elapsed, "ms")
     console.log("=".repeat(80))

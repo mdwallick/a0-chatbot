@@ -30,6 +30,7 @@ import { XboxUserProfileTool, XboxAchievementTool } from "@/lib/ai/tools/xbox"
 import { SalesforceTool } from "@/lib/ai/tools/salesforce"
 
 import { auth0 } from "@/lib/auth0"
+import { isProviderEnabled, getEnabledProviders } from "@/lib/config/enabled-connections"
 import { openai } from "@/lib/openai"
 import { setAIContext } from "@auth0/ai-vercel"
 import { errorSerializer, withInterruptions } from "@auth0/ai-vercel/interrupts"
@@ -58,27 +59,49 @@ export async function POST(request: Request) {
       : undefined,
   }
 
-  const toolDefinitions = {
+  // Base tools available to all users
+  const toolDefinitions: Record<string, any> = {
     DalleImageTool,
     WebSearchTool,
     ProductSearchTool,
     CheckoutTool,
-    GmailReadTool,
-    GmailSendTool,
-    GoogleDriveTool,
-    GoogleCalendarReadTool,
-    GoogleCalendarWriteTool,
-    GoogleFilesWriteTool,
-    GoogleFolderCreateTool,
-    MicrosoftCalendarReadTool,
-    MicrosoftCalendarWriteTool,
-    MicrosoftOneDriveTool,
-    MicrosoftFilesWriteTool,
-    MicrosoftMailReadTool,
-    MicrosoftMailSendTool,
-    SalesforceTool,
-    XboxUserProfileTool,
-    XboxAchievementTool,
+  }
+
+  // Conditionally add provider-specific tools based on ENABLED_CONNECTIONS
+  if (isProviderEnabled("google")) {
+    Object.assign(toolDefinitions, {
+      GmailReadTool,
+      GmailSendTool,
+      GoogleDriveTool,
+      GoogleCalendarReadTool,
+      GoogleCalendarWriteTool,
+      GoogleFilesWriteTool,
+      GoogleFolderCreateTool,
+    })
+  }
+
+  if (isProviderEnabled("microsoft")) {
+    Object.assign(toolDefinitions, {
+      MicrosoftCalendarReadTool,
+      MicrosoftCalendarWriteTool,
+      MicrosoftOneDriveTool,
+      MicrosoftFilesWriteTool,
+      MicrosoftMailReadTool,
+      MicrosoftMailSendTool,
+    })
+  }
+
+  if (isProviderEnabled("salesforce")) {
+    Object.assign(toolDefinitions, {
+      SalesforceTool,
+    })
+  }
+
+  if (isProviderEnabled("xbox")) {
+    Object.assign(toolDefinitions, {
+      XboxUserProfileTool,
+      XboxAchievementTool,
+    })
   }
 
   const tools = Object.fromEntries(
@@ -239,6 +262,27 @@ async function getSystemTemplate({
   isAuthenticated: boolean
 }) {
   const maxPerDay = getImageCreationLimit()
+  const enabledProviders = getEnabledProviders()
+
+  // Build dynamic integrations list based on enabled providers
+  const integrationDescriptions: Record<string, string> = {
+    google:
+      "- **Google**: Read/send/draft Gmail, read/write Calendar events, search/read Drive files (single tool), write files, create folders",
+    microsoft:
+      "- **Microsoft**: Read/send Outlook mail, read/write Calendar events, browse/read OneDrive files (single tool), write files",
+    salesforce:
+      "- **Salesforce**: Search and query CRM records (single tool with action parameter)",
+    xbox: "- **Xbox**: Read player profile, gamerscore, and achievement history",
+  }
+
+  const enabledIntegrations = enabledProviders
+    .map(provider => integrationDescriptions[provider])
+    .filter(Boolean)
+    .join("\n")
+
+  const disabledProviders = (["google", "microsoft", "salesforce", "xbox"] as const).filter(
+    p => !enabledProviders.includes(p)
+  )
 
   const baseTemplate = `
 You are a friendly assistant! Keep your responses concise and helpful.
@@ -261,10 +305,7 @@ You can still help with general questions, web searches, and information request
 ${
   isAuthenticated
     ? `
-- **Google**: Read/send/draft Gmail, read/write Calendar events, search/read Drive files (single tool), write files, create folders
-- **Microsoft**: Read/send Outlook mail, read/write Calendar events, browse/read OneDrive files (single tool), write files
-- **Salesforce**: Search and query CRM records (single tool with action parameter)
-- **Xbox**: Read player profile, gamerscore, and achievement history
+${enabledIntegrations}
 - **Commerce**: Search products and create checkout sessions
 - **Web Search**: Search the internet for current information
 - **Image Generation**: Create images with DALL-E (limit: ${maxPerDay}/day)
@@ -274,7 +315,7 @@ ${typeof imageUsageCount === "number" ? `  - Images generated today: ${imageUsag
 - **Web Search**: Search the internet for current information
 - **Commerce**: Search products and create checkout sessions
 - **Image Generation**: Requires sign-in
-- **Google/Microsoft/Salesforce/Xbox**: Requires sign-in
+${disabledProviders.length === 4 ? "- **Google/Microsoft/Salesforce/Xbox**: Requires sign-in" : enabledProviders.length > 0 ? `- **${enabledProviders.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join("/")}**: Requires sign-in` : ""}
 `
 }
 

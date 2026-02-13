@@ -2,8 +2,11 @@ import { ChevronLeftIcon } from "lucide-react"
 import Link from "next/link"
 
 import UserProfile from "@/components/auth0/user-profile"
+import { getEnabledConnections } from "@/components/connections"
 
 export default async function Profile() {
+  const enabledConnections = getEnabledConnections()
+
   return (
     <div
       className="flex flex-col min-w-0 h-dvh bg-background w-full"
@@ -19,7 +22,7 @@ export default async function Profile() {
               </Link>
             </div>
           </div>
-          <UserProfile />
+          <UserProfile availableConnections={enabledConnections} />
         </div>
       </div>
     </div>

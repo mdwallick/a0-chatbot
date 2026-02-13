@@ -14,12 +14,13 @@ export async function middleware(request: NextRequest) {
   if (tx && tx === "link-account") {
     const subject = qs.get("tx_sub")
     const strategy = qs.get("tx_strategy")
+    const connection = qs.get("connection") // Auth0 connection name (e.g., "salesforce", "xbox")
     const scopes = qs.get("scopes")?.split(",") || []
 
     // create a cookie to store the link-account information
     authRes.cookies.set({
       name: "link-account",
-      value: JSON.stringify({ subject, strategy, scopes }),
+      value: JSON.stringify({ subject, strategy, connection, scopes }),
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       expires: new Date(Date.now() + 5 * 60 * 1000),

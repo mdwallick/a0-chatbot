@@ -173,7 +173,7 @@ See `env.sample` for complete list. Key variables:
 - liteLLM API key and base URL (`LITELLM_API_KEY`, `LITELLM_BASE_URL`)
 - Model name for routing (`OPENAI_MODEL` - e.g., gpt-4o-mini)
 - PostgreSQL connection string
-- `ENABLED_CONNECTIONS`: JSON map of connection names to Auth0 connection IDs
+- `ENABLED_CONNECTIONS`: JSON map of connection names to Auth0 connection IDs. Controls which integrations are available. Keys are: `google-oauth2`, `windowslive`, `salesforce`, `xbox`. Remove a key to disable that integration.
 - Google Custom Search API credentials (for web search)
 
 ## Development Guidelines

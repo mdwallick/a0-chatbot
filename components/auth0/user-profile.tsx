@@ -8,7 +8,7 @@ import { deleteUserAccount, fetchUserIdentities } from "@/actions/auth0-actions"
 import { buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 
-import { AvailableConnections } from "../connections"
+import type { ConnectionConfig } from "../connections"
 import BasicInfoForm from "./basic-info-form"
 import ConnectedAccounts from "./connected-accounts"
 import AppearanceSettings from "./appearance-settings"
@@ -18,7 +18,11 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export default function UserProfile() {
+interface UserProfileProps {
+  availableConnections: ConnectionConfig[]
+}
+
+export default function UserProfile({ availableConnections }: UserProfileProps) {
   const [currentItem, setCurrentItem] = useState("basic-info")
   useEffect(() => {
     setCurrentItem(window.location.hash.substring(1) || "basic-info")
@@ -73,7 +77,7 @@ export default function UserProfile() {
               <div className="flex flex-col space-y-6">
                 <BasicInfoForm />
                 <ConnectedAccounts
-                  availableAccounts={AvailableConnections}
+                  availableAccounts={availableConnections}
                   allowLink={true}
                   onFetch={fetchUserIdentities}
                   onUnlink={deleteUserAccount}

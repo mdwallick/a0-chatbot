@@ -31,6 +31,7 @@ import { useLinkedAccounts } from "./use-linked-accounts-context"
 
 import type React from "react"
 import type { ChatStatus } from "ai"
+import type { ProviderName } from "@/lib/config/enabled-connections"
 
 // Custom attachment type that extends FileUIPart with metadata
 type Attachment = FileUIPart & {
@@ -52,6 +53,7 @@ function PureMultimodalInput({
   handleSubmit,
   append,
   className,
+  enabledProviders,
 }: {
   chatId: string
   input: string
@@ -63,6 +65,7 @@ function PureMultimodalInput({
   handleSubmit: (e?: React.FormEvent, options?: { experimental_attachments?: FileUIPart[] }) => void
   append: (message: { role: "user"; content: string }) => void
   className?: string
+  enabledProviders: ProviderName[]
 }) {
   const { user } = useUser()
   const linkedAccounts: any = useLinkedAccounts()
@@ -70,8 +73,14 @@ function PureMultimodalInput({
   const [files, setFiles] = useState<GoogleFile[]>([])
   const [attachments, setAttachments] = useState<Attachment[]>([])
 
-  function isConnectionEnabled(connection: string) {
+  // Check if user has linked a specific connection
+  function isConnectionLinked(connection: string) {
     return linkedAccounts.some((account: any) => account.connection === connection)
+  }
+
+  // Check if a provider is enabled in ENABLED_CONNECTIONS
+  function isProviderAvailable(provider: ProviderName) {
+    return enabledProviders.includes(provider)
   }
 
   useEffect(() => {
@@ -219,52 +228,57 @@ function PureMultimodalInput({
                 </div>
               </PopoverTrigger>
               <PopoverContent className="w-[275px] flex flex-col gap-0 p-0">
-                {isConnectionEnabled(Connections.google.connection) && (
-                  <div className="flex items-center justify-between gap-2 hover:bg-gray-100 transition-all ease-in hover:cursor-pointer p-4 py-3 pt-3">
-                    <div className="flex gap-2 items-center">
-                      <GoogleIcon />
-                      <span className="text-sm text-gray-600">
-                        <GoogleDrivePicker onSelect={loadGoogleDocument} />
-                      </span>
+                {isProviderAvailable("google") &&
+                  isConnectionLinked(Connections.google.connection) && (
+                    <div className="flex items-center justify-between gap-2 hover:bg-gray-100 transition-all ease-in hover:cursor-pointer p-4 py-3 pt-3">
+                      <div className="flex gap-2 items-center">
+                        <GoogleIcon />
+                        <span className="text-sm text-gray-600">
+                          <GoogleDrivePicker onSelect={loadGoogleDocument} />
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {!isConnectionEnabled(Connections.google.connection) && (
-                  <EnableIntegration
-                    title="Connect to Google"
-                    icon={<GoogleIcon />}
-                    integration={Connections.google.connection}
-                  />
-                )}
+                {isProviderAvailable("google") &&
+                  !isConnectionLinked(Connections.google.connection) && (
+                    <EnableIntegration
+                      title="Connect to Google"
+                      icon={<GoogleIcon />}
+                      integration={Connections.google.connection}
+                    />
+                  )}
 
-                {!isConnectionEnabled(Connections.microsoft.connection) && (
-                  <EnableIntegration
-                    title="Connect to Microsoft"
-                    icon={<MicrosoftIcon />}
-                    integration={Connections.microsoft.connection}
-                  />
-                )}
+                {isProviderAvailable("microsoft") &&
+                  !isConnectionLinked(Connections.microsoft.connection) && (
+                    <EnableIntegration
+                      title="Connect to Microsoft"
+                      icon={<MicrosoftIcon />}
+                      integration={Connections.microsoft.connection}
+                    />
+                  )}
 
-                {!isConnectionEnabled(Connections.salesforce.connection) && (
-                  <EnableIntegration
-                    title="Connect to Salesforce"
-                    icon={<SalesforceIcon />}
-                    integration={Connections.salesforce.connection}
-                  />
-                )}
+                {isProviderAvailable("salesforce") &&
+                  !isConnectionLinked(Connections.salesforce.connection) && (
+                    <EnableIntegration
+                      title="Connect to Salesforce"
+                      icon={<SalesforceIcon />}
+                      integration={Connections.salesforce.connection}
+                    />
+                  )}
 
-                {!isConnectionEnabled(Connections.xbox.connection) && (
-                  <EnableIntegration
-                    title="Connect to Xbox"
-                    icon={<XboxIcon />}
-                    integration={Connections.xbox.connection}
-                  />
-                )}
+                {isProviderAvailable("xbox") &&
+                  !isConnectionLinked(Connections.xbox.connection) && (
+                    <EnableIntegration
+                      title="Connect to Xbox"
+                      icon={<XboxIcon />}
+                      integration={Connections.xbox.connection}
+                    />
+                  )}
               </PopoverContent>
             </Popover>
 
-            {isConnectionEnabled(Connections.xbox.connection) && (
+            {isProviderAvailable("xbox") && isConnectionLinked(Connections.xbox.connection) && (
               <IntegrationTools
                 append={append}
                 title="Xbox Tools"
@@ -282,7 +296,7 @@ function PureMultimodalInput({
               />
             )}
 
-            {isConnectionEnabled(Connections.google.connection) && (
+            {isProviderAvailable("google") && isConnectionLinked(Connections.google.connection) && (
               <IntegrationTools
                 append={append}
                 title="Google Tools"
@@ -308,60 +322,63 @@ function PureMultimodalInput({
               />
             )}
 
-            {isConnectionEnabled(Connections.microsoft.connection) && (
-              <IntegrationTools
-                append={append}
-                title="Microsoft Tools"
-                icon={<MicrosoftIconRounded />}
-                tools={[
-                  {
-                    title: "What's on my calendar?",
-                    prompt: "What's on my Microsoft calendar this week?",
-                  },
-                  {
-                    title: "Create a new appointment",
-                    prompt:
-                      "Create a new appointment on my Microsoft calendar for next Monday from 12-1pm.",
-                  },
-                  {
-                    title: "Summarize my recent emails",
-                    prompt: "Summarize my Microsoft inbox.",
-                  },
-                  {
-                    title: "List files and folders",
-                    prompt: "List my files and folders from Microsoft OneDrive.",
-                  },
-                  {
-                    title: "Create a new file",
-                    prompt:
-                      'Create a new text file in my OneDrive and summarize the movie "2001: A Space Odyssey"',
-                  },
-                ]}
-              />
-            )}
+            {isProviderAvailable("microsoft") &&
+              isConnectionLinked(Connections.microsoft.connection) && (
+                <IntegrationTools
+                  append={append}
+                  title="Microsoft Tools"
+                  icon={<MicrosoftIconRounded />}
+                  tools={[
+                    {
+                      title: "What's on my calendar?",
+                      prompt: "What's on my Microsoft calendar this week?",
+                    },
+                    {
+                      title: "Create a new appointment",
+                      prompt:
+                        "Create a new appointment on my Microsoft calendar for next Monday from 12-1pm.",
+                    },
+                    {
+                      title: "Summarize my recent emails",
+                      prompt: "Summarize my Microsoft inbox.",
+                    },
+                    {
+                      title: "List files and folders",
+                      prompt: "List my files and folders from Microsoft OneDrive.",
+                    },
+                    {
+                      title: "Create a new file",
+                      prompt:
+                        'Create a new text file in my OneDrive and summarize the movie "2001: A Space Odyssey"',
+                    },
+                  ]}
+                />
+              )}
 
-            {isConnectionEnabled(Connections.salesforce.connection) && (
-              <IntegrationTools
-                append={append}
-                title="Salesforce Tools"
-                icon={<SalesforceIcon />}
-                tools={[
-                  {
-                    title: "List My Accounts",
-                    prompt: "List my accounts from Salesforce.",
-                  },
-                  {
-                    title: "List My Opportunities",
-                    prompt:
-                      "List my open opportunities from Salesforce and include the total dollar amount at the end.",
-                  },
-                  {
-                    title: "List My Contacts",
-                    prompt: "List my contacts from Salesforce. Make any email addresses clickable.",
-                  },
-                ]}
-              />
-            )}
+            {isProviderAvailable("salesforce") &&
+              isConnectionLinked(Connections.salesforce.connection) && (
+                <IntegrationTools
+                  append={append}
+                  title="Salesforce Tools"
+                  icon={<SalesforceIcon />}
+                  tools={[
+                    {
+                      title: "List My Accounts",
+                      prompt: "List my accounts from Salesforce.",
+                    },
+                    {
+                      title: "List My Opportunities",
+                      prompt:
+                        "List my open opportunities from Salesforce and include the total dollar amount at the end.",
+                    },
+                    {
+                      title: "List My Contacts",
+                      prompt:
+                        "List my contacts from Salesforce. Make any email addresses clickable.",
+                    },
+                  ]}
+                />
+              )}
           </>
         )}
       </div>
@@ -379,6 +396,7 @@ function PureMultimodalInput({
 export const MultimodalInput = memo(PureMultimodalInput, (prevProps, nextProps) => {
   if (prevProps.input !== nextProps.input) return false
   if (prevProps.status !== nextProps.status) return false
+  if (prevProps.enabledProviders !== nextProps.enabledProviders) return false
 
   return true
 })

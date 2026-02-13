@@ -1,4 +1,5 @@
 import { ConnectionsMetadata } from "@/lib/auth0-ai/connections-metadata"
+import { isConnectionEnabled } from "@/lib/config/enabled-connections"
 import {
   GoogleIconSquared,
   MicrosoftIconSquared,
@@ -11,7 +12,13 @@ const microsoft = ConnectionsMetadata.find(c => c.name === "microsoft")!
 const salesforce = ConnectionsMetadata.find(c => c.name === "salesforce")!
 const xbox = ConnectionsMetadata.find(c => c.name === "xbox")!
 
-export const AvailableConnections = [
+export type ConnectionConfig = (typeof AllConnections)[number]
+
+/**
+ * All available connections (unfiltered).
+ * Use getEnabledConnections() for server-side filtered list.
+ */
+export const AllConnections = [
   {
     icon: <GoogleIconSquared />,
     strategy: "google-oauth2",
@@ -57,3 +64,16 @@ export const AvailableConnections = [
     friendlyScopes: xbox.friendlyScopes,
   },
 ]
+
+/**
+ * Get connections filtered by ENABLED_CONNECTIONS env var.
+ * Call this from server components/actions to get runtime-filtered list.
+ */
+export function getEnabledConnections(): ConnectionConfig[] {
+  return AllConnections.filter(conn => isConnectionEnabled(conn.connection))
+}
+
+/**
+ * @deprecated Use getEnabledConnections() for filtered list or AllConnections for full list
+ */
+export const AvailableConnections = AllConnections

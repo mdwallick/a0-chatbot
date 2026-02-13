@@ -21,14 +21,18 @@ import ThemeToggle from "./theme-toggle"
 
 import { useState, useCallback } from "react"
 
+import type { ProviderName } from "@/lib/config/enabled-connections"
+
 export function Chat({
   id,
   initialMessages,
   isReadonly,
+  enabledProviders,
 }: {
   id: string
   initialMessages: Array<UIMessage>
   isReadonly: boolean
+  enabledProviders: ProviderName[]
 }) {
   const { user } = useUser()
 
@@ -131,6 +135,7 @@ export function Chat({
                 messages={messages}
                 setMessages={setMessages}
                 handleSubmit={handleSubmit}
+                enabledProviders={enabledProviders}
               />
             )}
           </form>

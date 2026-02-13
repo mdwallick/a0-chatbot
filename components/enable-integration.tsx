@@ -5,7 +5,7 @@ import { useCallback } from "react"
 
 import { useUser } from "@auth0/nextjs-auth0"
 
-import { AvailableConnections } from "./connections"
+import { AllConnections } from "./connections"
 
 export function EnableIntegration({
   integration,
@@ -20,10 +20,10 @@ export function EnableIntegration({
 
   const getLinkAccount = useCallback(
     (connection: string) => {
-      const match = AvailableConnections.find((account: any) => account.connection === connection)
+      const match = AllConnections.find((account: any) => account.connection === connection)
 
       if (!match) {
-        throw new Error(`Connection "${connection}" not found in AvailableConnections`)
+        throw new Error(`Connection "${connection}" not found in AllConnections`)
       }
 
       const { strategy } = match

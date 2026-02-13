@@ -10,7 +10,7 @@ import { cn, getMessageText } from "@/lib/utils"
 import { Auth0InterruptionUI } from "@auth0/ai-vercel/react"
 import { TokenVaultInterrupt } from "@auth0/ai/interrupts"
 
-import { AvailableConnections } from "./connections"
+import { AllConnections } from "./connections"
 import { PencilEditIcon, SparklesIcon, LoaderIcon } from "./icons"
 import { Markdown } from "./markdown"
 import { MessageActions } from "./message-actions"
@@ -110,7 +110,7 @@ const PurePreviewMessage = ({
   const isStreaming = isLoading && message.role === "assistant"
 
   function getMetadata(toolInterrupt: Auth0InterruptionUI) {
-    const metadata = AvailableConnections.find(
+    const metadata = AllConnections.find(
       (account: any) => account.connection === toolInterrupt?.connection
     )
 

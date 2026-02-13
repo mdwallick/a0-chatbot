@@ -3,6 +3,7 @@ import { auth0 } from "@/lib/auth0"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import type { UIMessage } from "ai"
+import { getEnabledProviders } from "@/lib/config/enabled-connections"
 
 const validRoles = ["system", "user", "assistant", "data"] as const
 
@@ -48,5 +49,15 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
       }))
   }
 
-  return <Chat key={id} id={id} initialMessages={messages} isReadonly={false} />
+  const enabledProviders = getEnabledProviders()
+
+  return (
+    <Chat
+      key={id}
+      id={id}
+      initialMessages={messages}
+      isReadonly={false}
+      enabledProviders={enabledProviders}
+    />
+  )
 }

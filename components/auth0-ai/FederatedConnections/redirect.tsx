@@ -5,7 +5,7 @@ import { useUser } from "@auth0/nextjs-auth0"
 import { PromptUserContainer } from "../util/prompt-user-container"
 import { FederatedConnectionAuthProps } from "./FederatedConnectionAuthProps"
 
-import { AvailableConnections } from "../../connections"
+import { AllConnections } from "../../connections"
 
 export function EnsureAPIAccessRedirect({
   interrupt: { requiredScopes, connection },
@@ -22,12 +22,10 @@ export function EnsureAPIAccessRedirect({
       action={{
         label: action?.label ?? "Connect",
         onClick: () => {
-          const match = AvailableConnections.find(
-            (account: any) => account.connection === connection
-          )
+          const match = AllConnections.find((account: any) => account.connection === connection)
 
           if (!match) {
-            throw new Error(`Connection "${connection}" not found in AvailableConnections`)
+            throw new Error(`Connection "${connection}" not found in AllConnections`)
           }
 
           const { strategy } = match

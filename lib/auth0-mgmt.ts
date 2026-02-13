@@ -69,6 +69,19 @@ export async function updateUser(
   )
 }
 
+export async function updateUserProfile(
+  userId: string,
+  { name, nickname }: { name?: string; nickname?: string }
+) {
+  return auth0.users.update(
+    { id: userId },
+    {
+      name: name ?? undefined,
+      nickname: nickname ?? undefined,
+    }
+  )
+}
+
 export async function getLinkedAccounts(userId: string) {
   try {
     const response = await getUser(userId!)

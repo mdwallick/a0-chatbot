@@ -5,8 +5,13 @@ import React, { useCallback, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useToast } from "@/components/ui/use-toast"
 import { useUser } from "@auth0/nextjs-auth0"
+
+import type { ProviderKey } from "@/lib/auth0-ai/connections-metadata"
+import { UserScopeMetadata } from "@/lib/auth0-ai/connections-metadata"
+import { categorizeScopes, getNonEmptyCategories } from "@/lib/auth0-ai/scope-categories"
 
 function Spinner() {
   return (
@@ -201,7 +206,14 @@ export default function ConnectedAccounts({
                       <div className="flex gap-3 items-center w-full">
                         {icon}
                         <div className="flex flex-col">
-                          <span className="leading-6 text-sm font-medium">{displayName}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="leading-6 text-sm font-medium">{displayName}</span>
+                            {isMainConnection && (
+                              <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                                Primary
+                              </span>
+                            )}
+                          </div>
                           {description && (
                             <p className="font-light text-sm leading-5 text-muted-foreground max-w-fit">
                               {description}
@@ -217,14 +229,23 @@ export default function ConnectedAccounts({
                       {isConnected ? (
                         <>
                           {onUnlink && (
-                            <Button
-                              className="h-fit w-full transition-all ease-in-out border-red-500 border text-red-500 hover:bg-red-500 hover:text-white hover:cursor-pointer"
-                              variant="outline"
-                              onClick={handleUnlinkAccount(connection)}
-                              disabled={isUnlinkingAccount === connection || isMainConnection}
-                            >
-                              {isUnlinkingAccount === connection ? <Spinner /> : "Disconnect"}
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="w-full">
+                                  <Button
+                                    className="h-fit w-full transition-all ease-in-out border-red-500 border text-red-500 hover:bg-red-500 hover:text-white hover:cursor-pointer"
+                                    variant="outline"
+                                    onClick={handleUnlinkAccount(connection)}
+                                    disabled={isUnlinkingAccount === connection || isMainConnection}
+                                  >
+                                    {isUnlinkingAccount === connection ? <Spinner /> : "Disconnect"}
+                                  </Button>
+                                </span>
+                              </TooltipTrigger>
+                              {isMainConnection && (
+                                <TooltipContent>Cannot disconnect primary account</TooltipContent>
+                              )}
+                            </Tooltip>
                           )}
                         </>
                       ) : (
@@ -244,19 +265,15 @@ export default function ConnectedAccounts({
                       <div className="col-start-2 line-clamp-1 min-h-4 font-medium tracking-tight text-muted-foreground ">
                         You have granted permission to this app to:
                       </div>
-                      <ul className="text-muted-foreground col-start-2 grid justify-items-start gap-1 text-sm [&_p]:leading-relaxed">
-                        {isConnected && scopesToDisplay.length > 0 ? (
-                          scopesToDisplay.map(scope => (
-                            <li key={scope} className="list-disc ml-5">
-                              {getFriendlyScopeName(connection, scope)}
-                            </li>
-                          ))
-                        ) : isConnected ? (
-                          <li className="list-disc ml-5">No specific permissions found.</li>
+                      <div className="col-start-2">
+                        {scopesToDisplay.length > 0 ? (
+                          <CategorizedScopes connection={connection} scopes={scopesToDisplay} />
                         ) : (
-                          <li className="list-disc ml-5">Connect to see permissions.</li>
-                        )}{" "}
-                      </ul>
+                          <p className="text-muted-foreground text-sm">
+                            No specific permissions found.
+                          </p>
+                        )}
+                      </div>
                       <div className="col-start-2 line-clamp-1 min-h-4 font-medium tracking-tight text-muted-foreground ">
                         To manage or revoke this consent, see your{" "}
                         <a
@@ -280,9 +297,6 @@ export default function ConnectedAccounts({
   )
 }
 
-import type { ProviderKey } from "@/lib/auth0-ai/connections-metadata"
-import { UserScopeMetadata } from "@/lib/auth0-ai/connections-metadata"
-
 /**
  * Finds the friendly name for a technical scope given a provider.
  * @param {string} providerName - The name of the connection/provider (e.g., "google").
@@ -301,4 +315,35 @@ function getFriendlyScopeName(providerName: string, technicalScope: string) {
   }
   // Fallback to the technical scope if no friendly name is found
   return technicalScope
+}
+
+/**
+ * Renders scopes grouped by category
+ */
+function CategorizedScopes({ connection, scopes }: { connection: string; scopes: string[] }) {
+  const categorized = categorizeScopes(connection, scopes)
+  const nonEmptyCategories = getNonEmptyCategories(categorized)
+
+  if (nonEmptyCategories.length === 0) {
+    return <p className="text-muted-foreground text-sm">No specific permissions found.</p>
+  }
+
+  return (
+    <div className="space-y-3">
+      {nonEmptyCategories.map(([category, categoryScopes]) => (
+        <div key={category}>
+          <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+            {category}
+          </h5>
+          <ul className="text-muted-foreground grid justify-items-start gap-0.5 text-sm">
+            {categoryScopes.map(scope => (
+              <li key={scope} className="list-disc ml-5">
+                {getFriendlyScopeName(connection, scope)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  )
 }

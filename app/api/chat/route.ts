@@ -7,7 +7,13 @@ import {
   UIMessage,
 } from "ai"
 
-import { DalleImageTool, WebSearchTool, ProductSearchTool, CheckoutTool } from "@/lib/ai/tools"
+import {
+  DalleImageTool,
+  GNewsSearchTool,
+  WebSearchTool,
+  ProductSearchTool,
+  CheckoutTool,
+} from "@/lib/ai/tools"
 import {
   GmailReadTool,
   GmailSendTool,
@@ -62,6 +68,7 @@ export async function POST(request: Request) {
   // Base tools available to all users
   const toolDefinitions: Record<string, any> = {
     DalleImageTool,
+    GNewsSearchTool,
     WebSearchTool,
     ProductSearchTool,
     CheckoutTool,
@@ -307,12 +314,14 @@ ${
     ? `
 ${enabledIntegrations}
 - **Commerce**: Search products and create checkout sessions
-- **Web Search**: Search the internet for current information
+- **News Search**: Get current headlines and news articles by topic (business, technology, sports, etc.)
+- **Web Search**: Search the internet for general information
 - **Image Generation**: Create images with DALL-E (limit: ${maxPerDay}/day)
 ${typeof imageUsageCount === "number" ? `  - Images generated today: ${imageUsageCount}/${maxPerDay}` : ""}
 `
     : `
-- **Web Search**: Search the internet for current information
+- **News Search**: Get current headlines and news articles
+- **Web Search**: Search the internet for general information
 - **Commerce**: Search products and create checkout sessions
 - **Image Generation**: Requires sign-in
 ${disabledProviders.length === 4 ? "- **Google/Microsoft/Salesforce/Xbox**: Requires sign-in" : enabledProviders.length > 0 ? `- **${enabledProviders.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join("/")}**: Requires sign-in` : ""}

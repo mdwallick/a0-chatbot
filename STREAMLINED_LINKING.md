@@ -37,24 +37,37 @@ Three new endpoints handle account operations during the OAuth flow:
 
 #### 1. Check Account (`POST /api/ucp/account/check`)
 
-**Purpose**: Verify if a merchant identity is already linked to a chatbot user.
+**Purpose**: Verify if a merchant identity is already linked to a chatbot user OR if a chatbot user with the same email already exists.
 
 **Request**:
 
 ```json
 {
-  "assertion": "eyJhbGci...", // JWT with user identity
+  "assertion": "eyJhbGci...", // JWT with user identity (must include email claim)
   "intent": "check"
 }
 ```
 
-**Response (Found)**:
+**Response (Found - Existing Link)**:
 
 ```json
 {
   "account_found": true,
   "user_id": "auth0|chatbot123",
-  "linked_at": "2026-02-11T15:30:00.000Z"
+  "linked_at": "2026-02-11T15:30:00.000Z",
+  "match_method": "database_link"
+}
+```
+
+**Response (Found - Email Match)**:
+
+```json
+{
+  "account_found": true,
+  "user_id": "auth0|chatbot456",
+  "email": "user@example.com",
+  "email_verified": true,
+  "match_method": "email_lookup"
 }
 ```
 
@@ -62,15 +75,28 @@ Three new endpoints handle account operations during the OAuth flow:
 
 ```json
 {
-  "account_found": false
+  "account_found": false,
+  "merchant_user_id": "auth0|merchant789",
+  "merchant_email": "user@example.com"
 }
 ```
 
 **Implementation**: `app/api/ucp/account/check/route.ts`
 
-- Decodes JWT assertion to extract `sub` (merchant user ID)
-- Queries `MerchantIdentityLink` table for existing link
-- Returns whether account exists
+**Two-step lookup process**:
+
+1. **Database Link Check**: Queries `MerchantIdentityLink` table for existing link by merchant user ID
+2. **Email Lookup**: If no link exists, searches chatbot's Auth0 tenant using Lucene query for user with matching email
+
+**Auth0 Management API Integration**:
+
+- Uses M2M credentials (`AUTH0_CLIENT_ID_MGMT`, `AUTH0_CLIENT_SECRET_MGMT`)
+- Gets Management API token with `read:users` scope
+- Performs Lucene search: `email:"user@example.com"`
+- Returns first matching user if found
+- Verbose debugging logs all steps for troubleshooting
+
+**This implements Google's streamlined linking pattern**: Check if the merchant user (by email) already has an account in the partner system before creating a new link.
 
 #### 2. Create Account (`POST /api/ucp/account/create`)
 

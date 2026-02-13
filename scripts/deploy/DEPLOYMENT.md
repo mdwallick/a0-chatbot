@@ -128,6 +128,61 @@ Ensure your production database is ready:
 DATABASE_URL="your-prod-db-url" npm run prisma:migrate
 ```
 
+## Database Schema Changes
+
+When modifying the database schema, you **must** create migration files for changes to be deployed to Vercel.
+
+### Important: `migrate dev` vs `db push`
+
+| Command                  | Creates Migration | Use Case                              |
+| ------------------------ | ----------------- | ------------------------------------- |
+| `npm run prisma:migrate` | ✅ Yes            | **Always use for deployable changes** |
+| `npm run prisma:push`    | ❌ No             | Local prototyping only                |
+
+### Why This Matters
+
+Vercel runs `prisma migrate deploy` during builds, which **only applies existing migration files**. If you use `prisma db push`:
+
+- Your local database gets updated ✅
+- No migration file is created ❌
+- Vercel deployment has nothing to apply ❌
+- Production database is missing the changes ❌
+
+### Correct Workflow for Schema Changes
+
+1. **Modify the schema:**
+
+   ```bash
+   # Edit prisma/schema.prisma
+   ```
+
+2. **Create and apply migration:**
+
+   ```bash
+   npm run prisma:migrate -- --name descriptive_name
+   ```
+
+3. **Commit the migration file:**
+
+   ```bash
+   git add prisma/migrations/
+   git commit -m "fix(db): add migration for new_table"
+   ```
+
+4. **Push to trigger deployment:**
+   ```bash
+   git push
+   ```
+
+### Fixing Missing Migrations
+
+If a schema change was made without a migration (e.g., using `db push`), create the migration retroactively:
+
+```bash
+# This will detect schema drift and create the necessary migration
+npm run prisma:migrate -- --name add_missing_table
+```
+
 ## Deployment Scripts
 
 ### Pre-Deployment Checklist
@@ -266,6 +321,30 @@ npm run prisma:migrate -- --dry-run
 # Reset database (CAUTION: destroys data)
 npm run prisma:push -- --force-reset
 ```
+
+### Table Missing in Production
+
+If a table exists in `schema.prisma` but not in the production database:
+
+1. **Check for missing migration:**
+
+   ```bash
+   # List all migrations
+   ls prisma/migrations/
+
+   # Look for migration that creates the missing table
+   grep -r "CREATE TABLE.*TableName" prisma/migrations/
+   ```
+
+2. **If no migration exists, create one:**
+   ```bash
+   npm run prisma:migrate -- --name add_missing_table_name
+   git add prisma/migrations/
+   git commit -m "fix(db): add missing migration for table_name"
+   git push
+   ```
+
+This commonly happens when `prisma db push` was used instead of `prisma migrate dev`.
 
 ### Build Failures
 

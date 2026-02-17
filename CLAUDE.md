@@ -173,7 +173,7 @@ See `env.sample` for complete list. Key variables:
 - liteLLM API key and base URL (`LITELLM_API_KEY`, `LITELLM_BASE_URL`)
 - Model name for routing (`OPENAI_MODEL` - e.g., gpt-4o-mini)
 - PostgreSQL connection string
-- `ENABLED_CONNECTIONS`: JSON map of connection names to Auth0 connection IDs. Controls which integrations are available. Keys are: `google-oauth2`, `windowslive`, `salesforce`, `xbox`. Remove a key to disable that integration.
+- Connection enablement via individual env vars (`GOOGLE_CONNECTION_ID`, `MICROSOFT_CONNECTION_ID`, `SALESFORCE_CONNECTION_ID`, `XBOX_CONNECTION_ID`). Set to Auth0 connection ID to enable, leave unset to disable.
 - Google Custom Search API credentials (for web search)
 
 ## Development Guidelines
@@ -195,7 +195,7 @@ See `env.sample` for complete list. Key variables:
 2. Create provider file in `lib/auth0-ai/<provider>.ts` with scope-specific wrappers
 3. Create tools directory: `lib/ai/tools/<provider>/`
 4. Implement tools following existing patterns
-5. Add provider to `ENABLED_CONNECTIONS` environment variable
+5. Add provider's connection env var (e.g., `<PROVIDER>_CONNECTION_ID`)
 
 ### Prisma Workflow
 
@@ -251,7 +251,7 @@ Defined in `getSystemTemplate()` in `app/api/chat/route.ts`. Includes:
 ### Debugging Token Issues
 
 1. Check `lib/auth0-ai/<provider>.ts` for correct scope definitions
-2. Verify `ENABLED_CONNECTIONS` mapping in `.env.local`
+2. Verify `<PROVIDER>_CONNECTION_ID` is set in `.env.local`
 3. Check Auth0 connection configuration (scopes must be enabled)
 4. Use browser DevTools Network tab to inspect token exchange
 

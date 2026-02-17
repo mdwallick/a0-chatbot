@@ -91,8 +91,15 @@ REQUIRED_VARS=(
     "DATABASE_URL"
     "OPENAI_API_KEY"
     "OPENAI_MODEL"
-    "ENABLED_CONNECTIONS"
     "GNEWS_API_KEY"
+)
+
+# Connection enablement vars (at least one recommended)
+CONNECTION_VARS=(
+    "GOOGLE_CONNECTION_ID"
+    "MICROSOFT_CONNECTION_ID"
+    "SALESFORCE_CONNECTION_ID"
+    "XBOX_CONNECTION_ID"
 )
 
 OPTIONAL_VARS=(
@@ -115,7 +122,7 @@ OPTIONAL_VARS=(
     "MERCHANT_IDLINK_CLIENT_SECRET"
 )
 
-ALL_VARS=("${AUTH0_VARS[@]}" "${REQUIRED_VARS[@]}" "${OPTIONAL_VARS[@]}")
+ALL_VARS=("${AUTH0_VARS[@]}" "${REQUIRED_VARS[@]}" "${CONNECTION_VARS[@]}" "${OPTIONAL_VARS[@]}")
 
 # Function to check if variable exists in a file
 var_in_file() {
@@ -205,6 +212,32 @@ if [ "$missing_required" = true ]; then
     echo ""
     echo -e "${RED}Error: Missing required variables${NC}"
     exit 1
+fi
+
+echo ""
+echo -e "${YELLOW}Connection Variables (set to enable integrations):${NC}"
+has_connection=false
+for var in "${CONNECTION_VARS[@]}"; do
+    vercel_value=$(get_var_from_file "$var" ".env.vercel")
+    prod_value=$(get_var_from_file "$var" ".env.production")
+
+    if [ -n "$vercel_value" ] || [ -n "$prod_value" ]; then
+        has_connection=true
+        if [ -n "$prod_value" ]; then
+            echo -e "  ${GREEN}✓${NC} $var"
+            echo -e "      ${BLUE}preview/dev${NC}: .env.vercel"
+            echo -e "      ${CYAN}production${NC}:  .env.production"
+        else
+            echo -e "  ${GREEN}✓${NC} $var ${BLUE}← .env.vercel (all environments)${NC}"
+        fi
+    else
+        echo -e "  ${YELLOW}⚠${NC} $var (not set - integration disabled)"
+    fi
+done
+
+if [ "$has_connection" = false ]; then
+    echo ""
+    echo -e "  ${YELLOW}Note: No connections enabled. Users won't be able to link accounts.${NC}"
 fi
 
 echo ""

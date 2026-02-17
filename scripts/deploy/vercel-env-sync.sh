@@ -65,7 +65,7 @@ if [ ! -f ".env.vercel" ]; then
     echo -e "${RED}Error: .env.vercel not found${NC}"
     echo ""
     echo -e "${YELLOW}Create .env.vercel with values for preview/development:${NC}"
-    echo "  DATABASE_URL, OPENAI_API_KEY, dev Auth0 credentials, etc."
+    echo "  DATABASE_URL, LITELLM_API_KEY, dev Auth0 credentials, etc."
     exit 1
 fi
 
@@ -89,9 +89,13 @@ AUTH0_VARS=(
 
 REQUIRED_VARS=(
     "DATABASE_URL"
-    "OPENAI_API_KEY"
-    "OPENAI_MODEL"
+    "LITELLM_API_KEY"
+    "LITELLM_BASE_URL"
+    "LITELLM_MODEL"
+    "LITELLM_IMAGE_MODEL"
     "GNEWS_API_KEY"
+    "IMAGES_PER_DAY_LIMIT"
+    "CRON_SECRET"
 )
 
 # Connection enablement vars (at least one recommended)
@@ -103,23 +107,18 @@ CONNECTION_VARS=(
 )
 
 OPTIONAL_VARS=(
-    "LITELLM_API_KEY"
-    "LITELLM_BASE_URL"
     "GOOGLE_CX"
     "GOOGLE_SEARCH_API_KEY"
     "SALESFORCE_LOGIN_URL"
-    "IMAGES_PER_DAY_LIMIT"
-    "DALL_E_MODEL"
     "SERP_API_KEY"
-    "CRON_SECRET"
     "MERCHANT_DOMAIN"
     "MERCHANT_CLIENT_ID"
     "MERCHANT_CLIENT_SECRET"
     "MERCHANT_AUDIENCE"
-    "MERCHANT_SCOPE"
     "MERCHANT_IDLINK_DOMAIN"
     "MERCHANT_IDLINK_CLIENT_ID"
     "MERCHANT_IDLINK_CLIENT_SECRET"
+    "AUTH0_AUDIENCE"
 )
 
 ALL_VARS=("${AUTH0_VARS[@]}" "${REQUIRED_VARS[@]}" "${CONNECTION_VARS[@]}" "${OPTIONAL_VARS[@]}")

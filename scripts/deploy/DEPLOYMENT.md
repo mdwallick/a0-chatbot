@@ -53,9 +53,11 @@ AUTH0_CLIENT_ID_MGMT="mgmt-client-id"
 AUTH0_CLIENT_SECRET_MGMT="mgmt-secret"
 APP_BASE_URL="http://localhost:3000"
 
-# Shared values
-OPENAI_API_KEY="sk-..."
-OPENAI_MODEL="gpt-4o-mini"
+# liteLLM configuration
+LITELLM_API_KEY="your-litellm-key"
+LITELLM_BASE_URL="https://your-litellm-instance.com"
+LITELLM_MODEL="claude-4-5-haiku"
+LITELLM_IMAGE_MODEL="dall-e-3"
 
 # Enabled connections (set to Auth0 connection ID to enable)
 GOOGLE_CONNECTION_ID="con_xxx"
@@ -78,9 +80,11 @@ AUTH0_CLIENT_ID_MGMT="mgmt-client-id"
 AUTH0_CLIENT_SECRET_MGMT="mgmt-secret"
 APP_BASE_URL="https://preview.example.com"
 
-# Shared values
-OPENAI_API_KEY="sk-..."
-OPENAI_MODEL="gpt-4o-mini"
+# liteLLM configuration
+LITELLM_API_KEY="your-litellm-key"
+LITELLM_BASE_URL="https://your-litellm-instance.com"
+LITELLM_MODEL="claude-4-5-haiku"
+LITELLM_IMAGE_MODEL="dall-e-3"
 
 # Enabled connections (set to Auth0 connection ID to enable)
 GOOGLE_CONNECTION_ID="con_xxx"

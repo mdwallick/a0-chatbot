@@ -18,7 +18,7 @@ npm install
 
 # Copy environment template and configure
 cp env.sample .env.local
-# Edit .env.local with your Auth0, OpenAI, and database credentials
+# Edit .env.local with your Auth0, liteLLM, and database credentials
 ```
 
 ### Running the Application
@@ -171,7 +171,7 @@ See `env.sample` for complete list. Key variables:
 - Auth0 web client credentials (`AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, etc.)
 - Auth0 M2M client for management API (`AUTH0_CLIENT_ID_MGMT`, scopes: read/update/delete users)
 - liteLLM API key and base URL (`LITELLM_API_KEY`, `LITELLM_BASE_URL`)
-- Model name for routing (`OPENAI_MODEL` - e.g., gpt-4o-mini)
+- Model name for routing (`LITELLM_MODEL` - e.g., claude-4-5-haiku)
 - PostgreSQL connection string
 - Connection enablement via individual env vars (`GOOGLE_CONNECTION_ID`, `MICROSOFT_CONNECTION_ID`, `SALESFORCE_CONNECTION_ID`, `XBOX_CONNECTION_ID`). Set to Auth0 connection ID to enable, leave unset to disable.
 - Google Custom Search API credentials (for web search)
@@ -284,16 +284,12 @@ The liteLLM provider is configured in `lib/litellm.ts`:
 
 liteLLM handles model routing based on the model name passed to it:
 
-- Chat/completion: Uses model specified in `OPENAI_MODEL` env var
-- Image generation (DALL-E): Configured in `lib/ai/tools/dalle.ts`
+- Chat/completion: Uses model specified in `LITELLM_MODEL` env var
+- Image generation: Uses model specified in `LITELLM_IMAGE_MODEL` env var (default: dall-e-3)
 - Thread summarization: Uses `gpt-4o` model
 
 Ensure your liteLLM instance is configured with the appropriate model mappings.
 
 ### Image Generation Notes
 
-DALL-E image generation goes through liteLLM (`lib/ai/tools/dalle.ts`). If your liteLLM instance doesn't support image generation:
-
-1. Add a separate `OPENAI_API_KEY` environment variable
-2. Update `dalle.ts` to use direct OpenAI client with that key
-3. Keep other endpoints using liteLLM
+Image generation goes through liteLLM (`lib/ai/tools/dalle.ts`). The model is configured via `LITELLM_IMAGE_MODEL` env var (defaults to `dall-e-3`).

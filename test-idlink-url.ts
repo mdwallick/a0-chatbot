@@ -10,7 +10,7 @@ function testIdentityLinkingUrlGeneration() {
 
   const idlinkClientId = process.env.MERCHANT_IDLINK_CLIENT_ID
   const idlinkDomain = process.env.MERCHANT_IDLINK_DOMAIN
-  const appBaseUrl = process.env.APP_BASE_URL || process.env.AUTH0_BASE_URL
+  const appBaseUrl = process.env.APP_BASE_URL
 
   console.log("Configuration:")
   console.log("- Client ID:", idlinkClientId)

@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Exchange authorization code for tokens
-    const appBaseUrl = process.env.APP_BASE_URL || process.env.AUTH0_BASE_URL
+    const appBaseUrl = process.env.APP_BASE_URL
     const redirectUri = `${appBaseUrl}/api/ucp/identity-linking/callback`
 
     const tokenData = await exchangeCodeForTokens(code, redirectUri, intent || undefined)

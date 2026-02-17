@@ -20,7 +20,7 @@ async function testIdentityLinking() {
       : "NOT SET"
   )
   console.log("- Domain:", process.env.MERCHANT_IDLINK_DOMAIN)
-  console.log("- App Base URL:", process.env.APP_BASE_URL || process.env.AUTH0_BASE_URL)
+  console.log("- App Base URL:", process.env.APP_BASE_URL)
   console.log()
 
   const testCheckout = {

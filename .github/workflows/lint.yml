@@ -35,9 +35,7 @@ jobs:
           APP_BASE_URL: http://localhost:3000
           LITELLM_API_KEY: dummy
           LITELLM_BASE_URL: https://dummy.local
-          OPENAI_MODEL: dummy
-          OPENAI_API_KEY: dummy
-          DALL_E_MODEL: dummy
-          ENABLED_CONNECTIONS: dummy
+          LITELLM_MODEL: dummy
+          LITELLM_IMAGE_MODEL: dummy
           SALESFORCE_LOGIN_URL: https://login.salesforce.com
           DATABASE_URL: dummy

@@ -21,6 +21,7 @@ jobs:
           scopes: |
             auth
             calendar
+            config
             files
             mail
             ui

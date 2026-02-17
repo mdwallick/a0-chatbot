@@ -179,7 +179,7 @@ export async function POST(request: Request) {
 
       try {
         const generator = streamChatWithTools({
-          model: process.env.OPENAI_MODEL || "claude-4-5-sonnet",
+          model: process.env.LITELLM_MODEL || "claude-4-5-sonnet",
           messages: openaiMessages,
           tools,
           openaiTools,

@@ -30,7 +30,7 @@ export const DalleImageTool = (context: ChatContext) =>
       await incrementImageUsage(userId)
 
       const response = await openai.images.generate({
-        model: process.env.DALL_E_MODEL || "dall-e-3",
+        model: process.env.LITELLM_IMAGE_MODEL || "dall-e-3",
         prompt,
         n: 1,
         size: "1024x1024",

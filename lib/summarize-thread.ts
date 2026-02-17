@@ -5,7 +5,7 @@ export async function summarizeThread(messages: { role: string; content: string 
   const conversation = messages.map(m => `${m.role}: ${m.content}`).join("\n")
 
   const result = await openaiClient.chat.completions.create({
-    model: process.env.OPENAI_MODEL || "claude-4-5-sonnet",
+    model: process.env.LITELLM_MODEL || "claude-4-5-sonnet",
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: conversation },

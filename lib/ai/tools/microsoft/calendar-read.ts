@@ -15,6 +15,36 @@ interface CalendarResponse {
   "@odata.nextLink"?: string
 }
 
+// Sanitized event structure for ZDR compliance - omits PII and sensitive content
+interface SanitizedEvent {
+  id: string
+  subject: string
+  start: string
+  end: string
+  location?: string
+  attendeeCount: number
+  isAllDay: boolean
+  status?: string
+}
+
+/**
+ * Sanitize calendar events to remove PII and sensitive content.
+ * This enables ZDR (Zero Data Retention) compliance by not sending
+ * email addresses, meeting descriptions, or other sensitive data to the model.
+ */
+function sanitizeEvents(events: Event[]): SanitizedEvent[] {
+  return events.map(event => ({
+    id: event.id || "",
+    subject: event.subject || "(No subject)",
+    start: event.start?.dateTime || "",
+    end: event.end?.dateTime || "",
+    location: event.location?.displayName || undefined,
+    attendeeCount: event.attendees?.length || 0,
+    isAllDay: event.isAllDay || false,
+    status: event.showAs || undefined,
+  }))
+}
+
 const flexibleDateTime = z.string().refine(val => !isNaN(Date.parse(val)), {
   message: "Invalid datetime format",
 })
@@ -51,7 +81,7 @@ export const MicrosoftCalendarReadTool = withMSCalendarRead(
         })
 
         logs.push(`searching calendar from ${timeMin} to ${timeMax}`)
-        const items: CalendarResponse = await client
+        const response: CalendarResponse = await client
           .api("/me/calendarview")
           .header("Prefer", `outlook.timezone="${timeZone || "UTC"}"`)
           .query({
@@ -60,10 +90,14 @@ export const MicrosoftCalendarReadTool = withMSCalendarRead(
             orderby: "start/dateTime",
           })
           .get()
-        logs.push(`Found ${items?.value?.length || 0} events`)
+
+        // Sanitize events to remove PII for ZDR compliance
+        const events = sanitizeEvents(response?.value || [])
+        logs.push(`Found ${events.length} events`)
+
         return {
           logs,
-          items,
+          events,
         }
       } catch (error) {
         if (error instanceof GaxiosError) {

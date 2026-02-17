@@ -1,11 +1,4 @@
-import {
-  convertToModelMessages,
-  createUIMessageStream,
-  createUIMessageStreamResponse,
-  streamText,
-  stepCountIs,
-  UIMessage,
-} from "ai"
+import { createUIMessageStream, createUIMessageStreamResponse, UIMessage } from "ai"
 
 import {
   DalleImageTool,
@@ -37,14 +30,17 @@ import { SalesforceTool } from "@/lib/ai/tools/salesforce"
 
 import { auth0 } from "@/lib/auth0"
 import { isProviderEnabled, getEnabledProviders } from "@/lib/config/enabled-connections"
-import { openai } from "@/lib/openai"
 import { setAIContext } from "@auth0/ai-vercel"
-import { errorSerializer, withInterruptions } from "@auth0/ai-vercel/interrupts"
 
-import { trimMessages, getMessageText } from "@/lib/utils"
+import { trimMessages, getMessageText, flattenToolCalls } from "@/lib/utils"
 import { prisma } from "@/lib/prisma"
 import { summarizeThread } from "@/lib/summarize-thread"
 import { getImageCountToday, getImageCreationLimit } from "@/lib/utils"
+import {
+  convertToolsToOpenAI,
+  convertMessagesToOpenAI,
+  streamChatWithTools,
+} from "@/lib/openai-chat"
 
 export async function POST(request: Request) {
   const { id, messages }: { id: string; messages: Array<UIMessage>; selectedChatModel: string } =
@@ -111,6 +107,7 @@ export async function POST(request: Request) {
     })
   }
 
+  // Instantiate tools with context
   const tools = Object.fromEntries(
     Object.entries(toolDefinitions).map(([name, definition]) => {
       if (typeof definition === "function") {
@@ -119,6 +116,9 @@ export async function POST(request: Request) {
       return [name, definition]
     })
   )
+
+  // Convert tools to OpenAI function format
+  const openaiTools = convertToolsToOpenAI(tools)
 
   if (isAuthenticated) {
     await prisma.chatThread.upsert({
@@ -138,7 +138,7 @@ export async function POST(request: Request) {
       data: {
         role: "user",
         content: messageContent,
-        parts: lastMessage.parts as any, // Store full UIMessage parts for rich history
+        parts: lastMessage.parts as any,
         threadId: id,
       },
     })
@@ -148,6 +148,9 @@ export async function POST(request: Request) {
     keepSystem: true,
     maxMessages: 12,
   })
+
+  // Flatten tool calls in conversation history for ZDR compatibility
+  const flattenedMessages = flattenToolCalls(trimmedMessages)
 
   let imageUsageCount: number | undefined = undefined
 
@@ -162,96 +165,149 @@ export async function POST(request: Request) {
     isAuthenticated,
   })
   const now = new Date().toLocaleString("en-US", { timeZone: "US/Central" })
+  const systemPrompt = `The current date and time is ${now}. ${systemTemplate}`
 
+  // Convert messages to OpenAI format
+  const openaiMessages = convertMessagesToOpenAI(flattenedMessages as any, systemPrompt)
+
+  // Use Vercel AI SDK's UI message stream for proper client format
   const stream = createUIMessageStream({
     originalMessages: messages,
-    execute: withInterruptions(
-      async ({ writer }) => {
-        const result = streamText({
-          model: openai(process.env.OPENAI_MODEL || "gpt-4o-mini"),
-          system: `The current date and time is ${now}. ${systemTemplate}`,
-          messages: await convertToModelMessages(trimmedMessages),
+    execute: async ({ writer }) => {
+      let fullText = ""
+      let textId = `text-${Date.now()}`
+
+      try {
+        const generator = streamChatWithTools({
+          model: process.env.OPENAI_MODEL || "claude-4-5-sonnet",
+          messages: openaiMessages,
           tools,
-          // Allow up to 5 steps for tool calls and responses
-          stopWhen: stepCountIs(5),
-          onStepFinish: async step => {
-            // Check for tool errors after each step to trigger Auth0 interruption handling
-            if (step.finishReason === "tool-calls") {
-              for (const content of step.content) {
-                if (content.type === "tool-error") {
-                  const { toolName, toolCallId, error, input } = content as any
-                  console.log("[Chat] Tool error detected:", { toolName, error: error?.message })
-                  const serializableError = {
-                    cause: error,
-                    toolCallId: toolCallId,
-                    toolName: toolName,
-                    toolArgs: input,
-                  }
-                  throw serializableError
-                }
-              }
-            }
+          openaiTools,
+          maxIterations: 5,
+          onToolCall: (toolName, toolArgs) => {
+            console.log(`[Chat] Tool called: ${toolName}`, toolArgs)
           },
-          onFinish: async output => {
-            if (isAuthenticated) {
-              // Save assistant response with parts
-              await prisma.message.create({
-                data: {
-                  role: "assistant",
-                  content: output.text,
-                  parts: [{ type: "text", text: output.text }] as any,
-                  threadId: id,
-                },
-              })
-
-              // Auto-summarize after first complete exchange
-              const thread = await prisma.chatThread.findUnique({
-                where: { id },
-                include: {
-                  messages: {
-                    orderBy: { createdAt: "asc" },
-                    take: 4, // Get first few messages for summarization
-                  },
-                },
-              })
-
-              if (thread && thread.summary === "New conversation" && thread.messages.length >= 2) {
-                // Check if we have at least one user and one assistant message
-                const hasUser = thread.messages.some(m => m.role === "user")
-                const hasAssistant = thread.messages.some(m => m.role === "assistant")
-
-                if (hasUser && hasAssistant) {
-                  console.log("[Chat] Auto-summarizing thread after first exchange")
-
-                  const summary = await summarizeThread(
-                    thread.messages.slice(0, 4).map(m => ({
-                      role: m.role,
-                      content: m.content,
-                    }))
-                  )
-
-                  await prisma.chatThread.update({
-                    where: { id },
-                    data: { summary },
-                  })
-                }
-              }
-            }
+          onToolResult: toolName => {
+            console.log(`[Chat] Tool result: ${toolName}`)
+          },
+          onToolError: (toolName, error) => {
+            console.log(`[Chat] Tool error: ${toolName}`, error.message)
           },
         })
 
-        writer.merge(
-          result.toUIMessageStream({
-            sendReasoning: true,
+        let textStarted = false
+        // Track active tool call IDs to match tool_call with tool_result
+        const activeToolCallIds: Map<string, string> = new Map()
+
+        for await (const event of generator) {
+          if (event.type === "text") {
+            if (!textStarted) {
+              // Start text part
+              writer.write({ type: "text-start", id: textId })
+              textStarted = true
+            }
+            // Stream text delta
+            writer.write({ type: "text-delta", id: textId, delta: event.text })
+            fullText += event.text
+          } else if (event.type === "tool_call") {
+            // If we were writing text, end it first
+            if (textStarted) {
+              writer.write({ type: "text-end", id: textId })
+              textStarted = false
+              textId = `text-${Date.now()}` // New ID for next text block
+            }
+            // Generate consistent tool call ID for this tool invocation
+            const toolCallId = `${event.toolName}-${Date.now()}`
+            activeToolCallIds.set(event.toolName, toolCallId)
+            // Write tool input
+            writer.write({
+              type: "tool-input-start",
+              toolCallId,
+              toolName: event.toolName,
+            })
+            writer.write({
+              type: "tool-input-available",
+              toolCallId,
+              toolName: event.toolName,
+              input: event.toolArgs,
+            })
+          } else if (event.type === "tool_result") {
+            // Use the tracked toolCallId from the corresponding tool_call
+            const toolCallId =
+              activeToolCallIds.get(event.toolName) || `${event.toolName}-${Date.now()}`
+            writer.write({
+              type: "tool-output-available",
+              toolCallId,
+              output: event.result,
+            })
+          } else if (event.type === "done") {
+            // End any open text
+            if (textStarted) {
+              writer.write({ type: "text-end", id: textId })
+            }
+            fullText = event.fullText
+          } else if (event.type === "error") {
+            // Handle errors
+            if (textStarted) {
+              writer.write({ type: "text-end", id: textId })
+            }
+            throw event.error
+          }
+        }
+
+        // Save assistant response to database
+        if (isAuthenticated && fullText) {
+          await prisma.message.create({
+            data: {
+              role: "assistant",
+              content: fullText,
+              parts: [{ type: "text", text: fullText }] as any,
+              threadId: id,
+            },
           })
-        )
-      },
-      { messages, tools }
-    ),
-    onError: errorSerializer(err => {
-      console.error(err)
-      return "Oops, an error occured!"
-    }),
+
+          // Auto-summarize after first complete exchange
+          const thread = await prisma.chatThread.findUnique({
+            where: { id },
+            include: {
+              messages: {
+                orderBy: { createdAt: "asc" },
+                take: 4,
+              },
+            },
+          })
+
+          if (thread && thread.summary === "New conversation" && thread.messages.length >= 2) {
+            const hasUser = thread.messages.some(m => m.role === "user")
+            const hasAssistant = thread.messages.some(m => m.role === "assistant")
+
+            if (hasUser && hasAssistant) {
+              console.log("[Chat] Auto-summarizing thread after first exchange")
+
+              const summary = await summarizeThread(
+                thread.messages.slice(0, 4).map(m => ({
+                  role: m.role,
+                  content: m.content,
+                }))
+              )
+
+              await prisma.chatThread.update({
+                where: { id },
+                data: { summary },
+              })
+            }
+          }
+        }
+      } catch (error: any) {
+        console.error("[Chat] Error:", error)
+        // Re-throw so the stream handles it
+        throw error
+      }
+    },
+    onError: err => {
+      console.error("[Chat] Stream error:", err)
+      return "An error occurred while processing your request."
+    },
   })
 
   return createUIMessageStreamResponse({ stream })

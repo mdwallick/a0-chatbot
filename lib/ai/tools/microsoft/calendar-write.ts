@@ -7,6 +7,7 @@ import { TokenVaultError } from "@auth0/ai/interrupts"
 import { Client } from "@microsoft/microsoft-graph-client"
 
 import { withMSCalendarWrite } from "@/lib/auth0-ai/microsoft"
+import { Event } from "@microsoft/microsoft-graph-types"
 
 const flexibleDateTime = z.string().refine(val => !isNaN(Date.parse(val)), {
   message: "Invalid datetime format",
@@ -73,15 +74,19 @@ export const MicrosoftCalendarWriteTool = withMSCalendarWrite(
 
         if (eventId) {
           await client.api(`/me/events/${eventId}`).patch(event)
+          // Return minimal confirmation for ZDR compliance
           return {
             status: "success",
             message: `Event "${subject}" updated successfully`,
+            eventId,
           }
         } else {
-          await client.api("/me/events").post(event)
+          const response: Event = await client.api("/me/events").post(event)
+          // Return minimal confirmation for ZDR compliance
           return {
             status: "success",
             message: `Event "${subject}" created successfully from ${startDateTime} to ${endDateTime}`,
+            eventId: response.id,
           }
         }
       } catch (error) {

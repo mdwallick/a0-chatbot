@@ -42,8 +42,6 @@ export const GoogleCalendarWriteTool = withGoogleCalendarWrite(
       attendees = [],
       eventId,
     }) => {
-      const logs = []
-
       // Get the access token from Auth0 AI
       const access_token = getAccessTokenFromTokenVault()
       const auth = getGoogleAuth(access_token)
@@ -65,24 +63,33 @@ export const GoogleCalendarWriteTool = withGoogleCalendarWrite(
           },
         }
 
-        logs.push("create event", event)
         const calendar = google.calendar({ version: "v3", auth })
 
         if (eventId) {
-          const response = await calendar.events.update({
+          await calendar.events.update({
             calendarId: "primary",
             eventId,
             requestBody: event,
             sendUpdates: "all", // important! sends email invites to attendees
           })
-          return response.data
+          // Return minimal confirmation for ZDR compliance
+          return {
+            status: "success",
+            message: `Event "${summary}" updated successfully`,
+            eventId,
+          }
         } else {
           const response = await calendar.events.insert({
             calendarId: "primary",
             requestBody: event,
             sendUpdates: "all", // important! sends email invites to attendees
           })
-          return response.data
+          // Return minimal confirmation for ZDR compliance
+          return {
+            status: "success",
+            message: `Event "${summary}" created successfully from ${startDateTime} to ${endDateTime}`,
+            eventId: response.data.id,
+          }
         }
       } catch (error) {
         if (error instanceof GaxiosError) {

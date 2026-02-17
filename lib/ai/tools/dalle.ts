@@ -6,10 +6,11 @@ import { incrementImageUsage } from "@/lib/utils"
 import type { ChatContext } from "@/lib/types"
 
 /**
- * OpenAI client for DALL-E image generation
+ * OpenAI-compatible client for DALL-E image generation via liteLLM proxy
  */
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.LITELLM_API_KEY,
+  baseURL: process.env.LITELLM_BASE_URL,
 })
 
 const toolSchema = z.object({

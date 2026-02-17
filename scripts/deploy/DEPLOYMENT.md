@@ -56,7 +56,10 @@ APP_BASE_URL="http://localhost:3000"
 # Shared values
 OPENAI_API_KEY="sk-..."
 OPENAI_MODEL="gpt-4o-mini"
-ENABLED_CONNECTIONS='{"google-oauth2":"con_xxx"}'
+
+# Enabled connections (set to Auth0 connection ID to enable)
+GOOGLE_CONNECTION_ID="con_xxx"
+MICROSOFT_CONNECTION_ID="con_xxx"
 ```
 
 ### Example: .env.vercel (shared Vercel config)
@@ -78,7 +81,10 @@ APP_BASE_URL="https://preview.example.com"
 # Shared values
 OPENAI_API_KEY="sk-..."
 OPENAI_MODEL="gpt-4o-mini"
-ENABLED_CONNECTIONS='{"google-oauth2":"con_xxx"}'
+
+# Enabled connections (set to Auth0 connection ID to enable)
+GOOGLE_CONNECTION_ID="con_xxx"
+MICROSOFT_CONNECTION_ID="con_xxx"
 ```
 
 ### Example: .env.production (production overrides only)

@@ -1,44 +1,36 @@
 /**
- * Utility for managing enabled connections via ENABLED_CONNECTIONS env var.
+ * Utility for managing enabled connections via individual environment variables.
  *
- * Format: JSON object mapping connection names to connection IDs (or true to enable)
- * Example: '{"google-oauth2":"con_xxx","windowslive":"con_xxx","salesforce":"con_xxx","xbox":"con_xxx"}'
+ * Environment variables:
+ * - GOOGLE_CONNECTION_ID=con_xxx     → enables google-oauth2
+ * - MICROSOFT_CONNECTION_ID=con_xxx  → enables windowslive
+ * - SALESFORCE_CONNECTION_ID=con_xxx → enables salesforce
+ * - XBOX_CONNECTION_ID=con_xxx       → enables xbox
  *
- * Connection names correspond to the "connection" field in ConnectionsMetadata:
- * - google-oauth2 (Google)
- * - windowslive (Microsoft)
- * - salesforce (Salesforce)
- * - xbox (Xbox)
+ * Set the env var to the Auth0 connection ID to enable, or leave unset to disable.
  */
-
-type EnabledConnectionsConfig = Record<string, string | boolean>
-
-let cachedConfig: EnabledConnectionsConfig | null = null
 
 /**
- * Parse and cache the ENABLED_CONNECTIONS environment variable.
- * Returns an empty object if not set or invalid.
+ * Mapping from connection names to their environment variable names.
  */
-function getConfig(): EnabledConnectionsConfig {
-  if (cachedConfig !== null) {
-    return cachedConfig
-  }
+const ConnectionEnvVarMap: Record<string, string> = {
+  "google-oauth2": "GOOGLE_CONNECTION_ID",
+  windowslive: "MICROSOFT_CONNECTION_ID",
+  salesforce: "SALESFORCE_CONNECTION_ID",
+  xbox: "XBOX_CONNECTION_ID",
+}
 
-  const envValue = process.env.ENABLED_CONNECTIONS
-  if (!envValue) {
-    console.warn("[EnabledConnections] ENABLED_CONNECTIONS not set, all connections disabled")
-    cachedConfig = {}
-    return cachedConfig
+/**
+ * Get the connection ID for a connection from its environment variable.
+ * Returns undefined if not set.
+ */
+function getConnectionIdFromEnv(connectionName: string): string | undefined {
+  const envVarName = ConnectionEnvVarMap[connectionName]
+  if (!envVarName) {
+    return undefined
   }
-
-  try {
-    cachedConfig = JSON.parse(envValue) as EnabledConnectionsConfig
-    return cachedConfig
-  } catch (error) {
-    console.error("[EnabledConnections] Failed to parse ENABLED_CONNECTIONS:", error)
-    cachedConfig = {}
-    return cachedConfig
-  }
+  const value = process.env[envVarName]
+  return value && value.trim() !== "" ? value.trim() : undefined
 }
 
 /**
@@ -46,8 +38,7 @@ function getConfig(): EnabledConnectionsConfig {
  * @param connectionName - The connection name (e.g., "google-oauth2", "salesforce")
  */
 export function isConnectionEnabled(connectionName: string): boolean {
-  const config = getConfig()
-  return connectionName in config && !!config[connectionName]
+  return !!getConnectionIdFromEnv(connectionName)
 }
 
 /**
@@ -56,20 +47,16 @@ export function isConnectionEnabled(connectionName: string): boolean {
  * @returns The connection ID or undefined if not enabled
  */
 export function getConnectionId(connectionName: string): string | undefined {
-  const config = getConfig()
-  const value = config[connectionName]
-  if (typeof value === "string") {
-    return value
-  }
-  return undefined
+  return getConnectionIdFromEnv(connectionName)
 }
 
 /**
  * Get list of all enabled connection names.
  */
 export function getEnabledConnectionNames(): string[] {
-  const config = getConfig()
-  return Object.keys(config).filter(key => !!config[key])
+  return Object.keys(ConnectionEnvVarMap).filter(connectionName =>
+    isConnectionEnabled(connectionName)
+  )
 }
 
 /**
@@ -103,8 +90,9 @@ export function getEnabledProviders(): ProviderName[] {
 }
 
 /**
- * Clear the cached config (useful for testing or when env var changes).
+ * Get the environment variable name for a connection.
+ * Useful for debugging or documentation.
  */
-export function clearCache(): void {
-  cachedConfig = null
+export function getEnvVarNameForConnection(connectionName: string): string | undefined {
+  return ConnectionEnvVarMap[connectionName]
 }
